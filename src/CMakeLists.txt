@@ -15,7 +15,8 @@ set (cpuvisor_service_LIBRARIES
   ${OpenCV_LIBRARIES}
   ${Liblinear_LIBRARIES}
   ${Caffe_LIBRARIES}
-  ${GLOG_LIBRARIES})
+  ${GLOG_LIBRARIES}
+  protodefs)
 
 # COMPILE TARGETS
 # -------------------------------------

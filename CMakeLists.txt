@@ -34,6 +34,7 @@ find_package(Liblinear REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Caffe REQUIRED)
 find_package(GLOG REQUIRED)
+find_package(Protobuf REQUIRED)
 
 # SET INCLUDE DIRECTORIES
 # -------------------------------------
@@ -69,5 +70,6 @@ endif ()
 
 # ADD SUBDIRECTORIES TO START BUILD
 # -------------------------------------
+add_subdirectory(src/proto proto)
 add_subdirectory(src bin)
 #add_subdirectory(src/test bin/test)

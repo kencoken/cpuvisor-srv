@@ -5,6 +5,8 @@
 
 #include "directencode/caffe_encoder.h"
 
+#include "cpuvisor.pb.h"
+
 int main(int argc, char* argv[]) {
 
   google::InstallFailureSignalHandler();
