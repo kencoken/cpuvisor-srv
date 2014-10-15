@@ -1,7 +1,11 @@
 # PREPARE LIST OF SOURCES
 # -------------------------------------
 
-set (cpuvisor_service_SOURCES cpuvisor_service.cc)
+set (cpuvisor_service_SOURCES
+  cpuvisor_service.cc
+  directencode/caffe_encoder.cc
+  directencode/caffe_encoder_utils.cc
+  directencode/augmentation_helper.cc)
 
 # PREPARE LIST OF LIBRARIES
 # -------------------------------------
