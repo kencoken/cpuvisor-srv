@@ -1,18 +1,18 @@
 package cpuvisor;
 
-message ServerParameter {
-  optional FeatureParameter feat_params = 1;
+message ServerConfig {
+  optional CaffeConfig caffe_config = 1;
 }
 
-message FeatureParameter {
+enum DataAugType {
+  DAT_NONE = 0;
+  DAT_ASPECT_CORNERS = 1;
+}
+
+message CaffeConfig {
   optional string param_file = 1;
   optional string model_file = 2;
-  optional string mean_file = 3;
-  optional string output_layer = 4 [default = "fc7"];
-
-  enum DataAugmentation {
-    DAT_NONE = 0;
-    DAT_ASPECT_CORNERS = 1;
-  }
-  optional DataAugmentation data_aug = 5 [default = DAT_NONE];
+  optional string mean_image_file = 3;
+  optional DataAugType data_aug_type = 4 [default = DAT_NONE];
+  optional string output_blob_name = 5 [default = "fc7"];
 }

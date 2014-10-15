@@ -17,6 +17,8 @@
 #include <boost/thread.hpp>
 #include <boost/property_tree/ptree.hpp>
 
+#include "cpuvisor.pb.h"
+
 #define LAST_BLOB_STR "last_blob"
 #define DEFAULT_BLOB_STR "fc7"
 
@@ -42,6 +44,21 @@ namespace featpipe {
       }
       output_blob_name = properties.get<std::string>("output_blob", DEFAULT_BLOB_STR);
     }
+    inline virtual void configureFromProtobuf(const cpuvisor::CaffeConfig& proto_config) {
+      param_file = proto_config.param_file();
+      model_file = proto_config.model_file();
+      mean_image_file = proto_config.mean_image_file();
+      cpuvisor::DataAugType proto_data_aug_type = proto_config.data_aug_type();
+      switch (proto_data_aug_type) {
+      case cpuvisor::DAT_NONE:
+        data_aug_type = DAT_NONE;
+        break;
+      case cpuvisor::DAT_ASPECT_CORNERS:
+        data_aug_type = DAT_ASPECT_CORNERS;
+        break;
+      }
+      output_blob_name = proto_config.output_blob_name();
+    }
   };
 
   class CaffeEncoder : public GenericDirectEncoder {
@@ -51,6 +68,11 @@ namespace featpipe {
     }
     // constructors
     CaffeEncoder(const CaffeConfig& config): config_(config) {
+      initNetFromConfig_();
+    }
+    CaffeEncoder(const cpuvisor::CaffeConfig& proto_config) {
+      config_ = CaffeConfig();
+      config_.configureFromProtobuf(proto_config);
       initNetFromConfig_();
     }
     CaffeEncoder(const CaffeEncoder& other) {

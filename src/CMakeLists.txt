@@ -16,6 +16,7 @@ set (cpuvisor_service_LIBRARIES
   ${Liblinear_LIBRARIES}
   ${Caffe_LIBRARIES}
   ${GLOG_LIBRARIES}
+  ${PROTOBUF_LIBRARIES}
   protodefs)
 
 # COMPILE TARGETS

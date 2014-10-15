@@ -1,0 +1,7 @@
+caffe_config {
+  param_file: "/Data/src/caffe/examples/CNN_M_128/VGG_CNN_M_128_deploy.prototxt"
+  model_file: "/Data/src/caffe/examples/CNN_M_128/VGG_CNN_M_128.caffemodel"
+  mean_image_file: "/Data/src/caffe/examples/CNN_M_128/VGG_mean.binaryproto"
+  data_aug_type: DAT_NONE
+  output_blob_name: "fc7"
+}

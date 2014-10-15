@@ -42,6 +42,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${Liblinear_INCLUDE_DIRS})
 include_directories(${Caffe_INCLUDE_DIRS})
 include_directories(${GLOG_INCLUDE_DIRS})
+include_directories(${PROTOBUF_INCLUDE_DIRS})
 
 include_directories("${CMAKE_SOURCE_DIR}/src")
 
