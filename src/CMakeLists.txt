@@ -10,7 +10,8 @@ set (cpuvisor_service_LIBRARIES
   ${Boost_LIBRARIES}
   ${OpenCV_LIBRARIES}
   ${Liblinear_LIBRARIES}
-  ${Caffe_LIBRARIES})
+  ${Caffe_LIBRARIES}
+  ${GLOG_LIBRARIES})
 
 # COMPILE TARGETS
 # -------------------------------------

@@ -29,16 +29,18 @@ endif (GIT_FOUND)
 # FIND LIBRARIES
 # -------------------------------------
 #set(Boost_NO_SYSTEM_PATHS TRUE)
-find_package(Boost 1.53.0 REQUIRED COMPONENTS thread)
+find_package(Boost 1.53.0 REQUIRED COMPONENTS thread system)
 find_package(Liblinear REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Caffe REQUIRED)
+find_package(GLOG REQUIRED)
 
 # SET INCLUDE DIRECTORIES
 # -------------------------------------
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${Liblinear_INCLUDE_DIRS})
 include_directories(${Caffe_INCLUDE_DIRS})
+include_directories(${GLOG_INCLUDE_DIRS})
 
 include_directories("${CMAKE_SOURCE_DIR}/src")
 
@@ -47,7 +49,7 @@ include_directories("${CMAKE_SOURCE_DIR}/src")
 # (not editable via ccmake, as are overridden here -
 # this would also be the case if the variables were non-cached
 # but let's cache them anyway so they at least appear in ccmake)
-set(CMAKE_CXX_FLAGS "-g -Wall -march=native" # flags added to all configs - and also when no config specified (default)
+set(CMAKE_CXX_FLAGS "-g -Wall -march=native -DCPU_ONLY" # flags added to all configs - and also when no config specified (default)
   CACHE STRING "Edit in CMakeLists.txt" FORCE)
 set(CMAKE_CXX_FLAGS_DEBUG ""#"-D_GLIBCXX_DEBUG"
   CACHE STRING "Edit in CMakeLists.txt" FORCE)
@@ -58,6 +60,12 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2"
   CACHE STRING "Edit in CMakeLists.txt" FORCE)
 set(CMAKE_CXX_FLAGS_MINSIZEREL "-Os -DNDEBUG"
   CACHE STRING "Edit in CMakeLists.txt" FORCE)
+
+# add BLAS headers directory if OSX
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/System/Library/Frameworks/vecLib.framework/Versions/A/Headers/"
+    CACHE STRING "Edit in CMakeLists.txt" FORCE)
+endif ()
 
 # ADD SUBDIRECTORIES TO START BUILD
 # -------------------------------------
