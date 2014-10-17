@@ -74,7 +74,9 @@ namespace featpipe {
       dst(cv::Rect(0, excess_sz, crop_size, crop_size)).copyTo(cropped_dst);
     } else if (new_width > new_height) {
       size_t excess_sz = (new_width - new_height) / 2;
-      dst(cv::Rect(0, excess_sz, crop_size, crop_size)).copyTo(cropped_dst);
+      dst(cv::Rect(excess_sz, 0, crop_size, crop_size)).copyTo(cropped_dst);
+    } else {
+      dst.copyTo(cropped_dst);
     }
 
     return cropped_dst;

@@ -17,7 +17,7 @@
 #include <boost/thread.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-#include "cpuvisor.pb.h"
+#include "cpuvisor_config.pb.h"
 
 #define LAST_BLOB_STR "last_blob"
 #define DEFAULT_BLOB_STR "fc7"

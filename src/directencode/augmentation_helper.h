@@ -7,11 +7,11 @@
 #ifndef FEATPIPE_AUGMENTATION_HELPER_H_
 #define FEATPIPE_AUGMENTATION_HELPER_H_
 
-#include "opencv2/opencv.hpp"
-#include "directencode/caffe_encoder_utils.h"
-
 #include <vector>
 #include <string>
+#include <opencv2/opencv.hpp>
+
+#include "directencode/caffe_encoder_utils.h"
 
 namespace featpipe {
 

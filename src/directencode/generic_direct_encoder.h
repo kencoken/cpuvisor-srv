@@ -21,7 +21,7 @@ namespace featpipe {
     virtual cv::Mat compute(const std::vector<cv::Mat>& images) = 0;
     virtual size_t get_code_size() const = 0;
 
-    virtual cv::Mat compute(const cv::Mat& image) {
+    virtual cv::Mat compute(cv::Mat& image) {
       std::vector<cv::Mat> images;
       images.push_back(image);
 

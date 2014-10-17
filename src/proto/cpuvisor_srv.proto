@@ -1,0 +1,36 @@
+package cpuvisor;
+
+message FeatsProto {
+  optional uint32 num = 1 [default = 0];
+  optional uint32 dim = 2 [default = 0];
+  repeated float data = 3 [packed = true];
+  repeated string paths = 4;
+}
+
+
+
+
+message RPCReq {
+  required string request_string = 1;
+  optional uint32 id = 2;
+}
+
+message QuerySession {
+  optional uint32 id = 1;
+}
+
+message TrainImageUrl {
+  optional string url = 1;
+  optional bool is_positive = 2 [default = true];
+}
+
+message RankedItem {
+  optional string path = 1;
+  optional float score = 2;
+}
+
+message RankedList {
+  repeated RankedItem rlist = 1;
+  optional uint32 page = 2;
+  optional uint32 page_count = 3;
+}

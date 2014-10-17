@@ -29,12 +29,15 @@ endif (GIT_FOUND)
 # FIND LIBRARIES
 # -------------------------------------
 #set(Boost_NO_SYSTEM_PATHS TRUE)
-find_package(Boost 1.53.0 REQUIRED COMPONENTS thread system)
+find_package(Boost 1.53.0 REQUIRED COMPONENTS thread system filesystem)
 find_package(Liblinear REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Caffe REQUIRED)
 find_package(GLOG REQUIRED)
+find_package(GFLAGS REQUIRED)
 find_package(Protobuf REQUIRED)
+find_package(ZeroMQ REQUIRED)
+find_package(cppnetlib 0.11.0 REQUIRED)
 
 # SET INCLUDE DIRECTORIES
 # -------------------------------------
@@ -42,7 +45,10 @@ include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${Liblinear_INCLUDE_DIRS})
 include_directories(${Caffe_INCLUDE_DIRS})
 include_directories(${GLOG_INCLUDE_DIRS})
+include_directories(${GFLAGS_INCLUDE_DIRS})
 include_directories(${PROTOBUF_INCLUDE_DIRS})
+include_directories(${ZeroMQ_INCLUDE_DIRS})
+include_directories(${CPPNETLIB_INCLUDE_DIRS})
 
 include_directories("${CMAKE_SOURCE_DIR}/src")
 

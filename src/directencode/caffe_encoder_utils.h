@@ -1,10 +1,9 @@
 #ifndef FEATPIPE_CAFFE_ENCODER_UTILS_H_
 #define FEATPIPE_CAFFE_ENCODER_UTILS_H_
 
-#include "opencv2/opencv.hpp"
-
 #include <vector>
 #include <string>
+#include <opencv2/opencv.hpp>
 
 #include "caffe/caffe.hpp"
 

@@ -1,0 +1,37 @@
+package cpuvisor;
+
+message Config {
+  optional CaffeConfig caffe_config = 1;
+  optional PreprocConfig preproc_config = 2;
+  optional ServerConfig server_config = 3;
+}
+
+enum DataAugType {
+  DAT_NONE = 0;
+  DAT_ASPECT_CORNERS = 1;
+}
+
+message CaffeConfig {
+  optional string param_file = 1;
+  optional string model_file = 2;
+  optional string mean_image_file = 3;
+  optional DataAugType data_aug_type = 4 [default = DAT_NONE];
+  optional string output_blob_name = 5 [default = "fc7"];
+}
+
+message PreprocConfig {
+  optional string dataset_im_paths = 1;
+  optional string dataset_feats_file = 2;
+  optional string neg_im_paths = 3;
+  optional string neg_feats_file = 4;
+
+  optional string dataset_im_base_path = 5;
+  optional string neg_im_base_path = 6;
+}
+
+message ServerConfig {
+  optional string server_endpoint = 1;
+  optional string notify_endpoint = 5;
+  optional string image_cache_path = 10;
+  optional string rlist_cache_path = 11;
+}
