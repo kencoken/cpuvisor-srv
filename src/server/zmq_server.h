@@ -27,9 +27,10 @@ namespace cpuvisor {
     virtual void serve(const bool blocking=true);
 
   protected:
+    virtual void serve_();
     boost::shared_ptr<boost::thread> serve_thread_;
 
-    virtual void serve_();
+    cpuvisor::Config config_;
   };
 
 }

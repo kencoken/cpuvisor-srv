@@ -14,8 +14,8 @@ preproc_config: {
   neg_feats_file: "/Data/src/cpuvisor-srv/negfeats.binaryproto"
 }
 server_config: {
-  server_endpoint: "tcp://*:5555"
-  notify_endpoint: "tcp://*:5556"
+  server_endpoint: "tcp://localhost:5555"
+  notify_endpoint: "tcp://localhost:5556"
   image_cache_path: "/Data/src/cpuvisor-srv"
   rlist_cache_path: "/Data/src/cpuvisor-srv"
 }
