@@ -19,9 +19,9 @@ message QuerySession {
   optional uint32 id = 1;
 }
 
-message TrainImageUrl {
-  optional string url = 1;
-  optional bool is_positive = 2 [default = true];
+message TrainImageUrls {
+  repeated string urls = 1;
+  optional bool are_positive = 2 [default = true];
 }
 
 message RankedItem {
