@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 
 #include <glog/logging.h>
@@ -9,6 +10,10 @@
 #include <boost/network/protocol/http/client/connection/connection_delegate_factory.hpp>
 #include <boost/network/protocol/http/traits/delegate_factory.hpp>
 #include <boost/network/protocol/http/client/connection/async_normal.hpp>
+
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 #include <unistd.h>
 
@@ -39,6 +44,19 @@ struct body_handler {
       std::cout << body.size() << ",..." << std::endl;
       body.append(boost::begin(range), boost::end(range));
       std::cout << "...," << body.size() << std::endl;
+    } else {
+      if (error == boost::asio::error::eof) {
+        static boost::uuids::random_generator uuid_gen = boost::uuids::random_generator();
+        std::string id = boost::lexical_cast<std::string>(uuid_gen());
+        id = "/Users/ken/Desktop/" + id + ".jpg";
+
+        std::ofstream out_file;
+        out_file.open(id, std::ios::out | std::ios::binary);
+        out_file << body;
+        std::cout << "Wrote file!" << std::endl;
+      }
+      std::cout << boost::asio::error::eof << std::endl;
+      std::cout << "ERROR OCCURRED!" << error << std::endl;
     }
   }
 
@@ -54,18 +72,24 @@ int main(int argc, char* argv[]) {
 
   http::client client(options);
   http::client::request request("http://upload.wikimedia.org/wikipedia/commons/5/58/Sunset_2007-1.jpg");
+  //request << header("Connection", "close");
   http::client::response response;
 
   std::cout << "Issuing request" << std::endl;
   response = client.get(request, body_handler());
 
-  std::cout << "Waiting for response..." << std::endl;
-  while (!ready(response));
+  http::client::request another_request("http://static.hdw.eweb4.com/media/wallpapers_1920x1080/world/1/1/lord-murugan-statue-malaysia-world-hd-wallpaper-1920x1080-7133.jpg");
+  //another_request << header("Connection", "close");
+  http::client::response another_response;
+  another_response = client.get(another_request, body_handler());
 
-  usleep(100);
+  //std::cout << "Waiting for response..." << std::endl;
+  //while (!ready(response));
 
-  std::cout << "OK!" << std::endl;
-  //std::cout << res << std::endl;
+  usleep(1000);
+
+  // std::cout << "OK!" << std::endl;
+  // std::cout << body(response) << std::endl;
 
   return 0;
 }

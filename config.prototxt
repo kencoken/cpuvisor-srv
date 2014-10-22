@@ -10,12 +10,12 @@ preproc_config: {
   dataset_im_base_path: '/Users/ken/Downloads/VOCdevkit/VOC2007/JPEGImages'
   dataset_feats_file: "/Data/src/cpuvisor-srv/dsetfeats.binaryproto"
   neg_im_paths: "/Data/src/cpuvisor-srv/negpaths.txt"
-  neg_im_base_path: '/Users/ken/Downloads'
+  neg_im_base_path: '/Users/ken/Downloads/neg_images'
   neg_feats_file: "/Data/src/cpuvisor-srv/negfeats.binaryproto"
 }
 server_config: {
   server_endpoint: "tcp://localhost:5555"
   notify_endpoint: "tcp://localhost:5556"
-  image_cache_path: "/Data/src/cpuvisor-srv"
+  image_cache_path: "/Data/src/cpuvisor-srv/downloaded"
   rlist_cache_path: "/Data/src/cpuvisor-srv"
 }

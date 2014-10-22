@@ -14,6 +14,11 @@ set (cpuvisor_preproc_SOURCES
 set (cpuvisor_service_SOURCES
   cpuvisor_service.cc
   server/zmq_server.cc
+  server/base_server.cc
+  directencode/caffe_encoder.cc
+  directencode/caffe_encoder_utils.cc
+  directencode/augmentation_helper.cc
+  server/util/image_downloader.cc
   server/util/io.cc)
 
 # PREPARE LIST OF LIBRARIES
@@ -42,6 +47,7 @@ set (cpuvisor_service_LIBRARIES
   ${GFLAGS_LIBRARIES}
   ${ZeroMQ_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
+  ${CPPNETLIB_LIBRARIES}
   protodefs)
 
 # COMPILE TARGETS

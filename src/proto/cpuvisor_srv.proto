@@ -12,11 +12,16 @@ message FeatsProto {
 
 message RPCReq {
   required string request_string = 1;
-  optional uint32 id = 2;
+  optional string id = 2;
+  optional string tag = 3;
+
+  optional TrainImageUrls train_image_urls = 10;
 }
 
-message QuerySession {
-  optional uint32 id = 1;
+message RPCRep {
+  required bool success = 1 [default = true];
+  optional string id = 2;
+  optional string err_msg = 16;
 }
 
 message TrainImageUrls {

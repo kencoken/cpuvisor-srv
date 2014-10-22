@@ -24,33 +24,38 @@ namespace cpuvisor {
 
   class BaseServerPostProcessor : public PostProcessor {
   public:
-    BaseServerPostProcessor(featpipe::CaffeEncoder& encoder,
-                            cv::Mat& feats)
-      : encoder_(encoder)
-      , feats_(feats) { }
-    virtual void process(const std::string imfile);
+    inline BaseServerPostProcessor(featpipe::CaffeEncoder& encoder)
+      : encoder_(encoder) { }
+    virtual void process(const std::string imfile,
+                         void* extra_data = 0);
   protected:
     featpipe::CaffeEncoder& encoder_;
-    cv::Mat& feats_;
+  };
+
+  class BaseServerCallback : public DownloadCompleteCallback {
+  public:
+    inline BaseServerCallback(boost::shared_ptr<QueryIfo> query_ifo)
+      : query_ifo_(query_ifo) { }
+    virtual void operator()();
+  protected:
+    boost::shared_ptr<QueryIfo> query_ifo_;
   };
 
   class BaseServer : boost::noncopyable {
 
   public:
-    BaseServer(const cpuvisor::config& config);
+    BaseServer(const cpuvisor::Config& config);
 
-    std::string startQuery();
-    void addTrs(const std::string id, const std::vector<std::string>& urls);
-    void train(const std::string id);
-    void rank(const std::string id);
-    void freeQuery(const std::string id);
+    virtual std::string startQuery(const std::string& tag = std::string());
+    virtual void addTrs(const std::string& id, const std::vector<std::string>& urls);
+    virtual void train(const std::string& id);
+    virtual void rank(const std::string& id);
+    virtual void freeQuery(const std::string& id);
 
   protected:
-    void getQueryIfo_(const std::string id);
+    virtual boost::shared_ptr<QueryIfo> getQueryIfo_(const std::string& id);
 
-    cv::Mat downloadAndCompute_(const std::string& urls);
-
-    std::map<std::string, QueryIfo> queries_;
+    std::map<std::string, boost::shared_ptr<QueryIfo> > queries_;
 
     cv::Mat dset_feats_;
     std::vector<std::string> dset_paths_;
@@ -61,6 +66,8 @@ namespace cpuvisor {
     std::string neg_base_path_;
 
     boost::shared_ptr<featpipe::CaffeEncoder> encoder_;
+    boost::shared_ptr<BaseServerPostProcessor> post_processor_;
+    boost::shared_ptr<ImageDownloader> image_downloader_;
   };
 
 }

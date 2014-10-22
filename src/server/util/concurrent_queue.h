@@ -7,6 +7,7 @@
 #ifndef FEATPIPE_CONCURRENT_QUEUE_H_
 #define FEATPIPE_CONCURRENT_QUEUE_H_
 
+#include <queue>
 #include <boost/thread.hpp>
 
 namespace featpipe {

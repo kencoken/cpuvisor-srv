@@ -14,7 +14,9 @@ namespace cpuvisor {
     float score;
   };
 
-  enum QueryState {QS_DATACOLL, QS_TRAINING, QS_TRAINED, QS_RANKING, QS_RANKED};
+  enum QueryState {QS_DATACOLL, QS_DATACOLL_COMPLETE,
+                   QS_TRAINING, QS_TRAINED,
+                   QS_RANKING, QS_RANKED};
 
   struct QueryData {
     cv::Mat pos_feats;
@@ -23,9 +25,14 @@ namespace cpuvisor {
   };
 
   struct QueryIfo {
-    QueryIfo(const std::string& id) : id(id)
-                                    , state(QS_DATACOLL) {}
+    QueryIfo() : state(QS_DATACOLL) {}
+    QueryIfo(const std::string& id,
+             const std::string& tag = std::string())
+      : id(id)
+      , tag(tag.empty() ? id : tag)
+      , state(QS_DATACOLL) { }
     std::string id;
+    std::string tag;
     QueryState state;
     QueryData data;
   };
