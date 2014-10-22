@@ -7,6 +7,10 @@
 #ifndef CPUVISOR_QUERY_DATA_H_
 #define CPUVISOR_QUERY_DATA_H_
 
+#include <vector>
+#include <string>
+#include <opencv2/opencv.hpp>
+
 namespace cpuvisor {
 
   struct Ritem {

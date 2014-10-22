@@ -32,10 +32,16 @@ namespace cpuvisor {
     virtual void serve_();
     virtual RPCRep dispatch_(RPCReq rpc_req);
 
+    virtual void monitor_add_trs_images_();
+    virtual void monitor_add_trs_complete_();
+
     Config config_;
 
     boost::shared_ptr<boost::thread> serve_thread_;
     boost::shared_ptr<BaseServer> base_server_;
+
+    boost::shared_ptr<boost::thread> monitor_add_trs_images_thread_;
+    boost::shared_ptr<boost::thread> monitor_add_trs_complete_thread_;
   };
 
 }

@@ -11,10 +11,17 @@
 namespace cpuvisor {
 
   void BaseServerPostProcessor::process(const std::string imfile,
-                                        void* extra_data) {
+                                        boost::shared_ptr<ExtraDataWrapper> extra_data) {
 
     // get feats matrix to extend from extra_data
-    cv::Mat* feats = static_cast<cv::Mat*>(extra_data);
+    BaseServerExtraData* extra_data_s =
+      dynamic_cast<BaseServerExtraData*>(extra_data.get());
+    if (!extra_data_s) return; // return if query_ifo cannot be retrieved
+    boost::shared_ptr<QueryIfo>& query_ifo = extra_data_s->query_ifo;
+    boost::shared_ptr<StatusNotifier>& notifier = extra_data_s->notifier;
+    if (query_ifo->state != QS_DATACOLL) return; // return if state has advanced
+
+    cv::Mat& feats = query_ifo->data.pos_feats;
 
     //try {
       // callback function which computes a caffe encoding for a
@@ -26,17 +33,19 @@ namespace cpuvisor {
       ims.push_back(im);
       cv::Mat feat = encoder_.compute(ims);
 
-      if (feats->empty()) {
-        //(*feats) = feat;
-      } else {
-        CHECK_EQ(feats->cols, feat.cols);
+      if (!feats.empty()) {
+        CHECK_EQ(feats.cols, feat.cols);
       }
 
-      DLOG(INFO) << "Pushing with sizes: " << feats->rows << "x" << feats->cols
+      DLOG(INFO) << "Pushing with sizes: " << feats.rows << "x" << feats.cols
                  << " and " << feat.rows << "x" << feat.cols;
-      feats->push_back(feat); // not sure if this is thread safe
+      feats.push_back(feat); // not sure if this is thread safe
 
-      DLOG(INFO) << "Feats size is now: " << feats->rows << "x" << feats->cols;
+      DLOG(INFO) << "Feats size is now: " << feats.rows << "x" << feats.cols;
+
+      // notify!
+      notifier->post_image_processed_(query_ifo->id, imfile);
+
       //} catch (...) {
       // delete image here
       //}
@@ -46,6 +55,9 @@ namespace cpuvisor {
     LOG(INFO) << "Setting status of query to QS_DATACOLL_COMPLETE";
     CHECK_EQ(query_ifo_->state, QS_DATACOLL);
     query_ifo_->state = QS_DATACOLL_COMPLETE;
+
+    notifier_->post_all_images_processed_(query_ifo_->id);
+    notifier_->post_state_change_(query_ifo_->id, query_ifo_->state);
   }
 
   // -----------------------------------------------------------------------------
@@ -77,6 +89,8 @@ namespace cpuvisor {
       boost::shared_ptr<ImageDownloader>(new ImageDownloader(server_config.image_cache_path(),
                                                              post_processor_));
 
+    notifier_ = boost::shared_ptr<StatusNotifier>(new StatusNotifier());
+
   }
 
   std::string BaseServer::startQuery(const std::string& tag) {
@@ -89,7 +103,10 @@ namespace cpuvisor {
     } while (queries_.find(id) != queries_.end());
 
     DLOG(INFO) << "Starting query with tag: " << tag;
-    queries_[id] = boost::shared_ptr<QueryIfo>(new QueryIfo(id, tag));
+    boost::shared_ptr<QueryIfo> query_ifo(new QueryIfo(id, tag));
+    queries_[id] = query_ifo;
+
+    notifier_->post_state_change_(id, query_ifo->state);
 
     return id;
   }
@@ -102,9 +119,14 @@ namespace cpuvisor {
     }
 
     boost::shared_ptr<BaseServerCallback>
-      callback_obj(new BaseServerCallback(query_ifo));
+      callback_obj(new BaseServerCallback(query_ifo, notifier_));
 
-    image_downloader_->downloadUrls(urls, query_ifo->tag, &query_ifo->data.pos_feats,
+    boost::shared_ptr<BaseServerExtraData> extra_data(new BaseServerExtraData());
+    extra_data->query_ifo = query_ifo;
+    extra_data->notifier = notifier_; // to allow for notifications
+                                      // from postproc callback
+
+    image_downloader_->downloadUrls(urls, query_ifo->tag, extra_data,
                                     callback_obj);
 
   }
@@ -112,13 +134,9 @@ namespace cpuvisor {
   void BaseServer::train(const std::string& id) {
     boost::shared_ptr<QueryIfo> query_ifo = getQueryIfo_(id);
 
-    if (query_ifo->state != QS_DATACOLL_COMPLETE) {
-      // raise an exception/communicate with client here instead of crashing out
-      CHECK_EQ(query_ifo->state, QS_DATACOLL_COMPLETE);
-    }
-
     LOG(INFO) << "Entered train in correct state";
     query_ifo->state = QS_TRAINING;
+    notifier_->post_state_change_(id, query_ifo->state);
 
     cv::Mat feats;
     cv::vconcat(query_ifo->data.pos_feats, neg_feats_, feats);
@@ -128,6 +146,7 @@ namespace cpuvisor {
     // float* = svm.get_w();
 
     query_ifo->state = QS_TRAINED;
+    notifier_->post_state_change_(id, query_ifo->state);
   }
 
   void BaseServer::rank(const std::string& id) {
@@ -136,11 +155,15 @@ namespace cpuvisor {
     if (query_ifo->state != QS_TRAINED) {
       // raise an exception/communicate with client here instead of crashing out
       CHECK_EQ(query_ifo->state, QS_TRAINED);
+      notifier_->post_state_change_(id, query_ifo->state);
     }
 
     LOG(INFO) << "Entered rank in correct state";
     query_ifo->state = QS_RANKING;
+    notifier_->post_state_change_(id, query_ifo->state);
+
     query_ifo->state = QS_RANKED;
+    notifier_->post_state_change_(id, query_ifo->state);
   }
 
   void BaseServer::freeQuery(const std::string& id) {

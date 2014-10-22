@@ -39,10 +39,16 @@ namespace cpuvisor {
 
   // callback functors -------------------
 
+  class ExtraDataWrapper {
+  public:
+    virtual ~ExtraDataWrapper() { } // make wrapper class virtual to
+                                    // allow downcasts
+  };
+
   class PostProcessor {
   public:
     virtual void process(const std::string imfile,
-                         void* extra_data = 0) = 0;
+                         boost::shared_ptr<ExtraDataWrapper> extra_data = boost::shared_ptr<ExtraDataWrapper>()) = 0;
   };
 
   class DownloadCompleteCallback {
@@ -65,7 +71,7 @@ namespace cpuvisor {
 
     std::string url;
     std::string fname;
-    void* extra_data; // optional extra data
+    boost::shared_ptr<ExtraDataWrapper> extra_data; // optional extra data
     boost::shared_ptr<DownloadCompleteCallback> callback; // optional associated completion callback
 
     bool completed;
@@ -84,12 +90,12 @@ namespace cpuvisor {
 
     virtual void downloadUrls(const std::vector<std::string>& urls,
                               const std::string& tag,
-                              void* extra_data = 0,
+                              boost::shared_ptr<ExtraDataWrapper> extra_data = boost::shared_ptr<ExtraDataWrapper>(),
                               boost::shared_ptr<DownloadCompleteCallback> callback = boost::shared_ptr<DownloadCompleteCallback>());
   protected:
     virtual ImfileIfo prepareForDownload_(const std::string& url,
                                           const std::string& tag,
-                                          void* extra_data,
+                                          boost::shared_ptr<ExtraDataWrapper> extra_data,
                                           boost::shared_ptr<DownloadCompleteCallback> callback = boost::shared_ptr<DownloadCompleteCallback>());
     std::string download_base_dir_;
     // launching image download

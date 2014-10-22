@@ -19,6 +19,7 @@ set (cpuvisor_service_SOURCES
   directencode/caffe_encoder_utils.cc
   directencode/augmentation_helper.cc
   server/util/image_downloader.cc
+  server/util/status_notifier.cc
   server/util/io.cc)
 
 # PREPARE LIST OF LIBRARIES

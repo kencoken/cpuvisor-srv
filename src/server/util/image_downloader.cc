@@ -27,7 +27,7 @@ namespace cpuvisor {
 
   void ImageDownloader::downloadUrls(const std::vector<std::string>& urls,
                                      const std::string& tag,
-                                     void* extra_data,
+                                     boost::shared_ptr<ExtraDataWrapper> extra_data,
                                      boost::shared_ptr<DownloadCompleteCallback> callback) {
 
     DLOG(INFO) << "In image donwloader...";
@@ -52,7 +52,7 @@ namespace cpuvisor {
 
   ImfileIfo ImageDownloader::prepareForDownload_(const std::string& url,
                                                  const std::string& tag,
-                                                 void* extra_data,
+                                                 boost::shared_ptr<ExtraDataWrapper> extra_data,
                                                  boost::shared_ptr<DownloadCompleteCallback> callback) {
 
     // extract file ext from url

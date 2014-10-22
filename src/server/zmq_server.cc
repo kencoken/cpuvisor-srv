@@ -1,5 +1,6 @@
 #include "zmq_server.h"
 
+#include <iostream>
 #include <sstream>
 #include <google/protobuf/text_format.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -9,15 +10,17 @@ namespace cpuvisor {
 
   ZmqServer::ZmqServer(const cpuvisor::Config& config)
     : config_(config)
-    , base_server_(new BaseServer(config)) {
+    , base_server_(new BaseServer(config))
+    , monitor_add_trs_images_thread_(new boost::thread(&ZmqServer::monitor_add_trs_images_, this))
+    , monitor_add_trs_complete_thread_(new boost::thread(&ZmqServer::monitor_add_trs_complete_, this)) {
 
   }
 
   ZmqServer::~ZmqServer() {
     // interrupt serve thread to ensure termination before auto-detaching
-    if (serve_thread_) {
-      serve_thread_->interrupt();
-    }
+    if (serve_thread_) serve_thread_->interrupt();
+    if (monitor_add_trs_images_thread_) monitor_add_trs_images_thread_->interrupt();
+    if (monitor_add_trs_complete_thread_) monitor_add_trs_complete_thread_->interrupt();
   }
 
   void ZmqServer::serve(const bool blocking) {
@@ -142,6 +145,31 @@ namespace cpuvisor {
               << rpc_rep_str << "-----------------\n" << std::endl;
 
     return rpc_rep;
+  }
+
+  void ZmqServer::monitor_add_trs_images_() {
+    while (true) {
+      QueryImageProcessedNotification notification =
+        base_server_->notifier()->wait_image_processed();
+      std::cout << "*******************************************************" << std::endl
+                << "QUERYIMAGEPROCESSEDNOTIFICATION" << std::endl
+                << "-------------------------------------------------------" << std::endl
+                << "id:    " << notification.id << std::endl
+                << "fname: " << notification.fname << std::endl
+                << "*******************************************************" << std::endl;
+    }
+  }
+
+  void ZmqServer::monitor_add_trs_complete_() {
+    while (true) {
+      QueryAllImagesProcessedNotification notification =
+        base_server_->notifier()->wait_all_images_processed();
+      std::cout << "*******************************************************" << std::endl
+                << "QUERYALLIMAGESPROCESSEDNOTIFICATION" << std::endl
+                << "-------------------------------------------------------" << std::endl
+                << "id:    " << notification.id << std::endl
+                << "*******************************************************" << std::endl;
+    }
   }
 
 }

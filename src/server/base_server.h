@@ -12,33 +12,43 @@
 #include <map>
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
-#include "opencv2/opencv.hpp"
+#include <opencv2/opencv.hpp>
 
 #include "directencode/caffe_encoder.h"
 
 #include "server/query_data.h" // defines all datatypes used in this class
 #include "server/util/image_downloader.h"
+#include "server/util/status_notifier.h"
 #include "cpuvisor_config.pb.h"
 
 namespace cpuvisor {
+
+  class BaseServerExtraData : public ExtraDataWrapper {
+  public:
+    boost::shared_ptr<QueryIfo> query_ifo;
+    boost::shared_ptr<StatusNotifier> notifier;
+  };
 
   class BaseServerPostProcessor : public PostProcessor {
   public:
     inline BaseServerPostProcessor(featpipe::CaffeEncoder& encoder)
       : encoder_(encoder) { }
     virtual void process(const std::string imfile,
-                         void* extra_data = 0);
+                         boost::shared_ptr<ExtraDataWrapper> extra_data = boost::shared_ptr<ExtraDataWrapper>());
   protected:
     featpipe::CaffeEncoder& encoder_;
   };
 
   class BaseServerCallback : public DownloadCompleteCallback {
   public:
-    inline BaseServerCallback(boost::shared_ptr<QueryIfo> query_ifo)
-      : query_ifo_(query_ifo) { }
+    inline BaseServerCallback(boost::shared_ptr<QueryIfo> query_ifo,
+                              boost::shared_ptr<StatusNotifier> notifier)
+      : query_ifo_(query_ifo)
+      , notifier_(notifier) { }
     virtual void operator()();
   protected:
     boost::shared_ptr<QueryIfo> query_ifo_;
+    boost::shared_ptr<StatusNotifier> notifier_;
   };
 
   class BaseServer : boost::noncopyable {
@@ -51,6 +61,10 @@ namespace cpuvisor {
     virtual void train(const std::string& id);
     virtual void rank(const std::string& id);
     virtual void freeQuery(const std::string& id);
+
+    inline boost::shared_ptr<StatusNotifier> notifier() {
+      return notifier_;
+    }
 
   protected:
     virtual boost::shared_ptr<QueryIfo> getQueryIfo_(const std::string& id);
@@ -68,6 +82,8 @@ namespace cpuvisor {
     boost::shared_ptr<featpipe::CaffeEncoder> encoder_;
     boost::shared_ptr<BaseServerPostProcessor> post_processor_;
     boost::shared_ptr<ImageDownloader> image_downloader_;
+
+    boost::shared_ptr<StatusNotifier> notifier_;
   };
 
 }
