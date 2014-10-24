@@ -49,20 +49,25 @@ req = protosrv.RPCReq()
 req.request_string = 'add_trs'
 req.id = query_id
 
-image_urls = ['http://i.telegraph.co.uk/multimedia/archive/02565/Ford-Fiesta_jpg_2565695b.jpg',
-              'http://www.extremetech.com/wp-content/uploads/2012/12/Audi-A1.jpg',
-              'http://i.telegraph.co.uk/multimedia/archive/02556/Ford-Fiesta-2_2556130k.jpg',
-              'http://i.telegraph.co.uk/multimedia/archive/01249/car_ultimate_aero__1249846c.jpg',
-              'http://cdn.carbuyer.co.uk/sites/carbuyer_d7/files/jato_uploaded/Hyundai-i10-micro-car-2012-front-quarter-main.jpg',
-              'http://www.popularmechanics.com/cm/popularmechanics/images/Rl/future_cars_09_0211-lgn.jpg',
-              'http://i.telegraph.co.uk/multimedia/archive/02417/Sandero-1_2417618k.jpg',
-              'http://s3.amazonaws.com/rapgenius/filepicker%2FsVUlzueDRFOaweMrMWzl_car.jpg',
-              'http://upload.wikimedia.org/wikipedia/commons/2/26/Metropolitan_car_club_meeting.JPG',
-              'http://i.huffpost.com/gen/1211885/thumbs/o-CAR-570.jpg',
-              'http://static1.businessinsider.com/image/52caecaa6da811c50e9ac55a/pandora-and-iheartradio-step-up-their-war-to-control-the-inside-of-your-car.jpg',
-              'http://www.weddingcarsomerset.co.uk/wp-content/uploads/2014/05/wedding-car-hire-bristol.jpg',
-              'http://upload.wikimedia.org/wikipedia/commons/5/5a/1970_AMC_The_Machine_2-door_muscle_car_in_RWB_trim_by_lake.JPG',
-              'http://www.hdwallpaperscool.com/wp-content/uploads/2013/11/muscle-cars-top-images-new-hd-wallpapers-classic.jpg']
+image_urls = ['http://www.robots.ox.ac.uk/~ken/vocims/000787.jpg',
+              'http://www.robots.ox.ac.uk/~ken/vocims/000860.jpg',
+              'http://www.robots.ox.ac.uk/~ken/vocims/000906.jpg',
+              'http://www.robots.ox.ac.uk/~ken/vocims/000937.jpg']
+
+# image_urls = ['http://i.telegraph.co.uk/multimedia/archive/02565/Ford-Fiesta_jpg_2565695b.jpg',
+#               'http://www.extremetech.com/wp-content/uploads/2012/12/Audi-A1.jpg',
+#               'http://i.telegraph.co.uk/multimedia/archive/02556/Ford-Fiesta-2_2556130k.jpg',
+#               'http://i.telegraph.co.uk/multimedia/archive/01249/car_ultimate_aero__1249846c.jpg',
+#               'http://cdn.carbuyer.co.uk/sites/carbuyer_d7/files/jato_uploaded/Hyundai-i10-micro-car-2012-front-quarter-main.jpg',
+#               'http://www.popularmechanics.com/cm/popularmechanics/images/Rl/future_cars_09_0211-lgn.jpg',
+#               'http://i.telegraph.co.uk/multimedia/archive/02417/Sandero-1_2417618k.jpg',
+#               'http://s3.amazonaws.com/rapgenius/filepicker%2FsVUlzueDRFOaweMrMWzl_car.jpg',
+#               'http://upload.wikimedia.org/wikipedia/commons/2/26/Metropolitan_car_club_meeting.JPG',
+#               'http://i.huffpost.com/gen/1211885/thumbs/o-CAR-570.jpg',
+#               'http://static1.businessinsider.com/image/52caecaa6da811c50e9ac55a/pandora-and-iheartradio-step-up-their-war-to-control-the-inside-of-your-car.jpg',
+#               'http://www.weddingcarsomerset.co.uk/wp-content/uploads/2014/05/wedding-car-hire-bristol.jpg',
+#               'http://upload.wikimedia.org/wikipedia/commons/5/5a/1970_AMC_The_Machine_2-door_muscle_car_in_RWB_trim_by_lake.JPG',
+#               'http://www.hdwallpaperscool.com/wp-content/uploads/2013/11/muscle-cars-top-images-new-hd-wallpapers-classic.jpg']
 for image_url in image_urls:
     req.train_image_urls.urls.append(image_url)
 
@@ -82,7 +87,7 @@ sleep(20)
 print 'Sending train command...'
 
 req = protosrv.RPCReq()
-req.request_string = 'train'
+req.request_string = 'train_rank_get_ranking';
 req.id = query_id
 
 socket.send(req.SerializeToString())
@@ -92,7 +97,15 @@ rpc_rep = protosrv.RPCRep()
 rpc_rep.ParseFromString(message)
 assert(rpc_rep.success == True)
 
-print 'Train command returned!'
+print 'Train, rank and get ranking command returned!'
+
+ctr = 1;
+for ritem in rpc_rep.ranking.rlist:
+    print '%d: %s (%f)' % (ctr, ritem.path, ritem.score)
+    ctr = ctr + 1
+    if ctr > 10:
+        break
+
 
 # for test_func in ['start_query', 'add_trs', 'train', 'rank', 'free_query', 'nonsense']:
 

@@ -35,5 +35,5 @@ message ServerConfig {
   optional string image_cache_path = 10;
   optional string rlist_cache_path = 11;
 
-  optional uint16 page_size = 16 [default = 100];
+  optional uint32 page_size = 16 [default = 100];
 }

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <stdint.h>
 #include <google/protobuf/text_format.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -129,36 +130,17 @@ namespace cpuvisor {
       } else if (req_str == "get_ranking") {
 
         Ranking ranking = base_server_->getRanking(id);
-        uint_32t page_sz = config_.server_config().page_size();
 
-        RankedList* ranking_proto = rpc_rep.mutable_ranking();
-        // extract n-th page
-        uint32_t page_num = rpc_req.retrieve_page();
-
-        size_t dset_sz = ranking.scores.rows;
-
-        uint_32t page_count = std::ceil(static_cast<float>(dset_sz) /
-                                        static_cast<float>(page_sz));
-        if (page_num > page_count) {
-          throw std::range_error("Tried to retrieve page outside of valid range");
-        }
-        ranking_proto->set_page_count(page_count);
-        ranking_proto->set_page(page_num);
-
-        size_t start_idx = page_sz*(page_num - 1);
-        size_t end_idx = std::max(page_sz*page_num, dset_sz);
-
-        for (size_t i = start_idx; i < end_idx; ++i) {
-          RankedItem* ritem_proto = ranking_proto->add_rlist();
-          size_t sort_idx = ranking.sort_idxs[i];
-          ritem_proto->set_path(base_server_->dset_path(sort_idx));
-          ritem_proto->set_score(ranking.scores[sort_idx]);
-        }
+        getRankingPage_(ranking, rpc_req, &rpc_rep);
 
       } else if (req_str == "train_rank_get_ranking") {
 
-        // TODO : blocking version of all three above functions which
+        // blocking version of all three above functions which
         // returns ranking directly
+        Ranking ranking;
+        base_server_->trainAndRank(id, true, &ranking);
+
+        getRankingPage_(ranking, rpc_req, &rpc_rep);
 
       } else if (req_str == "free_query") {
 
@@ -176,12 +158,59 @@ namespace cpuvisor {
       }
     }
 
-    std::string rpc_rep_str;
-    google::protobuf::TextFormat::PrintToString(rpc_rep, &rpc_rep_str);
-    std::cout << "Sending Protobuf:\n" << "-----------------\n"
-              << rpc_rep_str << "-----------------\n" << std::endl;
+    // std::string rpc_rep_str;
+    // google::protobuf::TextFormat::PrintToString(rpc_rep, &rpc_rep_str);
+    // std::cout << "Sending Protobuf:\n" << "-----------------\n"
+    //           << rpc_rep_str << "-----------------\n" << std::endl;
 
     return rpc_rep;
+  }
+
+  void ZmqServer::getRankingPage_(const Ranking& ranking,
+                                  const RPCReq& rpc_req, RPCRep* rpc_rep) {
+
+    uint32_t page_sz = config_.server_config().page_size();
+
+    RankedList* ranking_proto = rpc_rep->mutable_ranking();
+    // extract n-th page
+    uint32_t page_num = rpc_req.retrieve_page();
+
+    uint32_t dset_sz = ranking.scores.rows;
+    CHECK_GE(dset_sz, ranking.scores.cols);
+    CHECK_EQ(ranking.scores.cols, 1);
+
+    uint32_t page_count = std::ceil(static_cast<float>(dset_sz) /
+                                    static_cast<float>(page_sz));
+    if (page_num > page_count) {
+      throw std::range_error("Tried to retrieve page outside of valid range");
+    }
+    ranking_proto->set_page_count(page_count);
+    ranking_proto->set_page(page_num);
+
+    size_t start_idx = page_sz*(page_num - 1);
+    size_t end_idx = std::max(page_sz*page_num, dset_sz);
+
+    CHECK_EQ(ranking.sort_idxs.type(), CV_32S);
+    CHECK_EQ(ranking.scores.type(), CV_32F);
+    uint32_t* sort_idxs_ptr = (uint32_t*)ranking.sort_idxs.data;
+    float* scores_ptr = (float*)ranking.scores.data;
+
+    for (size_t i = 0; i < 10; ++i) {
+      DLOG(INFO) << i+1 << ": " << base_server_->dset_path(sort_idxs_ptr[i])
+                 << " (" << scores_ptr[sort_idxs_ptr[i]] << ")";
+    }
+
+    DLOG(INFO) << "Page start idx is: " << start_idx;
+    DLOG(INFO) << "Page end idx is: " << end_idx;
+
+    for (size_t i = start_idx; i < end_idx; ++i) {
+      RankedItem* ritem_proto = ranking_proto->add_rlist();
+      uint32_t sort_idx = sort_idxs_ptr[i];
+      ritem_proto->set_path(base_server_->dset_path(sort_idx));
+      ritem_proto->set_score(scores_ptr[sort_idx]);
+    }
+
+
   }
 
   void ZmqServer::monitor_add_trs_images_() {

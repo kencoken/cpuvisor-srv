@@ -6,7 +6,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include "server/util/io.h"
-//#include "classification/svm/liblinear.h"
+#include "server/util/feat_util.h"
 
 namespace cpuvisor {
 
@@ -138,8 +138,8 @@ namespace cpuvisor {
       throw CannotReturnRankingError("Cannot retrieve ranked list directly unless block = true");
     }
 
-    train_(id, block);
-    rank_(id, block);
+    train(id, block);
+    rank(id, block);
 
     if (ranking) {
       CHECK_EQ(block, true);
@@ -165,11 +165,13 @@ namespace cpuvisor {
   }
 
   Ranking BaseServer::getRanking(const std::string& id) {
+    boost::shared_ptr<QueryIfo> query_ifo = getQueryIfo_(id);
+
     if (query_ifo->state != QS_RANKED) {
       throw WrongQueryStatusError("Cannot test unles state = QS_TRAINED");
     }
 
-    CHECK_NE(query_ifo->data.ranking.scores.empty());
+    CHECK(!query_ifo->data.ranking.scores.empty());
 
     return query_ifo->data.ranking;
   }
@@ -201,19 +203,8 @@ namespace cpuvisor {
     query_ifo->state = QS_TRAINING;
     notifier_->post_state_change_(id, query_ifo->state);
 
-    cv::Mat feats;
-    cv::vconcat(query_ifo->data.pos_feats, neg_feats_, feats);
-
-    std::vector<std::vector<size_t> > labels(1);
-    labels[0].resize(query_ifo->data.pos_feats.rows);
-    for (size_t i = 0; i < labels.size(); ++i) {
-      labels[0] = i;
-    }
-
-    featpipe::Liblinear svm;
-    svm.train((float*)feats.data, feats.cols, feats.rows, labels);
-    float* w_ptr = svm.get_w();
-    query_ifo->data.model = cv::Mat(feats.cols, 1, CV_32F, w_ptr);
+    query_ifo->data.model =
+      cpuvisor::trainLinearSvm(query_ifo->data.pos_feats, neg_feats_);
 
     query_ifo->state = QS_TRAINED;
     notifier_->post_state_change_(id, query_ifo->state);
@@ -230,25 +221,10 @@ namespace cpuvisor {
     query_ifo->state = QS_RANKING;
     notifier_->post_state_change_(id, query_ifo->state);
 
-    cv::Mat& model = query_ifo->data.model;
-    cv::Mat& scores = query_ifo->data.ranking.scores;
-    cv::Mat& sortIdxs = query_ifo->data.ranking.sort_idxs;
-
-    scores = dset_feats_*model;
-
-    size_t dset_sz = scores.rows;
-    CHECK_EQ(scores.cols, 1);
-    CHECK_EQ(dset_sz, dset_feats_.rows);
-
-    cv::sortIdx(scores, sortIdxs,
-                CV_SORT_EVERY_ROW + CV_SORT_DESCENDING);
-
-    // std::vector<Ritem>& rlist = ;
-    // rlist.resize(dset_sz);
-    // for (size_t i = 0; i < dset_sz; ++i) {
-    //   rlist[i].path = dset_paths_[sortedIdxs[i]];
-    //   rlist[i].score = scores[sortedIdxs[i]];
-    // }
+    cpuvisor::rankUsingModel(query_ifo->data.model,
+                             dset_feats_,
+                             &query_ifo->data.ranking.scores,
+                             &query_ifo->data.ranking.sort_idxs);
 
     query_ifo->state = QS_RANKED;
     notifier_->post_state_change_(id, query_ifo->state);

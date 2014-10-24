@@ -1,6 +1,16 @@
 # PREPARE LIST OF SOURCES
 # -------------------------------------
 
+set (cpuvisor_testimg_SOURCES
+  cpuvisor_testimg.cc
+  directencode/caffe_encoder.cc
+  directencode/caffe_encoder_utils.cc
+  directencode/augmentation_helper.cc
+  classification/svm/liblinear.cc
+  server/util/io.cc
+  server/util/preproc.cc
+  server/util/feat_util.cc)
+
 set (cpuvisor_netlib_SOURCES
   cpuvisor_netlib.cc)
 
@@ -29,6 +39,15 @@ set (cpuvisor_service_SOURCES
 
 # PREPARE LIST OF LIBRARIES
 # -------------------------------------
+
+set (cpuvisor_testimg_LIBRARIES
+  ${Boost_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  ${Liblinear_LIBRARIES}
+  ${Caffe_LIBRARIES}
+  ${GLOG_LIBRARIES}
+  ${PROTOBUF_LIBRARIES}
+  protodefs)
 
 set (cpuvisor_netlib_LIBRARIES
   ${Boost_LIBRARIES}
@@ -60,6 +79,7 @@ set (cpuvisor_service_LIBRARIES
 # COMPILE TARGETS
 # -------------------------------------
 
+add_executable(cpuvisor_testimg ${cpuvisor_testimg_SOURCES})
 add_executable(cpuvisor_netlib ${cpuvisor_netlib_SOURCES})
 add_executable(cpuvisor_preproc ${cpuvisor_preproc_SOURCES})
 add_executable(cpuvisor_service ${cpuvisor_service_SOURCES})
@@ -67,6 +87,7 @@ add_executable(cpuvisor_service ${cpuvisor_service_SOURCES})
 # LINK LIBRARIES
 # -------------------------------------
 
+target_link_libraries(cpuvisor_testimg ${cpuvisor_testimg_LIBRARIES})
 target_link_libraries(cpuvisor_netlib ${cpuvisor_netlib_LIBRARIES})
 target_link_libraries(cpuvisor_preproc ${cpuvisor_preproc_LIBRARIES})
 target_link_libraries(cpuvisor_service ${cpuvisor_service_LIBRARIES})
@@ -75,6 +96,7 @@ target_link_libraries(cpuvisor_service ${cpuvisor_service_LIBRARIES})
 # -------------------------------------
 
 install(TARGETS
+  cpuvisor_testimg
   cpuvisor_netlib
   cpuvisor_preproc
   cpuvisor_service

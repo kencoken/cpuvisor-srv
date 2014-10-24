@@ -40,6 +40,13 @@ namespace cpuvisor {
       feats_proto.add_paths(paths[i]);
     }
 
+    // DEBUG
+    for (size_t i = 0; i < 5; ++i) {
+      DLOG(INFO) << paths[i] << ":";
+      DLOG(INFO) << feats.row(i);
+    }
+    // END DEBUG
+
     writeProtoToBinaryFile(proto_path, feats_proto);
   }
 
@@ -64,6 +71,13 @@ namespace cpuvisor {
     for (size_t i = 0; i < max_size; ++i) {
       paths_ref[i] = feats_proto.paths(i);
     }
+
+    // DEBUG
+    for (size_t i = 0; i < 5; ++i) {
+      DLOG(INFO) << (*paths)[i] << ":";
+      DLOG(INFO) << feats->row(i);
+    }
+    // END DEBUG
 
     return success;
   }

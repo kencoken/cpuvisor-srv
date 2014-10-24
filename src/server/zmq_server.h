@@ -32,6 +32,9 @@ namespace cpuvisor {
     virtual void serve_();
     virtual RPCRep dispatch_(RPCReq rpc_req);
 
+    virtual void getRankingPage_(const Ranking& ranking,
+                                 const RPCReq& rpc_req, RPCRep* rpc_rep);
+
     virtual void monitor_add_trs_images_();
     virtual void monitor_add_trs_complete_();
 

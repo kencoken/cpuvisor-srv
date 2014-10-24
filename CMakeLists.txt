@@ -79,4 +79,4 @@ endif ()
 # -------------------------------------
 add_subdirectory(src/proto proto)
 add_subdirectory(src bin)
-#add_subdirectory(src/test bin/test)
+add_subdirectory(src/test bin/test)
