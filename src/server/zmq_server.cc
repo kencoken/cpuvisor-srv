@@ -1,7 +1,10 @@
 #include "zmq_server.h"
 
+#include <cmath>
+#include <algorithm>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <google/protobuf/text_format.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -122,6 +125,40 @@ namespace cpuvisor {
       } else if (req_str == "rank") {
 
         base_server_->rank(id);
+
+      } else if (req_str == "get_ranking") {
+
+        Ranking ranking = base_server_->getRanking(id);
+        uint_32t page_sz = config_.server_config().page_size();
+
+        RankedList* ranking_proto = rpc_rep.mutable_ranking();
+        // extract n-th page
+        uint32_t page_num = rpc_req.retrieve_page();
+
+        size_t dset_sz = ranking.scores.rows;
+
+        uint_32t page_count = std::ceil(static_cast<float>(dset_sz) /
+                                        static_cast<float>(page_sz));
+        if (page_num > page_count) {
+          throw std::range_error("Tried to retrieve page outside of valid range");
+        }
+        ranking_proto->set_page_count(page_count);
+        ranking_proto->set_page(page_num);
+
+        size_t start_idx = page_sz*(page_num - 1);
+        size_t end_idx = std::max(page_sz*page_num, dset_sz);
+
+        for (size_t i = start_idx; i < end_idx; ++i) {
+          RankedItem* ritem_proto = ranking_proto->add_rlist();
+          size_t sort_idx = ranking.sort_idxs[i];
+          ritem_proto->set_path(base_server_->dset_path(sort_idx));
+          ritem_proto->set_score(ranking.scores[sort_idx]);
+        }
+
+      } else if (req_str == "train_rank_get_ranking") {
+
+        // TODO : blocking version of all three above functions which
+        // returns ranking directly
 
       } else if (req_str == "free_query") {
 

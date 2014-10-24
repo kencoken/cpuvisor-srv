@@ -13,10 +13,14 @@
 
 namespace cpuvisor {
 
-  struct Ritem {
-    std::string path;
-    float score;
+  struct Ranking {
+    cv::Mat scores;
+    cv::Mat sort_idxs;
   };
+  // struct Ritem {
+  //   std::string path;
+  //   float score;
+  // };
 
   enum QueryState {QS_DATACOLL, QS_DATACOLL_COMPLETE,
                    QS_TRAINING, QS_TRAINED,
@@ -25,7 +29,7 @@ namespace cpuvisor {
   struct QueryData {
     cv::Mat pos_feats;
     cv::Mat model;
-    std::vector<Ritem> rlist;
+    Ranking ranking;
   };
 
   struct QueryIfo {

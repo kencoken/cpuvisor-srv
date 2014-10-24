@@ -15,8 +15,7 @@ namespace featpipe {
 
   class AlreadyHasSubscriberError: public std::runtime_error {
   public:
-    AlreadyHasSubscriberError(std::string const& msg):
-      std::runtime_error(msg) {}
+    AlreadyHasSubscriberError(std::string const& msg): std::runtime_error(msg) { }
   };
 
   template<typename Data>

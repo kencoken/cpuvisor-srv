@@ -16,12 +16,15 @@ message RPCReq {
   optional string tag = 3;
 
   optional TrainImageUrls train_image_urls = 10;
+  optional uint32 retrieve_page = 11 [default = 1];
 }
 
 message RPCRep {
   required bool success = 1 [default = true];
   optional string id = 2;
   optional string err_msg = 16;
+
+  optional RankedList ranking = 10;
 }
 
 message TrainImageUrls {

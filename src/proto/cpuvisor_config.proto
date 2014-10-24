@@ -34,4 +34,6 @@ message ServerConfig {
   optional string notify_endpoint = 5;
   optional string image_cache_path = 10;
   optional string rlist_cache_path = 11;
+
+  optional uint16 page_size = 16 [default = 100];
 }

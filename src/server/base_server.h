@@ -23,6 +23,20 @@
 
 namespace cpuvisor {
 
+  // exceptions --------------------------
+
+  class WrongQueryStatusError: public std::runtime_error {
+  public:
+    WrongQueryStatusError(std::string const& msg): std::runtime_error(msg) { }
+  };
+
+  class CannotReturnRankingError: public std::runtime_error {
+  public:
+    CannotReturnRankingError(std::string const& msg): std::runtime_error(msg) { }
+  };
+
+  // callback functor specializations ----
+
   class BaseServerExtraData : public ExtraDataWrapper {
   public:
     boost::shared_ptr<QueryIfo> query_ifo;
@@ -51,6 +65,8 @@ namespace cpuvisor {
     boost::shared_ptr<StatusNotifier> notifier_;
   };
 
+  // class definition --------------------
+
   class BaseServer : boost::noncopyable {
 
   public:
@@ -58,16 +74,26 @@ namespace cpuvisor {
 
     virtual std::string startQuery(const std::string& tag = std::string());
     virtual void addTrs(const std::string& id, const std::vector<std::string>& urls);
-    virtual void train(const std::string& id);
-    virtual void rank(const std::string& id);
+    virtual void trainAndRank(const std::string& id, const bool block = false,
+                              Ranking* ranking = 0);
+    virtual void train(const std::string& id, const bool block = false);
+    virtual void rank(const std::string& id, const bool block = false);
+    virtual Ranking getRanking(const std::string& id);
     virtual void freeQuery(const std::string& id);
 
     inline boost::shared_ptr<StatusNotifier> notifier() {
       return notifier_;
     }
+    inline std::string dset_path(const size_t idx) const {
+      CHECK_LT(idx, dset_paths_.size());
+      return dset_paths_[idx];
+    }
 
   protected:
     virtual boost::shared_ptr<QueryIfo> getQueryIfo_(const std::string& id);
+
+    virtual void train_(const std::string& id);
+    virtual void rank_(const std::string& id);
 
     std::map<std::string, boost::shared_ptr<QueryIfo> > queries_;
 

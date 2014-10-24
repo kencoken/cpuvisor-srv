@@ -53,8 +53,9 @@ namespace cpuvisor {
 
   void BaseServerCallback::operator()() {
     LOG(INFO) << "Setting status of query to QS_DATACOLL_COMPLETE";
-    CHECK_EQ(query_ifo_->state, QS_DATACOLL);
-    query_ifo_->state = QS_DATACOLL_COMPLETE;
+    if (query_ifo_->state == QS_DATACOLL) {
+      query_ifo_->state = QS_DATACOLL_COMPLETE;
+    }
 
     notifier_->post_all_images_processed_(query_ifo_->id);
     notifier_->post_state_change_(query_ifo_->id, query_ifo_->state);
@@ -131,39 +132,46 @@ namespace cpuvisor {
 
   }
 
-  void BaseServer::train(const std::string& id) {
-    boost::shared_ptr<QueryIfo> query_ifo = getQueryIfo_(id);
-
-    LOG(INFO) << "Entered train in correct state";
-    query_ifo->state = QS_TRAINING;
-    notifier_->post_state_change_(id, query_ifo->state);
-
-    cv::Mat feats;
-    cv::vconcat(query_ifo->data.pos_feats, neg_feats_, feats);
-
-    // featpipe::Liblinear svm;
-    // svm.train(float* input, feat_dim, n, vector<vector<size_t> > labels);
-    // float* = svm.get_w();
-
-    query_ifo->state = QS_TRAINED;
-    notifier_->post_state_change_(id, query_ifo->state);
-  }
-
-  void BaseServer::rank(const std::string& id) {
-    boost::shared_ptr<QueryIfo> query_ifo = getQueryIfo_(id);
-
-    if (query_ifo->state != QS_TRAINED) {
-      // raise an exception/communicate with client here instead of crashing out
-      CHECK_EQ(query_ifo->state, QS_TRAINED);
-      notifier_->post_state_change_(id, query_ifo->state);
+  void BaseServer::trainAndRank(const std::string& id, const bool block,
+                                Ranking* ranking) {
+    if ((!block) && (ranking)) {
+      throw CannotReturnRankingError("Cannot retrieve ranked list directly unless block = true");
     }
 
-    LOG(INFO) << "Entered rank in correct state";
-    query_ifo->state = QS_RANKING;
-    notifier_->post_state_change_(id, query_ifo->state);
+    train_(id, block);
+    rank_(id, block);
 
-    query_ifo->state = QS_RANKED;
-    notifier_->post_state_change_(id, query_ifo->state);
+    if (ranking) {
+      CHECK_EQ(block, true);
+
+      (*ranking) = getRanking(id);
+    }
+  }
+
+  void BaseServer::train(const std::string& id, const bool block) {
+    if (block) {
+      train_(id);
+    } else {
+      boost::thread proc_thread(&BaseServer::train_, this, id);
+    }
+  }
+
+  void BaseServer::rank(const std::string& id, const bool block) {
+    if (block) {
+      rank_(id);
+    } else {
+      boost::thread proc_thread(&BaseServer::rank_, this, id);
+    }
+  }
+
+  Ranking BaseServer::getRanking(const std::string& id) {
+    if (query_ifo->state != QS_RANKED) {
+      throw WrongQueryStatusError("Cannot test unles state = QS_TRAINED");
+    }
+
+    CHECK_NE(query_ifo->data.ranking.scores.empty());
+
+    return query_ifo->data.ranking;
   }
 
   void BaseServer::freeQuery(const std::string& id) {
@@ -180,6 +188,70 @@ namespace cpuvisor {
     CHECK(query_iter != queries_.end());
 
     return query_iter->second;
+  }
+
+  void BaseServer::train_(const std::string& id) {
+    boost::shared_ptr<QueryIfo> query_ifo = getQueryIfo_(id);
+
+    if ((query_ifo->state != QS_DATACOLL) && (query_ifo->state != QS_DATACOLL_COMPLETE)) {
+      throw WrongQueryStatusError("Cannot train unles state = QS_DATACOLL or QS_DATACOLL_COMPLETE");
+    }
+
+    LOG(INFO) << "Entered train in correct state";
+    query_ifo->state = QS_TRAINING;
+    notifier_->post_state_change_(id, query_ifo->state);
+
+    cv::Mat feats;
+    cv::vconcat(query_ifo->data.pos_feats, neg_feats_, feats);
+
+    std::vector<std::vector<size_t> > labels(1);
+    labels[0].resize(query_ifo->data.pos_feats.rows);
+    for (size_t i = 0; i < labels.size(); ++i) {
+      labels[0] = i;
+    }
+
+    featpipe::Liblinear svm;
+    svm.train((float*)feats.data, feats.cols, feats.rows, labels);
+    float* w_ptr = svm.get_w();
+    query_ifo->data.model = cv::Mat(feats.cols, 1, CV_32F, w_ptr);
+
+    query_ifo->state = QS_TRAINED;
+    notifier_->post_state_change_(id, query_ifo->state);
+  }
+
+  void BaseServer::rank_(const std::string& id) {
+    boost::shared_ptr<QueryIfo> query_ifo = getQueryIfo_(id);
+
+    if (query_ifo->state != QS_TRAINED) {
+      throw WrongQueryStatusError("Cannot rank unles state = QS_TRAINED");
+    }
+
+    LOG(INFO) << "Entered rank in correct state";
+    query_ifo->state = QS_RANKING;
+    notifier_->post_state_change_(id, query_ifo->state);
+
+    cv::Mat& model = query_ifo->data.model;
+    cv::Mat& scores = query_ifo->data.ranking.scores;
+    cv::Mat& sortIdxs = query_ifo->data.ranking.sort_idxs;
+
+    scores = dset_feats_*model;
+
+    size_t dset_sz = scores.rows;
+    CHECK_EQ(scores.cols, 1);
+    CHECK_EQ(dset_sz, dset_feats_.rows);
+
+    cv::sortIdx(scores, sortIdxs,
+                CV_SORT_EVERY_ROW + CV_SORT_DESCENDING);
+
+    // std::vector<Ritem>& rlist = ;
+    // rlist.resize(dset_sz);
+    // for (size_t i = 0; i < dset_sz; ++i) {
+    //   rlist[i].path = dset_paths_[sortedIdxs[i]];
+    //   rlist[i].score = scores[sortedIdxs[i]];
+    // }
+
+    query_ifo->state = QS_RANKED;
+    notifier_->post_state_change_(id, query_ifo->state);
   }
 
 }

@@ -9,7 +9,10 @@ set (cpuvisor_preproc_SOURCES
   directencode/caffe_encoder.cc
   directencode/caffe_encoder_utils.cc
   directencode/augmentation_helper.cc
-  server/util/io.cc)
+  classification/svm/liblinear.cc
+  server/util/io.cc
+  server/util/preproc.cc
+  server/util/feat_util.cc)
 
 set (cpuvisor_service_SOURCES
   cpuvisor_service.cc
@@ -18,9 +21,11 @@ set (cpuvisor_service_SOURCES
   directencode/caffe_encoder.cc
   directencode/caffe_encoder_utils.cc
   directencode/augmentation_helper.cc
+  classification/svm/liblinear.cc
   server/util/image_downloader.cc
   server/util/status_notifier.cc
-  server/util/io.cc)
+  server/util/io.cc
+  server/util/feat_util.cc)
 
 # PREPARE LIST OF LIBRARIES
 # -------------------------------------
@@ -33,6 +38,7 @@ set (cpuvisor_netlib_LIBRARIES
 set (cpuvisor_preproc_LIBRARIES
   ${Boost_LIBRARIES}
   ${OpenCV_LIBRARIES}
+  ${Liblinear_LIBRARIES}
   ${Caffe_LIBRARIES}
   ${GLOG_LIBRARIES}
   ${GFLAGS_LIBRARIES}
