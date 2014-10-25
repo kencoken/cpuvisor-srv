@@ -47,6 +47,84 @@ TEST_CASE("feats/computeRepeatability",
   REQUIRE(cv::countNonZero(feat1 != feat3) == 0);
 }
 
+TEST_CASE("feats/ensureCorrectOutput",
+          "Ensure identical output to matcafffe when using the ZF 128 network") {
+  featpipe::CaffeEncoder encoder = setupCaffe();
+
+  std::vector<float> input_im;
+  {
+    std::ifstream input_im_fs("input_im.txt");
+    size_t excess = 0;
+    while(!input_im_fs.eof()){
+      float input_pix;
+      input_im_fs >> input_pix;
+      if (input_im.size() == 150528) {
+        excess++;
+      } else {
+        input_im.push_back(input_pix);
+      }
+    }
+    CHECK_EQ(input_im.size(), 150528);
+    CHECK_LE(excess, 1);
+  }
+
+  std::vector<float> input_mean;
+  {
+    std::ifstream input_mean_fs("input_mean.txt");
+    size_t excess = 0;
+    while(!input_mean_fs.eof()){
+      float input_pix;
+      input_mean_fs >> input_pix;
+      if (input_mean.size() == 150528) {
+        excess++;
+      } else {
+        input_mean.push_back(input_pix);
+      }
+    }
+    CHECK_EQ(input_mean.size(), 150528);
+    CHECK_LE(excess, 1);
+  }
+
+  std::vector<float> output_feat;
+  {
+    std::ifstream output_feat_fs("output_feat.txt");
+    size_t excess = 0;
+    while(!output_feat_fs.eof()){
+      float input_pix;
+      output_feat_fs >> input_pix;
+      if (output_feat.size() == 128) {
+        excess++;
+      } else {
+        output_feat.push_back(input_pix);
+      }
+    }
+    CHECK_EQ(output_feat.size(), 128);
+    CHECK_LE(excess, 1);
+  }
+
+  cv::Mat im = cv::Mat::ones(224,224,CV_32FC3);
+  CHECK_EQ(im.rows, 224);
+  CHECK_EQ(im.cols, 224);
+  CHECK_EQ(im.channels(), 3);
+
+  float* im_ptr = (float*)im.data;
+  for (size_t i = 0; i < 150528; ++i) {
+    im_ptr[i] = input_im[i];
+  }
+
+  std::vector<cv::Mat> ims;
+  ims.push_back(im);
+  cv::Mat feat = encoder.compute(ims);
+  CHECK_EQ(feat.type(), CV_32F);
+  float* feat_ptr = (float*)feat.data;
+
+  for (size_t i = 0; i < 128; ++i) {
+    REQUIRE(feat_ptr[i] == Approx(output_feat[i]));
+  }
+
+}
+
+
 TEST_CASE("feats/saveLoad",
           "Test that feats written to and loaded from protobuf are the same") {
   featpipe::CaffeEncoder encoder = setupCaffe();
@@ -68,10 +146,8 @@ TEST_CASE("feats/saveLoad",
     std::vector<cv::Mat> ims;
     ims.push_back(im);
     cv::Mat feat = encoder.compute(ims);
-    DLOG(INFO) << "HELLO: (" << feat.cols << ")" << feat;
     feat.copyTo(feats.row(i));
     //feats.row(i) = encoder.compute(ims); <-- THIS DOESN'T WORK!!!!!
-    DLOG(INFO) << "Goodbye: (" << feats.cols << ")" << feats.row(i);
   }
   for (size_t i = 1; i < paths.size(); ++i) {
     // check all features are the same
