@@ -51,7 +51,7 @@ struct body_handler {
         id = "/Users/ken/Desktop/" + id + ".jpg";
 
         std::ofstream out_file;
-        out_file.open(id, std::ios::out | std::ios::binary);
+        out_file.open(id.c_str(), std::ios::out | std::ios::binary);
         out_file << body;
         std::cout << "Wrote file!" << std::endl;
       }

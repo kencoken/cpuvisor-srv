@@ -46,13 +46,14 @@ namespace featpipe {
     }
 
     bool empty() const {
-      concurrent_queue_.empty();
+      return concurrent_queue_.empty();
     }
 
     bool tryPop(Data& popped_value) {
       incSubCount_();
-      concurrent_queue_.tryPop(popped_value);
+      bool retval = concurrent_queue_.tryPop(popped_value);
       decSubCount_();
+      return retval;
     }
 
     void waitAndPop(Data& popped_value) {

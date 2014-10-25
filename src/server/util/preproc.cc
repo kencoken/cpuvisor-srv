@@ -9,7 +9,7 @@ namespace cpuvisor {
                     const size_t limit) {
     std::vector<std::string> paths;
 
-    std::ifstream imfiles(text_path);
+    std::ifstream imfiles(text_path.c_str());
 
     // std::string base_path;
     // std::getline(imfiles, base_path);

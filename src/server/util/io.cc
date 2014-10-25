@@ -121,7 +121,7 @@ namespace cpuvisor {
   }
 
   void writeProtoToBinaryFile(const std::string& proto_path, const Message& proto) {
-    std::fstream output(proto_path, std::ios::out | std::ios::trunc | std::ios::binary);
+    std::fstream output(proto_path.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
     CHECK(proto.SerializeToOstream(&output));
   }
 }

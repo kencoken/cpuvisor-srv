@@ -139,7 +139,7 @@ namespace cpuvisor {
         if (error == boost::asio::error::eof) {
           // write image to file
           std::ofstream out_file;
-          out_file.open(imfile_ifo_.fname, std::ios::out | std::ios::binary);
+          out_file.open(imfile_ifo_.fname.c_str(), std::ios::out | std::ios::binary);
           out_file << body;
           DLOG(INFO) << "Wrote image to file: " << imfile_ifo_.fname;
 
