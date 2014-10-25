@@ -53,6 +53,7 @@ TEST_CASE("feats/ensureCorrectOutput",
 
   std::vector<float> input_im;
   {
+    DLOG(INFO) << "Loading Matlab input image...";
     std::ifstream input_im_fs("input_im.txt");
     size_t excess = 0;
     while(!input_im_fs.eof()){
@@ -68,25 +69,27 @@ TEST_CASE("feats/ensureCorrectOutput",
     CHECK_LE(excess, 1);
   }
 
-  std::vector<float> input_mean;
-  {
-    std::ifstream input_mean_fs("input_mean.txt");
-    size_t excess = 0;
-    while(!input_mean_fs.eof()){
-      float input_pix;
-      input_mean_fs >> input_pix;
-      if (input_mean.size() == 150528) {
-        excess++;
-      } else {
-        input_mean.push_back(input_pix);
-      }
-    }
-    CHECK_EQ(input_mean.size(), 150528);
-    CHECK_LE(excess, 1);
-  }
+  // std::vector<float> input_mean;
+  // {
+  //   DLOG(INFO) << "Loading Matlab input mean...";
+  //   std::ifstream input_mean_fs("input_mean.txt");
+  //   size_t excess = 0;
+  //   while(!input_mean_fs.eof()){
+  //     float input_pix;
+  //     input_mean_fs >> input_pix;
+  //     if (input_mean.size() == 150528) {
+  //       excess++;
+  //     } else {
+  //       input_mean.push_back(input_pix);
+  //     }
+  //   }
+  //   CHECK_EQ(input_mean.size(), 150528);
+  //   CHECK_LE(excess, 1);
+  // }
 
   std::vector<float> output_feat;
   {
+    DLOG(INFO) << "Loading Matlab output feat...";
     std::ifstream output_feat_fs("output_feat.txt");
     size_t excess = 0;
     while(!output_feat_fs.eof()){
@@ -107,11 +110,13 @@ TEST_CASE("feats/ensureCorrectOutput",
   CHECK_EQ(im.cols, 224);
   CHECK_EQ(im.channels(), 3);
 
+  DLOG(INFO) << "Copying to cv::Mat...";
   float* im_ptr = (float*)im.data;
   for (size_t i = 0; i < 150528; ++i) {
     im_ptr[i] = input_im[i];
   }
 
+  DLOG(INFO) << "Computing feature...";
   std::vector<cv::Mat> ims;
   ims.push_back(im);
   cv::Mat feat = encoder.compute(ims);
