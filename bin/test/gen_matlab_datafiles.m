@@ -15,14 +15,14 @@ centre_crop = ...
 
 centre_crop_flat = centre_crop(:);
 
-fid = fopen('input_im.txt');
+fid = fopen('input_im.txt','w');
 for i = 1:length(centre_crop_flat)
     fprintf(fid,'%f\n', centre_crop_flat(i));
 end
 
 norm_scores = scores / norm(scores);
 
-fid = fopen('output_feat.txt');
+fid = fopen('output_feat.txt','w');
 for i = 1:length(norm_scores)
     fprintf(fid,'%f\n', norm_scores(i));
 end

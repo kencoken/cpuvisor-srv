@@ -124,7 +124,7 @@ TEST_CASE("feats/ensureCorrectOutput",
   float* feat_ptr = (float*)feat.data;
 
   for (size_t i = 0; i < 128; ++i) {
-    REQUIRE(feat_ptr[i] == Approx(output_feat[i]));
+    CHECK_FALSE(feat_ptr[i] != Approx(output_feat[i]));
   }
 
 }
