@@ -34,11 +34,15 @@ Now the backend service can be run using:
 
     $ ./cpuvisor_service
 
-An example of how to use the service is provided by the `./test_client_proto.py`
+An example of how to use the service is provided by the `./test_client.py`
 script. To use it, the `imsearch-tools` submodule is required. Get it by issuing:
 
     $ git submodule init
     $ git submodule update
+
+Once the backend service is up and running, you can then test it using:
+
+    $ python test_client.py
 
 Dependencies
 ------------

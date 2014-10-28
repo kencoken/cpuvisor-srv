@@ -25,14 +25,19 @@ namespace cpuvisor {
 
   // exceptions --------------------------
 
-  class WrongQueryStatusError: public std::runtime_error {
+  class InvalidRequestError: public std::runtime_error {
   public:
-    WrongQueryStatusError(std::string const& msg): std::runtime_error(msg) { }
+    InvalidRequestError(std::string const& msg): std::runtime_error(msg) { }
   };
 
-  class CannotReturnRankingError: public std::runtime_error {
+  class WrongQueryStatusError: public InvalidRequestError {
   public:
-    CannotReturnRankingError(std::string const& msg): std::runtime_error(msg) { }
+    WrongQueryStatusError(std::string const& msg): InvalidRequestError(msg) { }
+  };
+
+  class CannotReturnRankingError: public InvalidRequestError {
+  public:
+    CannotReturnRankingError(std::string const& msg): InvalidRequestError(msg) { }
   };
 
   // callback functor specializations ----
@@ -73,6 +78,7 @@ namespace cpuvisor {
     BaseServer(const cpuvisor::Config& config);
 
     virtual std::string startQuery(const std::string& tag = std::string());
+    virtual void setTag(const std::string& id, const std::string& tag);
     virtual void addTrs(const std::string& id, const std::vector<std::string>& urls);
     virtual void trainAndRank(const std::string& id, const bool block = false,
                               Ranking* ranking = 0);

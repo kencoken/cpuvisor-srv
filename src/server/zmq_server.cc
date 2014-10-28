@@ -94,68 +94,84 @@ namespace cpuvisor {
 
     LOG(INFO) << "Dispatch to " << req_str;
 
-    if (req_str == "start_query") {
+    try {
 
-      std::string tag_str = rpc_req.tag();
-      CHECK(!tag_str.empty());
-      id = base_server_->startQuery(tag_str);
-      LOG(INFO) << "Generated Query ID: " << id;
-      rpc_rep.set_id(id);
+      if (req_str == "start_query") {
 
-    } else {
-
-      CHECK(!id.empty());
-
-      if (req_str == "add_trs") {
-
-        const TrainImageUrls& urls_proto = rpc_req.train_image_urls();
-        const int url_count = urls_proto.urls_size();
-        CHECK(url_count > 0);
-
-        std::vector<std::string> urls;
-        for (int i = 0; i < url_count; ++i) {
-          urls.push_back(urls_proto.urls(i));
-        }
-
-        base_server_->addTrs(id, urls);
-
-      } else if (req_str == "train") {
-
-        base_server_->train(id);
-
-      } else if (req_str == "rank") {
-
-        base_server_->rank(id);
-
-      } else if (req_str == "get_ranking") {
-
-        Ranking ranking = base_server_->getRanking(id);
-
-        getRankingPage_(ranking, rpc_req, &rpc_rep);
-
-      } else if (req_str == "train_rank_get_ranking") {
-
-        // blocking version of all three above functions which
-        // returns ranking directly
-        Ranking ranking;
-        base_server_->trainAndRank(id, true, &ranking);
-
-        getRankingPage_(ranking, rpc_req, &rpc_rep);
-
-      } else if (req_str == "free_query") {
-
-        base_server_->freeQuery(id);
+        std::string tag_str = rpc_req.tag();
+        id = base_server_->startQuery(tag_str);
+        LOG(INFO) << "Generated Query ID: " << id;
+        rpc_rep.set_id(id);
 
       } else {
 
-        rpc_rep.set_success(false);
-        std::stringstream sstrm;
-        sstrm << "Unrecognised function: " << req_str;
-        rpc_rep.set_err_msg(sstrm.str());
+        if (req_str == "set_tag") {
 
-        LOG(ERROR) << sstrm.str() << " ignoring...";
+          // must set tag either in call to start_query or using this
+          // function before calling 'add_trs'
+          std::string tag_str = rpc_req.tag();
+          base_server_->setTag(id, tag_str);
+          LOG(INFO) << "Set tag of query: " << id << " to: " << tag_str;
 
+        } else if (req_str == "add_trs") {
+
+          const TrainImageUrls& urls_proto = rpc_req.train_image_urls();
+          const int url_count = urls_proto.urls_size();
+
+          std::vector<std::string> urls;
+          for (int i = 0; i < url_count; ++i) {
+            urls.push_back(urls_proto.urls(i));
+          }
+
+          base_server_->addTrs(id, urls);
+
+        } else if (req_str == "train") {
+
+          base_server_->train(id);
+
+        } else if (req_str == "rank") {
+
+          base_server_->rank(id);
+
+        } else if (req_str == "get_ranking") {
+
+          Ranking ranking = base_server_->getRanking(id);
+
+          getRankingPage_(ranking, rpc_req, &rpc_rep);
+
+        } else if (req_str == "train_rank_get_ranking") {
+
+          // blocking version of all three above functions which
+          // returns ranking directly
+          Ranking ranking;
+          base_server_->trainAndRank(id, true, &ranking);
+
+          getRankingPage_(ranking, rpc_req, &rpc_rep);
+
+        } else if (req_str == "free_query") {
+
+          base_server_->freeQuery(id);
+
+        } else {
+
+          rpc_rep.set_success(false);
+          std::stringstream sstrm;
+          sstrm << "Unrecognised function: " << req_str;
+          rpc_rep.set_err_msg(sstrm.str());
+
+          LOG(ERROR) << sstrm.str() << " ignoring...";
+
+        }
       }
+    } catch (InvalidRequestError& e) {
+
+      rpc_rep.set_success(false);
+      std::stringstream sstrm;
+      sstrm << "Request was invalid: " << e.what();
+      rpc_rep.set_err_msg(sstrm.str());
+
+      LOG(ERROR) << "Request error occurred: " << sstrm.str();
+
     }
 
     // std::string rpc_rep_str;
@@ -181,6 +197,11 @@ namespace cpuvisor {
 
     uint32_t page_count = std::ceil(static_cast<float>(dset_sz) /
                                     static_cast<float>(page_sz));
+
+    DLOG(INFO) << "Page size is: " << page_sz;
+    DLOG(INFO) << "Page num is: " << page_num;
+    DLOG(INFO) << "Page count is: " << page_count;
+
     if (page_num > page_count) {
       throw std::range_error("Tried to retrieve page outside of valid range");
     }
@@ -188,7 +209,7 @@ namespace cpuvisor {
     ranking_proto->set_page(page_num);
 
     size_t start_idx = page_sz*(page_num - 1);
-    size_t end_idx = std::max(page_sz*page_num, dset_sz);
+    size_t end_idx = std::min(page_sz*page_num, dset_sz);
 
     CHECK_EQ(ranking.sort_idxs.type(), CV_32S);
     CHECK_EQ(ranking.scores.type(), CV_32F);

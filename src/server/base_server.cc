@@ -111,7 +111,11 @@ namespace cpuvisor {
       id = boost::lexical_cast<std::string>(uuid_gen());
     } while (queries_.find(id) != queries_.end());
 
-    DLOG(INFO) << "Starting query with tag: " << tag;
+    if (!tag.empty()) {
+      DLOG(INFO) << "Starting query with tag: " << tag << " (" << id << ")";
+    } else {
+      DLOG(INFO) << "Starting query (" << id << ")";
+    }
     boost::shared_ptr<QueryIfo> query_ifo(new QueryIfo(id, tag));
     queries_[id] = query_ifo;
 
@@ -120,11 +124,21 @@ namespace cpuvisor {
     return id;
   }
 
+  void BaseServer::setTag(const std::string& id, const std::string& tag) {
+    boost::shared_ptr<QueryIfo> query_ifo = getQueryIfo_(id);
+
+    query_ifo->tag = tag;
+  }
+
   void BaseServer::addTrs(const std::string& id, const std::vector<std::string>& urls) {
     boost::shared_ptr<QueryIfo> query_ifo = getQueryIfo_(id);
 
+    if (urls.size() == 0) throw InvalidRequestError("No urls specified in urls array");
+    if (query_ifo->tag.empty()) throw InvalidRequestError("Calling addTrs before setting tag");
+
     if (query_ifo->state != QS_DATACOLL) {
       LOG(INFO) << "Skipping adding url(s) for query " << id << " as it has advanced past data collection stage";
+      return;
     }
 
     boost::shared_ptr<BaseServerCallback>
@@ -187,15 +201,20 @@ namespace cpuvisor {
   void BaseServer::freeQuery(const std::string& id) {
     boost::shared_ptr<QueryIfo> query_ifo = getQueryIfo_(id);
 
-    queries_.erase(id);
+    size_t num_erased = queries_.erase(id);
+
+    if (num_erased == 0) throw InvalidRequestError("Tried to free query which does not exist");
   }
 
   // -----------------------------------------------------------------------------
 
   boost::shared_ptr<QueryIfo> BaseServer::getQueryIfo_(const std::string& id) {
+    if (id.empty()) throw InvalidRequestError("No query id specified");
+
     std::map<std::string, boost::shared_ptr<QueryIfo> >::iterator query_iter =
       queries_.find(id);
-    CHECK(query_iter != queries_.end());
+
+    if (query_iter == queries_.end()) throw InvalidRequestError("Could not find query id");
 
     return query_iter->second;
   }

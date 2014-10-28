@@ -40,6 +40,7 @@ namespace cpuvisor {
         ImfileIfo imfile_ifo = prepareForDownload_(urls[i], tag, extra_data, callback);
 
         image_count_[callback_hash] += 1;
+        DLOG(INFO) << "Image count was incremented to: " << image_count_[callback_hash];
 
         // issue request asynchronously
         // (to be handled by download_stream_handler callback)
@@ -145,6 +146,7 @@ namespace cpuvisor {
       } else {
         image_count_[callback_hash] -= 1;
       }
+      DLOG(INFO) << "Image count was decremented to: " << image_count_[callback_hash];
 
       // check to see if associated callback (if any) should be called
       int32_t images_remaining = image_count_[callback_hash];
