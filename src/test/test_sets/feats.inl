@@ -11,13 +11,14 @@
 
 #include "cpuvisor_config.pb.h"
 
+#define CONFIG_FILE "../../config.prototxt"
 #define TEST_FILE "../../test_data/input/000001.jpg"
 #define MLAB_INPUT_IM_PATH "../../test_data/input/mlab_input_im.txt"
 #define MLAB_OUTPUT_FEAT_PATH "../../test_data/input/mlab_output_feat.txt"
 
 featpipe::CaffeEncoder setupCaffe() {
   cpuvisor::Config config;
-  cpuvisor::readProtoFromTextFile("/home/ken/src/modules/cpuvisor-srv/config.prototxt", &config);
+  cpuvisor::readProtoFromTextFile(CONFIG_FILE, &config);
 
   const cpuvisor::CaffeConfig& caffe_config = config.caffe_config();
   return featpipe::CaffeEncoder(caffe_config);

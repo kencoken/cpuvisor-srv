@@ -33,7 +33,7 @@ endif (GIT_FOUND)
 
 # FIND LIBRARIES
 # -------------------------------------
-set(Boost_NO_SYSTEM_PATHS TRUE)
+#set(Boost_NO_SYSTEM_PATHS TRUE)
 find_package(Boost 1.53.0 REQUIRED COMPONENTS thread system filesystem)
 find_package(Liblinear REQUIRED)
 find_package(OpenCV REQUIRED)
