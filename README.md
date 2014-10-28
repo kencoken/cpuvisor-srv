@@ -1,5 +1,5 @@
-CPUVISOR-SRV backend service for VISOR (CPU)
-============================================
+CPUVISOR-SRV backend service for Visor (CPU version)
+====================================================
 
 Author: Ken Chatfield, University of Oxford (ken@robots.ox.ac.uk)
 
@@ -26,7 +26,8 @@ Usage
 
  1. Edit `./config.prototxt` with Caffe model files and dataset base paths
  2. Edit `./dsetpaths.txt` and `./negpaths.txt` with the paths to all dataset and
-    negative training images
+    negative training images (by default the paths in `dsetpaths.txt` contain all
+    images from the PASCAL VOC 2007 dataset)
  3. Run `./cpuvisor_preproc` to precompute all features
 
 Now the backend service can be run using:
@@ -52,5 +53,5 @@ The following packages are required:
  + OpenCV
  + Google Logging (GLOG)
  + Google Flags (GFLAGS)
- + Google Protobuf
- + ZeroMQ
+ + Google Protobuf (C++ and Python libraries)
+ + ZeroMQ (C++ and Python libraries)
