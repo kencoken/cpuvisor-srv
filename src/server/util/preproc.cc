@@ -53,6 +53,12 @@ namespace cpuvisor {
     mat_file.writeVectOfStrs("paths", paths);
     #endif
 
+    // ensure output dir exists
+    fs::path proto_dir_fs = fs::path(proto_path).parent_path();
+    if (!fs::exists(proto_dir_fs)) {
+      fs::create_directories(proto_dir_fs);
+    }
+
     LOG(INFO) << "Writing features to: " << proto_path;
     cpuvisor::writeFeatsToProto(feats, paths, proto_path);
   }

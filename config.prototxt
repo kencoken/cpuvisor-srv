@@ -8,10 +8,10 @@ caffe_config {
 preproc_config: {
   dataset_im_paths: "/home/ken/src/modules/cpuvisor-srv/dsetpaths.txt"
   dataset_im_base_path: "/data/ken/visor/datasets/VOC2007_full"
-  dataset_feats_file: "/home/ken/src/modules/cpuvisor-srv/dsetfeats.binaryproto"
+  dataset_feats_file: "/home/ken/src/modules/cpuvisor-srv/server_data/dsetfeats.binaryproto"
   neg_im_paths: "/home/ken/src/modules/cpuvisor-srv/negpaths.txt"
   neg_im_base_path: "/data/ken/neg_images"
-  neg_feats_file: "/home/ken/src/modules/cpuvisor-srv/negfeats.binaryproto"
+  neg_feats_file: "/home/ken/src/modules/cpuvisor-srv/server_data/negfeats.binaryproto"
 }
 server_config: {
   server_endpoint: "tcp://localhost:5555"
