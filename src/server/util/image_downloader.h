@@ -93,6 +93,7 @@ namespace cpuvisor {
                               boost::shared_ptr<ExtraDataWrapper> extra_data = boost::shared_ptr<ExtraDataWrapper>(),
                               boost::shared_ptr<DownloadCompleteCallback> callback = boost::shared_ptr<DownloadCompleteCallback>());
   protected:
+    virtual bool shouldDownloadUrl_(const std::string& url);
     virtual ImfileIfo prepareForDownload_(const std::string& url,
                                           const std::string& tag,
                                           boost::shared_ptr<ExtraDataWrapper> extra_data,

@@ -5,6 +5,9 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include <boost/filesystem.hpp>
+namespace fs = boost::filesystem;
+
 #include "server/util/io.h"
 #include "server/util/feat_util.h"
 
@@ -23,7 +26,9 @@ namespace cpuvisor {
 
     cv::Mat& feats = query_ifo->data.pos_feats;
 
-    //try {
+    cv::Mat feat;
+
+    try {
       // callback function which computes a caffe encoding for a
       // downloaded image
       cv::Mat im = cv::imread(imfile, CV_LOAD_IMAGE_COLOR);
@@ -31,24 +36,27 @@ namespace cpuvisor {
 
       std::vector<cv::Mat> ims;
       ims.push_back(im);
-      cv::Mat feat = encoder_.compute(ims);
+      feat = encoder_.compute(ims);
 
-      if (!feats.empty()) {
-        CHECK_EQ(feats.cols, feat.cols);
-      }
-
-      DLOG(INFO) << "Pushing with sizes: " << feats.rows << "x" << feats.cols
-                 << " and " << feat.rows << "x" << feat.cols;
-      feats.push_back(feat); // not sure if this is thread safe
-
-      DLOG(INFO) << "Feats size is now: " << feats.rows << "x" << feats.cols;
-
-      // notify!
-      notifier->post_image_processed_(query_ifo->id, imfile);
-
-      //} catch (...) {
+    } catch (featpipe::InvalidImageError& e) {
       // delete image here
-      //}
+      DLOG(INFO) << "Removing invalid image: " << imfile;
+      fs::remove(imfile);
+      return;
+    }
+
+    if (!feats.empty()) {
+      CHECK_EQ(feats.cols, feat.cols);
+    }
+
+    DLOG(INFO) << "Pushing with sizes: " << feats.rows << "x" << feats.cols
+               << " and " << feat.rows << "x" << feat.cols;
+    feats.push_back(feat); // not sure if this is thread safe
+
+    DLOG(INFO) << "Feats size is now: " << feats.rows << "x" << feats.cols;
+
+    // notify!
+    notifier->post_image_processed_(query_ifo->id, imfile);
   }
 
   void BaseServerCallback::operator()() {

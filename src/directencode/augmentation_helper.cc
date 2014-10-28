@@ -15,7 +15,9 @@ AugmentationHelper::prepareImages(const cv::Mat& image) {
   const int CROPPED_DIM = cropped_dim;
   std::vector<cv::Mat> output_ims;
 
-  CHECK_EQ(image.channels(), 3);
+  if (image.channels() != 3) {
+    throw InvalidImageError("Image did not pass validation check");
+  }
   CHECK_EQ(image.depth(), CV_32F);
 
   DLOG(INFO) << "Preparing augmented images..." << std::endl;

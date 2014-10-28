@@ -36,19 +36,29 @@ namespace cpuvisor {
 
     for (size_t i = 0; i < urls.size(); ++i) {
 
-      ImfileIfo imfile_ifo = prepareForDownload_(urls[i], tag, extra_data, callback);
+      if (shouldDownloadUrl_(urls[i])) {
+        ImfileIfo imfile_ifo = prepareForDownload_(urls[i], tag, extra_data, callback);
 
-      image_count_[callback_hash] += 1;
+        image_count_[callback_hash] += 1;
 
-      // issue request asynchronously
-      // (to be handled by download_stream_handler callback)
-      // by adding to launch_queue_
-      launch_queue_->push(imfile_ifo);
+        // issue request asynchronously
+        // (to be handled by download_stream_handler callback)
+        // by adding to launch_queue_
+        launch_queue_->push(imfile_ifo);
+      }
 
     }
   }
 
   // -----------------------------------------------------------------------------
+
+  bool ImageDownloader::shouldDownloadUrl_(const std::string& url) {
+
+    // filter https images, as these are currently unsupported by cpp-netlib
+    if (url.find("https") == 0) return false;
+
+    return true;
+  }
 
   ImfileIfo ImageDownloader::prepareForDownload_(const std::string& url,
                                                  const std::string& tag,

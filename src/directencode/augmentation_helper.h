@@ -9,11 +9,21 @@
 
 #include <vector>
 #include <string>
+#include <stdexcept>
 #include <opencv2/opencv.hpp>
 
 #include "directencode/caffe_encoder_utils.h"
 
 namespace featpipe {
+
+  // exceptions --------------------------
+
+  class InvalidImageError: public std::runtime_error {
+  public:
+    InvalidImageError(std::string const& msg): std::runtime_error(msg) { }
+  };
+
+  // class definition --------------------
 
   enum DataAugType {DAT_NONE = 0, DAT_ASPECT_CORNERS = 1};
 

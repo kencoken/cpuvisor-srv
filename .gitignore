@@ -3,3 +3,4 @@ build*/
 bin/
 proto/
 test_data/output/*
+server_data/*
