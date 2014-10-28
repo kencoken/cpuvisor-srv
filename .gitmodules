@@ -1,0 +1,3 @@
+[submodule "imsearch-tools"]
+	path = imsearch-tools
+	url = git@github.com:kencoken/imsearch-tools.git
