@@ -10,6 +10,10 @@ set (cpuvisor_testimg_SOURCES
   server/util/io.cc
   server/util/preproc.cc
   server/util/feat_util.cc)
+if (MATEXP_DEBUG)
+  list (APPEND cpuvisor_testimg_SOURCES server/util/debug/matfileutils.cc)
+  list (APPEND cpuvisor_testimg_SOURCES server/util/debug/matfileutils_cpp.cc)
+endif(MATEXP_DEBUG)
 
 set (cpuvisor_netlib_SOURCES
   cpuvisor_netlib.cc)
@@ -23,6 +27,10 @@ set (cpuvisor_preproc_SOURCES
   server/util/io.cc
   server/util/preproc.cc
   server/util/feat_util.cc)
+if (MATEXP_DEBUG)
+  list (APPEND cpuvisor_preproc_SOURCES server/util/debug/matfileutils.cc)
+  list (APPEND cpuvisor_preproc_SOURCES server/util/debug/matfileutils_cpp.cc)
+endif(MATEXP_DEBUG)
 
 set (cpuvisor_service_SOURCES
   cpuvisor_service.cc
@@ -36,6 +44,10 @@ set (cpuvisor_service_SOURCES
   server/util/status_notifier.cc
   server/util/io.cc
   server/util/feat_util.cc)
+if (MATEXP_DEBUG)
+  list (APPEND cpuvisor_service_SOURCES server/util/debug/matfileutils.cc)
+  list (APPEND cpuvisor_service_SOURCES server/util/debug/matfileutils_cpp.cc)
+endif(MATEXP_DEBUG)
 
 # PREPARE LIST OF LIBRARIES
 # -------------------------------------
@@ -46,8 +58,12 @@ set (cpuvisor_testimg_LIBRARIES
   ${Liblinear_LIBRARIES}
   ${Caffe_LIBRARIES}
   ${GLOG_LIBRARIES}
+  ${GFLAGS_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   protodefs)
+if (MATEXP_DEBUG)
+  list (APPEND cpuvisor_testimg_LIBRARIES ${MATIO_LIBRARIES})
+endif(MATEXP_DEBUG)
 
 set (cpuvisor_netlib_LIBRARIES
   ${Boost_LIBRARIES}
@@ -63,6 +79,9 @@ set (cpuvisor_preproc_LIBRARIES
   ${GFLAGS_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   protodefs)
+if (MATEXP_DEBUG)
+  list (APPEND cpuvisor_preproc_LIBRARIES ${MATIO_LIBRARIES})
+endif(MATEXP_DEBUG)
 
 set (cpuvisor_service_LIBRARIES
   ${Boost_LIBRARIES}
@@ -75,6 +94,9 @@ set (cpuvisor_service_LIBRARIES
   ${PROTOBUF_LIBRARIES}
   ${CPPNETLIB_LIBRARIES}
   protodefs)
+if (MATEXP_DEBUG)
+  list (APPEND cpuvisor_service_LIBRARIES ${MATIO_LIBRARIES})
+endif(MATEXP_DEBUG)
 
 # COMPILE TARGETS
 # -------------------------------------

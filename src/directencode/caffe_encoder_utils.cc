@@ -5,6 +5,7 @@
 #include <glog/logging.h>
 
 //#define DEBUG_CAFFE_CHECKSUM
+//#define ENABLE_BROKEN_OCV_ORDERING
 
 #ifdef DEBUG_CAFFE_CHECKSUM
 #include <boost/crc.hpp>
@@ -32,10 +33,39 @@ namespace featpipe {
                    " format and channels are also BGR!");
 
     CHECK_EQ(data_mean.channels(), 3);
-    cv::Mat mean_image = cv::Mat::zeros(data_mean.height(), data_mean.width(), CV_32FC3);
 
-    caffe::caffe_copy(data_mean.count(), data_mean.cpu_data(),
-                      (float*)mean_image.data);
+    #ifndef ENABLE_BROKEN_OCV_ORDERING
+
+    // Load in channels individually then merge to convert from Caffe format of:
+    //    W -> H -> ch
+    // where W is the fastest changing dimension, to OpenCV format of:
+    //    ch -> W -> H
+    std::vector<cv::Mat> mean_image_chs(3);
+    for (size_t i = 0; i < 3; ++i) {
+      mean_image_chs[i] = cv::Mat::zeros(data_mean.height(), data_mean.width(), CV_32F);
+
+      caffe::caffe_copy(data_mean.count()/3, data_mean.cpu_data() + data_mean.height()*data_mean.width()*i,
+                        (float*)mean_image_chs[i].data);
+    }
+
+    cv::Mat mean_image;
+    cv::merge(mean_image_chs, mean_image);
+
+    #else // ENABLE_BROKEN_OCV_ORDERING
+    cv::Mat mean_image(data_mean.height(), data_mean.width(), CV_32FC3);
+    caffe::caffe_copy(data_mean.count(), data_mean.cpu_data(), (float*)mean_image.data);
+    #endif
+
+    #ifdef DEBUG_CAFFE_IMS // DEBUG
+    std::vector<cv::Mat> bgrChannels(3);
+    split(mean_image, bgrChannels);
+    cv::imshow("Mean B", bgrChannels[0]/255);
+    cv::imshow("Mean G", bgrChannels[1]/255);
+    cv::imshow("Mean R", bgrChannels[2]/255);
+    cv::waitKey();
+    cv::destroyAllWindows();
+    #endif
+
     return mean_image;
   }
 
@@ -82,6 +112,29 @@ namespace featpipe {
     return cropped_dst;
   }
 
+  /// Convert to Caffe W -> H -> ch channel ordering from OpenCV ch -> W -> H
+  cv::Mat convertToChannelContiguous(const cv::Mat& src) {
+
+      CHECK_EQ(src.type(), CV_32FC3);
+
+      std::vector<cv::Mat> bgrChannels;
+      cv::split(src, bgrChannels);
+
+      cv::Mat dst(src.rows, src.cols, CV_32FC3);
+      size_t pix_sz = src.rows*src.cols;
+
+      float* dst_ptr = (float*)dst.data;
+      for (size_t ci = 0; ci < 3; ++ci) {
+        float* cur_channel_ptr = (float*)bgrChannels[ci].data;
+        for (size_t pi = 0; pi < pix_sz; ++pi) {
+          dst_ptr[ci*pix_sz + pi] = cur_channel_ptr[pi];
+        }
+      }
+
+      return dst;
+
+  }
+
   /// Check dimensions of images against blob
   size_t checkImagesAgainstBlob(const std::vector<cv::Mat>& images,
                                 const caffe::Blob<float>* blob) {
@@ -120,7 +173,12 @@ namespace featpipe {
       CHECK_EQ(im_pix_sz,
                images[im_idx].rows*images[im_idx].cols*images[im_idx].channels());
 
+      #ifndef ENABLE_BROKEN_OCV_ORDERING
+      cv::Mat im = convertToChannelContiguous(images[im_idx]);
+      const float* data_ptr = (float*)im.data;
+      #else
       const float* data_ptr = (float*)images[im_idx].data;
+      #endif
 
       caffe::caffe_copy(im_pix_sz, data_ptr,
                         input_blobs[0]->mutable_cpu_data() + im_pix_sz*im_idx);

@@ -2,3 +2,4 @@
 build*/
 bin/
 proto/
+test_data/output/*

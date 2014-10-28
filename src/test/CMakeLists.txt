@@ -6,6 +6,10 @@ set (test_SOURCES test.cc
   ../server/util/io.cc
   ../server/util/preproc.cc
   ../server/util/feat_util.cc)
+if (MATEXP_DEBUG)
+  list (APPEND test_SOURCES server/util/debug/matfileutils.cc)
+  list (APPEND test_SOURCES server/util/debug/matfileutils_cpp.cc)
+endif(MATEXP_DEBUG)
 
 set (test_LIBRARIES
   ${Boost_LIBRARIES}
@@ -15,6 +19,9 @@ set (test_LIBRARIES
   ${GLOG_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   protodefs)
+if (MATEXP_DEBUG)
+  list (APPEND test_LIBRARIES ${MATIO_LIBRARIES})
+endif(MATEXP_DEBUG)
 
 add_executable(test_exec ${test_SOURCES})
 

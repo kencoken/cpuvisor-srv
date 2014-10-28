@@ -7,6 +7,7 @@
 
 #include "cpuvisor_config.pb.h"
 
+DEFINE_string(config_path, "../config.prototxt", "Server config file");
 DEFINE_bool(dsetfeats, true, "Compute dataset features");
 DEFINE_bool(negfeats, true, "Compute negative training image features");
 
@@ -17,7 +18,7 @@ int main(int argc, char* argv[]) {
   google::ParseCommandLineFlags(&argc, &argv, true);
 
   cpuvisor::Config config;
-  cpuvisor::readProtoFromTextFile("/Data/src/cpuvisor-srv/config.prototxt", &config);
+  cpuvisor::readProtoFromTextFile(FLAGS_config_path, &config);
 
   const cpuvisor::CaffeConfig& caffe_config = config.caffe_config();
   featpipe::CaffeEncoder encoder(caffe_config);

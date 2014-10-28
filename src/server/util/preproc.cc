@@ -1,5 +1,9 @@
 #include "preproc.h"
 
+#ifdef MATEXP_DEBUG
+  #include "server/util/matfileutils_cpp.h"
+#endif
+
 namespace cpuvisor {
 
   void procTextFile(const std::string& text_path,
@@ -16,7 +20,7 @@ namespace cpuvisor {
     fs::path base_path_fs(base_path);
     if (!base_path.empty()) {
       CHECK(fs::exists(base_path_fs) && fs::is_directory(fs::canonical(base_path_fs)))
-        << "First line of file should be path to root of dataset or blank";
+        << "Base path should exist or be blank: " << base_path;
     }
 
     std::string imfile;
@@ -42,6 +46,12 @@ namespace cpuvisor {
       //feats.row(i) = cpuvisor::computeFeat(full_path, encoder); <- this doesn't work
 
     }
+
+    #ifdef MATEXP_DEBUG // DEBUG
+    MatFile mat_file(proto_path + ".mat", true);
+    mat_file.writeFloatMat("feats", (float*)feats.data, feats.rows, feats.cols);
+    mat_file.writeVectOfStrs("paths", paths);
+    #endif
 
     LOG(INFO) << "Writing features to: " << proto_path;
     cpuvisor::writeFeatsToProto(feats, paths, proto_path);

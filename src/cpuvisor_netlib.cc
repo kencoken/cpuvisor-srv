@@ -48,7 +48,7 @@ struct body_handler {
       if (error == boost::asio::error::eof) {
         static boost::uuids::random_generator uuid_gen = boost::uuids::random_generator();
         std::string id = boost::lexical_cast<std::string>(uuid_gen());
-        id = "/Users/ken/Desktop/" + id + ".jpg";
+        id = id + ".jpg";
 
         std::ofstream out_file;
         out_file.open(id.c_str(), std::ios::out | std::ios::binary);

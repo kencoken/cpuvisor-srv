@@ -113,7 +113,7 @@ namespace cpuvisor {
         CHECK(url_count > 0);
 
         std::vector<std::string> urls;
-        for (size_t i = 0; i < url_count; ++i) {
+        for (int i = 0; i < url_count; ++i) {
           urls.push_back(urls_proto.urls(i));
         }
 

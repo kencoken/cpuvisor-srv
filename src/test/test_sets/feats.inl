@@ -11,11 +11,13 @@
 
 #include "cpuvisor_config.pb.h"
 
-#define TEST_FILE "000001.jpg"
+#define TEST_FILE "../../test_data/input/000001.jpg"
+#define MLAB_INPUT_IM_PATH "../../test_data/input/mlab_input_im.txt"
+#define MLAB_OUTPUT_FEAT_PATH "../../test_data/input/mlab_output_feat.txt"
 
 featpipe::CaffeEncoder setupCaffe() {
   cpuvisor::Config config;
-  cpuvisor::readProtoFromTextFile("/Data/src/cpuvisor-srv/config.prototxt", &config);
+  cpuvisor::readProtoFromTextFile("/home/ken/src/modules/cpuvisor-srv/config.prototxt", &config);
 
   const cpuvisor::CaffeConfig& caffe_config = config.caffe_config();
   return featpipe::CaffeEncoder(caffe_config);
@@ -49,12 +51,17 @@ TEST_CASE("feats/computeRepeatability",
 
 TEST_CASE("feats/ensureCorrectOutput",
           "Ensure identical output to matcafffe when using the ZF 128 network") {
+  // TODO: fix - currently to get this test to pass, must define
+  // ENABLE_BROKEN_OCV_ORDERING in caffe_encoder_utils - this makes
+  // sense for the input image (as it is alread loaded in the correct
+  // order and doesn't need to be converted) but less so for the mean
+  // (implies that the broken mean is also being used in Matlab?)
   featpipe::CaffeEncoder encoder = setupCaffe();
 
   std::vector<float> input_im;
   {
     DLOG(INFO) << "Loading Matlab input image...";
-    std::ifstream input_im_fs("input_im.txt");
+    std::ifstream input_im_fs(MLAB_INPUT_IM_PATH);
     size_t excess = 0;
     while(!input_im_fs.eof()){
       float input_pix;
@@ -90,7 +97,7 @@ TEST_CASE("feats/ensureCorrectOutput",
   std::vector<float> output_feat;
   {
     DLOG(INFO) << "Loading Matlab output feat...";
-    std::ifstream output_feat_fs("output_feat.txt");
+    std::ifstream output_feat_fs(MLAB_OUTPUT_FEAT_PATH);
     size_t excess = 0;
     while(!output_feat_fs.eof()){
       float input_pix;

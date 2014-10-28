@@ -19,6 +19,11 @@ RelWithDebInfo MinSizeRel."
       FORCE)
 endif(NOT CMAKE_BUILD_TYPE)
 
+set (MATEXP_DEBUG off CACHE STRING "Compile with debug export to MAT files")
+if (MATEXP_DEBUG)
+  add_definitions("-D MATEXP_DEBUG")
+endif (MATEXP_DEBUG)
+
 find_package(Git)
 if (GIT_FOUND)
   include(GetGitRevisionDescription)
@@ -28,7 +33,7 @@ endif (GIT_FOUND)
 
 # FIND LIBRARIES
 # -------------------------------------
-#set(Boost_NO_SYSTEM_PATHS TRUE)
+set(Boost_NO_SYSTEM_PATHS TRUE)
 find_package(Boost 1.53.0 REQUIRED COMPONENTS thread system filesystem)
 find_package(Liblinear REQUIRED)
 find_package(OpenCV REQUIRED)
@@ -38,6 +43,10 @@ find_package(GFLAGS REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(ZeroMQ REQUIRED)
 find_package(cppnetlib 0.11.0 REQUIRED)
+#find_package(CUDAHeaders REQUIRED)
+if (MATEXP_DEBUG)
+  find_package(MATIO REQUIRED)
+endif(MATEXP_DEBUG)
 
 # SET INCLUDE DIRECTORIES
 # -------------------------------------
@@ -49,6 +58,10 @@ include_directories(${GFLAGS_INCLUDE_DIRS})
 include_directories(${PROTOBUF_INCLUDE_DIRS})
 include_directories(${ZeroMQ_INCLUDE_DIRS})
 include_directories(${CPPNETLIB_INCLUDE_DIRS})
+#include_directories(${CUDAHeaders_INCLUDE_DIRS})
+if (MATEXP_DEBUG)
+  include_directories(${MATIO_INCLUDE_DIRS})
+endif(MATEXP_DEBUG)
 
 include_directories("${CMAKE_SOURCE_DIR}/src")
 

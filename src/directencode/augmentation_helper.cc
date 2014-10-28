@@ -11,8 +11,8 @@ using namespace featpipe;
 
 std::vector<cv::Mat>
 AugmentationHelper::prepareImages(const cv::Mat& image) {
-  //const size_t IMAGE_DIM = image_dim;
-  const size_t CROPPED_DIM = cropped_dim;
+  //const int IMAGE_DIM = image_dim;
+  const int CROPPED_DIM = cropped_dim;
   std::vector<cv::Mat> output_ims;
 
   CHECK_EQ(image.channels(), 3);
@@ -47,34 +47,37 @@ AugmentationHelper::prepareImages(const cv::Mat& image) {
 std::vector<cv::Mat>
 AugmentationHelper::augmentWholeImage(const cv::Mat& image) const {
 
-  const size_t CROPPED_DIM = cropped_dim;
+  const int CROPPED_DIM = cropped_dim;
   std::vector<cv::Mat> output_ims;
 
   // extract centre crop
   DLOG(INFO) << "Get whole cropped image";
   cv::Mat cropped_im = getWholeCropCaffeImage(image, CROPPED_DIM);
-  output_ims.push_back(cropped_im);
-
-  #ifdef DEBUG_CAFFE_IMS
-  // cv::imshow("Original Image", image / 255.0);
-  // LOG(INFO) << "image: " << image.rows << "x" << image.cols;
-  // cv::waitKey(0);
-  // cv::destroyWindow("Original Image");
-  // cv::imshow("Centre Crop", cropped_im / 255.0);
-  // LOG(INFO) << "cropped_im: " << cropped_im.rows << "x" << cropped_im.cols;
-  // cv::waitKey(0);
-  // cv::destroyWindow("Centre Crop");
-  #endif
 
   DLOG(INFO) << "Multiply base image";
   cropped_im *= image_mul;
 
   DLOG(INFO) << "image_mul: " << image_mul;
 
+  #ifdef DEBUG_CAFFE_IMS // DEBUG
+  cv::imshow("Base Image", cropped_im/255);
+  cv::waitKey();
+  #endif
+
   if (use_mean_image_) {
     DLOG(INFO) << "Subtract mean from base image";
     cropped_im -= mean_image_;
+    //cv::Mat norm_cropped_im;
+    //cv::subtract(cropped_im, mean_image_, norm_cropped_im);
+    //norm_cropped_im.copyTo(cropped_im);
+
+    #ifdef DEBUG_CAFFE_IMS // DEBUG
+    cv::imshow("Mean Image", mean_image_/255);
+    cv::waitKey();
+    #endif
   }
+
+  output_ims.push_back(cropped_im);
 
   return output_ims;
 
@@ -83,8 +86,8 @@ AugmentationHelper::augmentWholeImage(const cv::Mat& image) const {
 std::vector<cv::Mat>
 AugmentationHelper::augmentAspectCorners(const cv::Mat& image) const {
 
-  const size_t IMAGE_DIM = image_dim;
-  const size_t CROPPED_DIM = cropped_dim;
+  const int IMAGE_DIM = image_dim;
+  const int CROPPED_DIM = cropped_dim;
   std::vector<cv::Mat> output_ims;
 
   // resize to IMAGE_DIM x N where IMAGE_DIM is the smaller dimension
@@ -97,54 +100,41 @@ AugmentationHelper::augmentAspectCorners(const cv::Mat& image) const {
       cv::flip(base_im, base_im, 1);
     }
 
-    #ifdef DEBUG_CAFFE_IMS
-    // cv::imshow("Original Image", image / 255.0);
-    // LOG(INFO) << "image: " << image.rows << "x" << image.cols;
-    // cv::waitKey(0);
-    // cv::destroyWindow("Original Image");
-    // cv::imshow("Base Image", base_im / 255.0);
-    // LOG(INFO) << "base_im: " << base_im.rows << "x" << base_im.cols;
-    // cv::waitKey(0);
-    // cv::destroyWindow("Base Image");
-    #endif
-
     base_im *= image_mul;
 
     DLOG(INFO) << "Adding centre image... (" << flip_idx << ")" << std::endl;
     // add centre image
     {
-      size_t start_idx_i = (base_im.rows - CROPPED_DIM)/2;
-      size_t start_idx_j = (base_im.cols - CROPPED_DIM)/2;
-      output_ims.push_back(cv::Mat::zeros(CROPPED_DIM, CROPPED_DIM, CV_32FC3));
+      int start_idx_i = (base_im.rows - CROPPED_DIM)/2;
+      int start_idx_j = (base_im.cols - CROPPED_DIM)/2;
+      CHECK_GE(start_idx_i, 0);
+      CHECK_GE(start_idx_j, 0);
+
+      cv::Mat cropped_im = cv::Mat::zeros(CROPPED_DIM, CROPPED_DIM, CV_32FC3);
 
       DLOG(INFO) << "IMAGE_DIM: " << IMAGE_DIM << std::endl;
       DLOG(INFO) << "CROPPED_DIM: " << CROPPED_DIM << std::endl;
       DLOG(INFO) << "base_im sz: " << base_im.rows << " x " << base_im.cols << std::endl;
       DLOG(INFO) << "start_idx: " << start_idx_i << ", " << start_idx_j << std::endl;
 
-      cv::Mat cropped_im = output_ims.back();
-
       DLOG(INFO) << "Extracting centre crop..." << std::endl;
       base_im(cv::Rect(start_idx_j, start_idx_i, CROPPED_DIM, CROPPED_DIM)).copyTo(cropped_im);
-
-      #ifdef DEBUG_CAFFE_IMS
-      // cv::imshow("Centre Image", cropped_im / (image_mul*255.0));
-      // LOG(INFO) << "cropped_im: " << cropped_im.rows << "x" << cropped_im.cols;
-      // cv::waitKey(0);
-      // cv::destroyWindow("Centre Image");
-      #endif
 
       if (use_mean_image_) {
         DLOG(INFO) << "Subtracing mean image..." << std::endl;
         cropped_im -= mean_image_;
+        // cv::Mat norm_cropped_im;
+        // cv::subtract(cropped_im, mean_image_, norm_cropped_im);
+        // norm_cropped_im.copyTo(cropped_im);
       }
+
+      output_ims.push_back(cropped_im);
     }
 
     DLOG(INFO) << "Adding corner images... (" << flip_idx << ")" << std::endl;
     // add corner images
     for (size_t i = 0; i < 4; ++i) {
-      output_ims.push_back(cv::Mat::zeros(CROPPED_DIM, CROPPED_DIM, CV_32FC3));
-      cv::Mat cropped_im = output_ims.back();
+      cv::Mat cropped_im = cv::Mat::zeros(CROPPED_DIM, CROPPED_DIM, CV_32FC3);
       switch (i) {
       case 0:
         base_im(cv::Rect(0, 0, CROPPED_DIM, CROPPED_DIM)).copyTo(cropped_im);
@@ -163,16 +153,14 @@ AugmentationHelper::augmentAspectCorners(const cv::Mat& image) const {
         break;
       }
 
-      #ifdef DEBUG_CAFFE_IMS
-      // cv::imshow("Corner Image", cropped_im / (image_mul*255.0));
-      // LOG(INFO) << "cropped_im: " << cropped_im.rows << "x" << cropped_im.cols;
-      // cv::waitKey(0);
-      // cv::destroyWindow("Corner Image");
-      #endif
-
       if (use_mean_image_) {
         cropped_im -= mean_image_;
+        // cv::Mat norm_cropped_im;
+        // cv::subtract(cropped_im, mean_image_, norm_cropped_im);
+        // norm_cropped_im.copyTo(cropped_im);
       }
+
+      output_ims.push_back(cropped_im);
     }
 
   }

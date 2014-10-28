@@ -33,7 +33,7 @@ namespace cpuvisor {
     CHECK(feats.isContinuous());
 
     const float* feats_data = (float*)feats.data;
-    for (size_t i = 0; i < feats.rows*feats.cols; ++i) {
+    for (size_t i = 0; i < static_cast<size_t>(feats.rows*feats.cols); ++i) {
       feats_proto.add_data(feats_data[i]);
     }
     for (size_t i = 0; i < paths.size(); ++i) {

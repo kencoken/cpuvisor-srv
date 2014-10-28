@@ -17,6 +17,7 @@ message CaffeConfig {
   optional string mean_image_file = 3;
   optional DataAugType data_aug_type = 4 [default = DAT_NONE];
   optional string output_blob_name = 5 [default = "fc7"];
+  optional bool use_rgb_images = 16 [default = false];
 }
 
 message PreprocConfig {

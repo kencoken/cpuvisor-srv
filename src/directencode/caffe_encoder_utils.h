@@ -13,6 +13,8 @@ namespace featpipe {
   cv::Mat getBaseCaffeImage(const cv::Mat& src, const size_t min_size);
   cv::Mat getWholeCropCaffeImage(const cv::Mat& src, const size_t crop_size);
 
+  cv::Mat convertToChannelContiguous(const cv::Mat& src);
+
   size_t checkImagesAgainstBlob(const std::vector<cv::Mat>& images,
                                 const caffe::Blob<float>* blob);
 

@@ -30,6 +30,7 @@ namespace featpipe {
     std::string mean_image_file;
     DataAugType data_aug_type;
     std::string output_blob_name;
+    bool use_rgb_images;
     inline virtual void configureFromPtree(const boost::property_tree::ptree& properties) {
       param_file = properties.get<std::string>("param_file");
       model_file = properties.get<std::string>("model_file");
@@ -43,6 +44,7 @@ namespace featpipe {
         LOG(FATAL) << "Unrecognized data augmentation type: " << data_aug_type_str;
       }
       output_blob_name = properties.get<std::string>("output_blob", DEFAULT_BLOB_STR);
+      use_rgb_images = properties.get<bool>("use_rgb_images", false);
     }
     inline virtual void configureFromProtobuf(const cpuvisor::CaffeConfig& proto_config) {
       param_file = proto_config.param_file();
@@ -58,6 +60,7 @@ namespace featpipe {
         break;
       }
       output_blob_name = proto_config.output_blob_name();
+      use_rgb_images = proto_config.use_rgb_images();
     }
   };
 
@@ -85,7 +88,8 @@ namespace featpipe {
       return (*this);
     }
     // main functions
-    virtual cv::Mat compute(const std::vector<cv::Mat>& images);
+    virtual cv::Mat compute(const std::vector<cv::Mat>& images,
+                            std::vector<cv::Mat>* _debug_input_images = 0);
     // virtual setter / getters
     inline virtual size_t get_code_size() const {
       if (config_.output_blob_name == LAST_BLOB_STR) {

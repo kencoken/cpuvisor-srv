@@ -1,3 +1,6 @@
+% generates sample input data and output feature text files
+% for comparing output of C++ CaffeEncoder with Matlab generated features
+
 im = single(im);
 
 if size(im, 1) < size(im, 2)
@@ -15,14 +18,14 @@ centre_crop = ...
 
 centre_crop_flat = centre_crop(:);
 
-fid = fopen('input_im.txt','w');
+fid = fopen('mlab_input_im.txt','w');
 for i = 1:length(centre_crop_flat)
     fprintf(fid,'%f\n', centre_crop_flat(i));
 end
 
 norm_scores = scores / norm(scores);
 
-fid = fopen('output_feat.txt','w');
+fid = fopen('mlab_output_feat.txt','w');
 for i = 1:length(norm_scores)
     fprintf(fid,'%f\n', norm_scores(i));
 end

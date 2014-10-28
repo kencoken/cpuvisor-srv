@@ -1,9 +1,10 @@
 caffe_config {
-  param_file: "/home/ken/src/modules/caffe/examples/CNN_M_128/VGG_CNN_M_128_deploy.prototxt"
-  model_file: "/home/ken/src/modules/caffe/examples/CNN_M_128/VGG_CNN_M_128.caffemodel"
-  mean_image_file: "/home/ken/src/modules/caffe/examples/CNN_M_128/VGG_mean.binaryproto"
+  param_file: "/data/ken/vgg-caffe-models/CNN_M_128/param.prototxt"
+  model_file: "/data/ken/vgg-caffe-models/CNN_M_128/model"
+  mean_image_file: "/data/ken/vgg-caffe-models/image_mean.binaryproto"
   data_aug_type: DAT_NONE
   output_blob_name: "fc7"
+  use_rgb_images: true
 }
 preproc_config: {
   dataset_im_paths: "/home/ken/src/modules/cpuvisor-srv/dsetpaths.txt"

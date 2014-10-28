@@ -8,14 +8,44 @@
 #include <boost/crc.hpp>
 #endif
 
-cv::Mat featpipe::CaffeEncoder::compute(const std::vector<cv::Mat>& images) {
+cv::Mat featpipe::CaffeEncoder::compute(const std::vector<cv::Mat>& images,
+                                        std::vector<cv::Mat>* _debug_input_images) {
 
   cv::Mat features(images.size(), get_code_size(), CV_32FC1);
 
   for (size_t im_idx = 0; im_idx < images.size(); ++im_idx) {
+
+    const cv::Mat* im = 0;
+    cv::Mat rgb_im;
+    if (config_.use_rgb_images) {
+      LOG(INFO) << "Converting BGR image to RGB";
+
+      cv::cvtColor(images[im_idx], rgb_im, CV_BGR2RGB);
+
+      im = &rgb_im;
+    } else {
+      im = &images[im_idx];
+    }
+    CHECK_NOTNULL(im);
+
+    #ifdef DEBUG_CAFFE_IMS // DEBUG
+    cv::imshow("Original Image", (*im)/255);
+    cv::waitKey();
+    #endif
+
     LOG(INFO) << "Prepare test images" << std::endl;
     std::vector<cv::Mat> caffe_images =
-      augmentation_helper_.prepareImages(images[im_idx]);
+      augmentation_helper_.prepareImages(*im);
+
+    #ifdef DEBUG_CAFFE_IMS // DEBUG
+    cv::imshow("Image", caffe_images[0]/255);
+    cv::waitKey();
+    cv::destroyAllWindows();
+    #endif
+
+    if (_debug_input_images) {
+      (*_debug_input_images) = caffe_images;
+    }
 
     cv::Mat scores;
 
@@ -27,6 +57,7 @@ cv::Mat featpipe::CaffeEncoder::compute(const std::vector<cv::Mat>& images) {
 
       std::cout << "Forwarding test images through network" << std::endl;
       const:: std::vector<caffe::Blob<float>*>& last_blobs = net_->ForwardPrefilled();
+      std::cout << "Done forwarding!" << std::endl;
 
       caffe::Blob<float>* output_blob = 0;
       if (config_.output_blob_name == LAST_BLOB_STR) {
@@ -49,12 +80,14 @@ cv::Mat featpipe::CaffeEncoder::compute(const std::vector<cv::Mat>& images) {
 
         caffe::caffe_copy(output_blob->count(), output_blob->cpu_data(),
                           (float*)scores.data);
-        #ifdef DEBUG_CAFFE_CHECKSUM
+
+        #ifdef DEBUG_CAFFE_CHECKSUM // DEBUG
         boost::crc_32_type result;
         result.process_bytes((float*)scores.data,
                              sizeof(float)*output_blob->count());
         DLOG(INFO) << "Copy from backend checksum for image: " << result.checksum();
         #endif
+
         } break;
       case caffe::Caffe::GPU:
         DLOG(INFO) << "Copying from GPU";
@@ -63,12 +96,14 @@ cv::Mat featpipe::CaffeEncoder::compute(const std::vector<cv::Mat>& images) {
         break;
       }
 
+      #ifndef NDEBUG // DEBUG
       double max_val, min_val;
       cv::minMaxLoc(scores, &min_val, &max_val);
       DLOG(INFO) << "scores size: " << scores.rows << " x " << scores.cols;
       DLOG(INFO) << "scores max: " << max_val;
       DLOG(INFO) << "scores min: " << min_val;
       DLOG(INFO) << "scores mean: " << cv::mean(scores);
+      #endif
 
     }
 
@@ -107,7 +142,6 @@ void featpipe::CaffeEncoder::initNetFromConfig_() {
   DLOG(INFO) << "Initializing network with " << image_count << " images";
   net_.reset(new caffe::Net<float>(config_.param_file.c_str(), image_count));
   net_->CopyTrainedLayersFrom(config_.model_file.c_str());
-  // TODO - set net output # images
 
   augmentation_helper_ = AugmentationHelper(config_.mean_image_file);
   augmentation_helper_.aug_type = config_.data_aug_type;

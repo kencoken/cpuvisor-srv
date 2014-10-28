@@ -20,8 +20,8 @@ namespace featpipe {
   class AugmentationHelper {
   public:
     DataAugType aug_type;
-    size_t image_dim;
-    size_t cropped_dim;
+    int image_dim;
+    int cropped_dim;
     float image_mul;
 
     AugmentationHelper(const std::string& mean_image_path = "")
@@ -36,8 +36,15 @@ namespace featpipe {
         mean_image_ = loadMeanImageFile(mean_image_path);
 
         // take centre crop from mean image
-        const size_t IMAGE_DIM = image_dim;
-        const size_t CROPPED_DIM = cropped_dim;
+        const int IMAGE_DIM = image_dim;
+        const int CROPPED_DIM = cropped_dim;
+        if ((mean_image_.rows == IMAGE_DIM) && (mean_image_.cols == IMAGE_DIM)) {
+          LOG(WARNING) << "Cropping centre from mean image...";
+          const int diff = (IMAGE_DIM - CROPPED_DIM) / 2;
+          cv::Mat cropped_mean;
+          mean_image_(cv::Rect(diff, diff, CROPPED_DIM, CROPPED_DIM)).copyTo(cropped_mean);
+          mean_image_ = cropped_mean;
+        }
         CHECK_EQ(mean_image_.rows, CROPPED_DIM);
         CHECK_EQ(mean_image_.cols, CROPPED_DIM);
         CHECK_EQ(mean_image_.channels(), 3);

@@ -18,7 +18,8 @@ namespace featpipe {
        classes */
     virtual ~GenericDirectEncoder() { }
     virtual GenericDirectEncoder* clone() const = 0;
-    virtual cv::Mat compute(const std::vector<cv::Mat>& images) = 0;
+    virtual cv::Mat compute(const std::vector<cv::Mat>& images,
+                            std::vector<cv::Mat>* _debug_input_images = 0) = 0;
     virtual size_t get_code_size() const = 0;
 
     virtual cv::Mat compute(cv::Mat& image) {
