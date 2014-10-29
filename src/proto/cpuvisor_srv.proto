@@ -27,6 +27,18 @@ message RPCRep {
   optional RankedList ranking = 10;
 }
 
+enum NotificationType {
+  NTFY_STATE_CHANGE = 1;
+  NTFY_IMAGE_PROCESSED = 2;
+  NTFY_ALL_IMAGES_PROCESSED = 3;
+}
+
+message VisorNotification {
+  required NotificationType type = 1;
+  optional string id = 2;
+  optional string data = 3;
+}
+
 message TrainImageUrls {
   repeated string urls = 1;
   optional bool are_positive = 2 [default = true];

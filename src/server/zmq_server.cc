@@ -15,6 +15,7 @@ namespace cpuvisor {
   ZmqServer::ZmqServer(const cpuvisor::Config& config)
     : config_(config)
     , base_server_(new BaseServer(config))
+    , monitor_state_change_thread_(new boost::thread(&ZmqServer::monitor_state_change_, this))
     , monitor_add_trs_images_thread_(new boost::thread(&ZmqServer::monitor_add_trs_images_, this))
     , monitor_add_trs_complete_thread_(new boost::thread(&ZmqServer::monitor_add_trs_complete_, this)) {
 
@@ -23,6 +24,7 @@ namespace cpuvisor {
   ZmqServer::~ZmqServer() {
     // interrupt serve thread to ensure termination before auto-detaching
     if (serve_thread_) serve_thread_->interrupt();
+    if (monitor_state_change_thread_) monitor_state_change_thread_->interrupt();
     if (monitor_add_trs_images_thread_) monitor_add_trs_images_thread_->interrupt();
     if (monitor_add_trs_complete_thread_) monitor_add_trs_complete_thread_->interrupt();
   }
@@ -39,12 +41,22 @@ namespace cpuvisor {
   // -----------------------------------------------------------------------------
 
   void ZmqServer::serve_() {
-    //  Prepare our context and socket
-    zmq::context_t context (1);
-    zmq::socket_t socket (context, ZMQ_REP);
+    // Prepare our context
+    zmq::context_t context(1);
+
+    // Prepare REQ-*REP* socket
+    zmq::socket_t socket(context, ZMQ_REP);
     std::string server_endpoint = config_.server_config().server_endpoint();
     boost::replace_all(server_endpoint, "localhost", "*");
     socket.bind(server_endpoint.c_str());
+
+    // Prepare *PUB*-SUB socket
+    boost::shared_ptr<zmq::socket_t> notify_socket(new zmq::socket_t(context, ZMQ_PUB));
+    std::string notify_endpoint = config_.server_config().notify_endpoint();
+    boost::replace_all(notify_endpoint, "localhost", "*");
+    notify_socket->bind(notify_endpoint.c_str());
+
+    notify_socket_ = notify_socket; // store when ready for use in notify threads
 
     std::cout << "ZMQ server started..." << std::endl;
 
@@ -234,6 +246,60 @@ namespace cpuvisor {
 
   }
 
+  void ZmqServer::monitor_state_change_() {
+    while (true) {
+      QueryStateChangeNotification notification =
+        base_server_->notifier()->wait_state_change();
+
+      std::string new_state_str;
+      switch (notification.new_state) {
+      case QS_DATACOLL:
+        new_state_str = "QS_DATACOLL";
+        break;
+      case QS_DATACOLL_COMPLETE:
+        new_state_str = "QS_DATACOLL_COMPLETE";
+        break;
+      case QS_TRAINING:
+        new_state_str = "QS_TRAINING";
+        break;
+      case QS_TRAINED:
+        new_state_str = "QS_TRAINED";
+        break;
+      case QS_RANKING:
+        new_state_str = "QS_RANKING";
+        break;
+      case QS_RANKED:
+        new_state_str = "QS_RANKED";
+        break;
+      default:
+        LOG(FATAL) << "Indeterminate enum value for state";
+      }
+
+      std::cout << "*******************************************************" << std::endl
+                << "QUERYSTATECHANGENOTIFICATION" << std::endl
+                << "-------------------------------------------------------" << std::endl
+                << "id:    " << notification.id << std::endl
+                << "state: " << new_state_str << std::endl
+                << "*******************************************************" << std::endl;
+
+      if (notify_socket_) {
+        VisorNotification notify_proto;
+        notify_proto.set_type(NTFY_STATE_CHANGE);
+        notify_proto.set_id(notification.id);
+        notify_proto.set_data(new_state_str);
+
+        std::string notify_proto_serialized;
+        notify_proto.SerializeToString(&notify_proto_serialized);
+
+        zmq::message_t notify_msg(notify_proto_serialized.size());
+        memcpy((void*)notify_msg.data(), notify_proto_serialized.c_str(),
+               notify_proto_serialized.size());
+
+        notify_socket_->send(notify_msg);
+      }
+    }
+  }
+
   void ZmqServer::monitor_add_trs_images_() {
     while (true) {
       QueryImageProcessedNotification notification =
@@ -244,6 +310,22 @@ namespace cpuvisor {
                 << "id:    " << notification.id << std::endl
                 << "fname: " << notification.fname << std::endl
                 << "*******************************************************" << std::endl;
+
+      if (notify_socket_) {
+        VisorNotification notify_proto;
+        notify_proto.set_type(NTFY_IMAGE_PROCESSED);
+        notify_proto.set_id(notification.id);
+        notify_proto.set_data(notification.fname);
+
+        std::string notify_proto_serialized;
+        notify_proto.SerializeToString(&notify_proto_serialized);
+
+        zmq::message_t notify_msg(notify_proto_serialized.size());
+        memcpy((void*)notify_msg.data(), notify_proto_serialized.c_str(),
+               notify_proto_serialized.size());
+
+        notify_socket_->send(notify_msg);
+      }
     }
   }
 
@@ -256,6 +338,21 @@ namespace cpuvisor {
                 << "-------------------------------------------------------" << std::endl
                 << "id:    " << notification.id << std::endl
                 << "*******************************************************" << std::endl;
+
+      if (notify_socket_) {
+        VisorNotification notify_proto;
+        notify_proto.set_type(NTFY_ALL_IMAGES_PROCESSED);
+        notify_proto.set_id(notification.id);
+
+        std::string notify_proto_serialized;
+        notify_proto.SerializeToString(&notify_proto_serialized);
+
+        zmq::message_t notify_msg(notify_proto_serialized.size());
+        memcpy((void*)notify_msg.data(), notify_proto_serialized.c_str(),
+               notify_proto_serialized.size());
+
+        notify_socket_->send(notify_msg);
+      }
     }
   }
 

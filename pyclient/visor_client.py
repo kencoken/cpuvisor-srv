@@ -21,10 +21,10 @@ class InvalidRequestError(Exception):
 
 class VisorClient(object):
 
-    def __init__(self, protoconfig_path):
+    def __init__(self, protoconfig_path, context=None):
 
         # setup ZMQ context for work
-        self.context = zmq.Context()
+        self.context = context or zmq.Context.instance()
 
         # read in configuration
         self.config = protoconfig.Config()
