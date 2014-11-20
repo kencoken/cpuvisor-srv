@@ -206,7 +206,31 @@ namespace cpuvisor {
     if (num_erased == 0) throw InvalidRequestError("Tried to free query which does not exist");
   }
 
-  // -----------------------------------------------------------------------------
+  // Legacy methods --------------------------------------------------------------
+
+  void BaseServer::addTrsFromFile(const std::string& id,
+                                  const std::vector<std::string>& paths) {
+    // note that unlike addTrs this method is blocking
+    boost::shared_ptr<QueryIfo> query_ifo = getQueryIfo_(id);
+
+    if (paths.size() == 0) throw InvalidRequestError("No paths specified in paths array");
+
+    if (query_ifo->state != QS_DATACOLL) {
+      LOG(INFO) << "Skipping adding paths(s) for query " << id << " as it has advanced past data collection stage";
+      return;
+    }
+
+    boost::shared_ptr<BaseServerExtraData> extra_data(new BaseServerExtraData());
+    extra_data->query_ifo = query_ifo;
+    extra_data->notifier = notifier_; // to allow for notifications
+                                      // from postproc callback
+
+    for (size_t i = 0; i < paths.size(); ++i) {
+      post_processor_->process(paths[i], extra_data);
+    }
+  }
+
+  // Protected methods -----------------------------------------------------------
 
   boost::shared_ptr<QueryIfo> BaseServer::getQueryIfo_(const std::string& id) {
     if (id.empty()) throw InvalidRequestError("No query id specified");

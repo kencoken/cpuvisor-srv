@@ -164,6 +164,26 @@ namespace cpuvisor {
 
           base_server_->freeQuery(id);
 
+        } else if (req_str == "add_trs_from_file") { // legacy
+
+          const TrainImageUrls& urls_proto = rpc_req.train_image_urls();
+          const int url_count = urls_proto.urls_size();
+
+          std::vector<std::string> paths;
+          for (int i = 0; i < url_count; ++i) {
+            paths.push_back(urls_proto.urls(i));
+          }
+
+          base_server_->addTrsFromFile(id, paths);
+
+        } else if (req_str == "train_and_wait") { // legacy
+
+          base_server_->train(id, true);
+
+        } else if (req_str == "rank_and_wait") { // legacy
+
+          base_server_->rank(id, true);
+
         } else {
 
           rpc_rep.set_success(false);

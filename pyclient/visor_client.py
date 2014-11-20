@@ -130,3 +130,49 @@ class VisorClient(object):
             raise InvalidRequestError(rep.err_msg)
 
         return rep
+
+class VisorClientLegacyExt(VisorClient):
+
+    def __init__(self, protoconfig_path, context=None):
+        super(VisorClientLegacyExt, self).__init__(protoconfig_path, context)
+
+    def add_trs_from_file(self, query_id, path):
+        """ Add positive training sample computed for an image file
+        """
+        log.info('REQ: add_trs_from_file (%s)', path)
+
+        req = self.generate_req_('add_trs_from_file')
+        req.id = query_id
+        req.train_image_urls.urls.append(path)
+
+        self.req_socket.send(req.SerializeToString())
+
+        self.parse_message_(self.req_socket.recv())
+
+    def train(self, query_id, blocking=True):
+        """ Train classifier
+        """
+        log.info('REQ: train')
+
+        if blocking:
+            req = self.generate_req_('train_and_wait')
+        else:
+            req = self.generate_req_('train')
+        req.id = query_id
+        self.req_socket.send(req.SerializeToString())
+
+        self.parse_message_(self.req_socket.recv())
+
+    def rank(self, query_id, blocking=True):
+        """ Rank using trained classifier
+        """
+        log.info('REQ: rank')
+
+        if blocking:
+            req = self.generate_req_('rank_and_wait')
+        else:
+            req = self.generate_req_('rank')
+        req.id = query_id
+        self.req_socket.send(req.SerializeToString())
+
+        self.parse_message_(self.req_socket.recv())

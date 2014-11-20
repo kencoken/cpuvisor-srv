@@ -10,6 +10,8 @@ VISUALISE_RESULTS = True    # if TRUE visualise the output ranking
 GET_NOTIFICATIONS = False   # if TRUE notifications are received from the server
 IMAGE_DOWNLOAD_TIMEOUT = 20 # time to wait for images to be downloaded and feats computed
 
+TEST_QUERY = 'car'
+
 config_file = '/Data/src/cpuvisor-srv/config.prototxt'
 
 # function for receiving notifications
@@ -47,7 +49,7 @@ if __name__ == "__main__":
 
     print 'Adding Training Samples...'
 
-    client.download_trs(query_id, 'car')
+    client.download_trs(query_id, TEST_QUERY)
 
     print 'Started training sample addition process...'
 

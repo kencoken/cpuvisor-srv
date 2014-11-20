@@ -33,6 +33,8 @@ DEFINE_string(test_posproto_file, "../test_data/output/testimg_test_pos_voc07.bi
 DEFINE_string(test_negproto_file, "../test_data/output/testimg_test_neg_voc07.binaryproto",
               "Output file containing computed features of negative test images");
 
+DEFINE_uint64(im_limit, 0, "Limit number of images to compute for each set");
+
 int main(int argc, char* argv[]) {
 
   google::InstallFailureSignalHandler();
@@ -60,7 +62,7 @@ int main(int argc, char* argv[]) {
   // Compute features
   // ----------------------------
 
-  size_t im_limit = 0; // set to 0 to compute entire dataset
+  uint64_t im_limit = FLAGS_im_limit; // set to 0 to compute entire dataset
 
   if (!fs::exists(fs::path(train_posproto_file))) {
     DLOG(INFO) << "Computing positive training feats...";

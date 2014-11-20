@@ -95,6 +95,9 @@ namespace cpuvisor {
       return dset_paths_[idx];
     }
 
+    // legacy methods
+    virtual void addTrsFromFile(const std::string& id, const std::vector<std::string>& paths);
+
   protected:
     virtual boost::shared_ptr<QueryIfo> getQueryIfo_(const std::string& id);
 
