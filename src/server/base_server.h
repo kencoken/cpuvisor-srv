@@ -96,13 +96,16 @@ namespace cpuvisor {
     }
 
     // legacy methods
-    virtual void addTrsFromFile(const std::string& id, const std::vector<std::string>& paths);
+    virtual void addTrsFromFile(const std::string& id, const std::vector<std::string>& paths,
+                                const bool block = false);
 
   protected:
     virtual boost::shared_ptr<QueryIfo> getQueryIfo_(const std::string& id);
 
     virtual void train_(const std::string& id);
     virtual void rank_(const std::string& id);
+
+    virtual void addTrsFromFile_(const std::string& id, const std::vector<std::string>& paths);
 
     std::map<std::string, boost::shared_ptr<QueryIfo> > queries_;
 

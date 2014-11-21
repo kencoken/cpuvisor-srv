@@ -64,7 +64,8 @@ namespace cpuvisor {
     }
 
     featpipe::Liblinear svm;
-    svm.set_c(0.1);
+    svm.set_c(1.0);
+    //svm.set_eps(0.001);
     svm.train((float*)feats.data, feats.cols, feats.rows, labels);
     float* w_ptr = svm.get_w();
 

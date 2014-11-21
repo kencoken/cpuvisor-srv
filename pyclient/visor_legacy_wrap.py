@@ -1,8 +1,19 @@
+SUPPORT_GREENLETS = True
+
 import os
 import socket
 import json
+import errno
+
+if SUPPORT_GREENLETS:
+    import gevent
+
+from threading import Thread
 
 import pyclient
+
+import logging
+log = logging.getLogger(__name__)
 
 DEFAULT_CONFIG_FILE = '/Data/src/cpuvisor-srv/config.prototxt'
 
@@ -19,7 +30,9 @@ class VisorLegacyWrap(object):
 
     def __init__(self, protoconfig_path,
                  serve_ip=DEFAULT_SERVE_IP,
-                 serve_port=DEFAULT_SERVE_PORT):
+                 serve_port=DEFAULT_SERVE_PORT,
+                 multiple_connections=False,
+                 use_greenlets=False):
 
         self.client = pyclient.VisorClientLegacyExt(protoconfig_path)
         self.next_num_query_id = 1
@@ -28,31 +41,94 @@ class VisorLegacyWrap(object):
         self.serve_ip = serve_ip
         self.serve_port = serve_port
 
+        self.multiple_connections = multiple_connections
+        self.use_greenlets = use_greenlets
+
+        if self.use_greenlets and not SUPPORT_GREENLETS:
+            raise RuntimeError('Must set SUPPORT_GREENLETS to True')
+
     def serve(self):
 
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if self.use_greenlets:
+            s = gevent.socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        else:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind((self.serve_ip, self.serve_port))
         s.listen(1)
 
-        conn, addr = s.accept()
-        print 'Connection address:', addr
-
         while True:
 
-            req_data = conn.recv(BUFFER_SIZE)
-            if not req_data: break
-            term_idx = req_data.find(TCP_TERMINATOR)
-            if term_idx < 0: break
+            conn, addr = s.accept()
+
+            if self.use_greenlets:
+                ses_handler = gevent.Greenlet(self.process_session, conn)
+                ses_handler.start()
+            else:
+                ses_handler = Thread(target=self.process_session, args=(conn,))
+                ses_handler.daemon = self.multiple_connections
+                ses_handler.start()
+
+            if not self.multiple_connections:
+                ses_handler.join()
+                break
+
+
+    def process_session(self, conn):
+
+        leftovers = ''
+
+        while True:
+            log.info('Starting receive cycle...')
+
+            term_idx = -1
+            req_data = leftovers
+
+            log.debug('Starting with req_data: "%s"', req_data)
+
+            conn_closed = False
+            try:
+                while term_idx < 0:
+                    log.debug('Waiting for data...')
+                    req_chunk = conn.recv(BUFFER_SIZE)
+                    if not req_chunk:
+                        log.info('Connection closed! Ending session...')
+                        conn_closed = True
+                        break
+
+                    log.debug('Received chunk: "%s"', req_chunk)
+                    req_data = req_data + req_chunk
+                    term_idx = req_data.find(TCP_TERMINATOR)
+            except socket.error as e:
+                if e.errno != errno.ECONNRESET: raise
+                log.info('Connection reset! Ending session...')
+                conn_closed = True
+
+            if conn_closed: break
+
+            excess_sz = term_idx + len(TCP_TERMINATOR)
+            leftovers = req_data[excess_sz:]
+
             req_data = req_data[0:term_idx]
-            print "received data: " + req_data
+
+            log.debug('Received data: "%s", leftovers: "%s"', req_data, leftovers)
 
             req_obj = json.loads(req_data)
+
+            log.debug('Dispatching request...')
             rep_obj = self.dispatch(req_obj)
-
             rep_data = json.dumps(rep_obj)
-            print "sending response: " + rep_data
+            log.debug('Dispatch returned response: %s', rep_data)
 
-            conn.send(rep_data + TCP_TERMINATOR)
+            rep_data = rep_data + TCP_TERMINATOR
+            total_sent = 0
+            while total_sent < len(rep_data):
+                log.info('Sending response chunk...')
+                sent = conn.send(rep_data[total_sent:])
+                if sent == 0:
+                    raise RuntimeError('Socket connection broken')
+                total_sent = total_sent + sent
+
+            log.info('Response sent!')
 
         conn.close()
 
@@ -66,6 +142,9 @@ class VisorLegacyWrap(object):
             return self.release_query_id(req_dict['query_id'])
         elif req_dict['func'] == 'addPosTrs':
             return self.add_pos_trs(req_dict['query_id'], req_dict['impath'])
+        elif req_dict['func'] == 'addPosTrsAndWait':
+            return self. add_pos_trs(req_dict['query_id'], req_dict['impath'],
+                                     blocking=True)
         elif req_dict['func'] == 'addNegTrs':
             return self.add_neg_trs()
         elif req_dict['func'] == 'saveClassifier':
@@ -76,8 +155,10 @@ class VisorLegacyWrap(object):
             return self.train(req_dict['query_id'])
         elif req_dict['func'] == 'rank':
             return self.rank(req_dict['query_id'])
-        elif req_dict['func'] == 'getRanking':
-            return self.get_ranking(req_dict['query_id'])
+        elif req_dict['func'] == 'getRanking' or req_dict['func'] == 'getRankingSubset':
+            rep_dict = self.get_ranking(req_dict['query_id'])
+            rep_dict['total_len'] = len(rep_dict['ranklist'])
+            return rep_dict
         else:
             raise RuntimeError('Unknown command: %s' % req_dict['func'])
 
@@ -103,10 +184,10 @@ class VisorLegacyWrap(object):
 
         return {'success': True}
 
-    def add_pos_trs(self, num_query_id, path):
+    def add_pos_trs(self, num_query_id, path, blocking=False):
         query_id = self._get_query_id(num_query_id)
 
-        self.client.add_trs_from_file(query_id, path)
+        self.client.add_trs_from_file(query_id, path, blocking)
 
         return {'success': True}
 
@@ -149,11 +230,13 @@ class VisorLegacyWrap(object):
 
             image = os.path.join(dset_dir, ritem.path)
             score = ritem.score
-            uri = os.path.join(dset_name, os.path.splitext(ritem.path)[0])
+            uri = os.path.splitext(ritem.path)[0]#os.path.join(dset_name, os.path.splitext(ritem.path)[0])
+            path = ritem.path
 
             ranking_obj.append({'image': image,
                                 'score': score,
-                                'uri': uri})
+                                'uri': uri,
+                                'path': path})
 
         return {'success': True,
                 'ranklist': ranking_obj}

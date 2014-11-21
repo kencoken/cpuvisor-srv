@@ -11,6 +11,8 @@
 #include <string>
 #include <opencv2/opencv.hpp>
 
+#include <boost/thread.hpp>
+
 namespace cpuvisor {
 
   struct Ranking {
@@ -28,6 +30,8 @@ namespace cpuvisor {
 
   struct QueryData {
     cv::Mat pos_feats;
+    std::vector<std::string> pos_paths; // for debugging
+    boost::mutex pos_mutex; // to ensure features are added in thread-safe manner
     cv::Mat model;
     Ranking ranking;
   };

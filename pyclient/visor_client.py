@@ -136,12 +136,15 @@ class VisorClientLegacyExt(VisorClient):
     def __init__(self, protoconfig_path, context=None):
         super(VisorClientLegacyExt, self).__init__(protoconfig_path, context)
 
-    def add_trs_from_file(self, query_id, path):
+    def add_trs_from_file(self, query_id, path, blocking=False):
         """ Add positive training sample computed for an image file
         """
         log.info('REQ: add_trs_from_file (%s)', path)
 
-        req = self.generate_req_('add_trs_from_file')
+        if blocking:
+            req = self.generate_req_('add_trs_from_file_and_wait')
+        else:
+            req = self.generate_req_('add_trs_from_file')
         req.id = query_id
         req.train_image_urls.urls.append(path)
 

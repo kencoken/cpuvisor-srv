@@ -29,7 +29,8 @@ def legacy_serve():
     # connect to server
 
     client = pyclient.VisorLegacyWrap(CONFIG_FILE,
-                                      SERVE_IP, SERVE_PORT)
+                                      SERVE_IP, SERVE_PORT,
+                                      use_greenlets=True)
 
     print 'Serving...'
     client.serve()
@@ -43,8 +44,12 @@ def recv_rep_obj(socket):
     rep_data = socket.recv(BUFFER_SIZE)
     term_idx = rep_data.find(TCP_TERMINATOR)
     while term_idx < 0:
-        rep_data = rep_data + socket.recv(BUFFER_SIZE)
-        term_idx = rep_data.find(TCP_TERMINATOR)
+        append_data = socket.recv(BUFFER_SIZE)
+        if not append_data:
+            raise RuntimeError("No data received!")
+        else:
+            rep_data = rep_data + append_data
+            term_idx = rep_data.find(TCP_TERMINATOR)
 
     rep_data = rep_data[0:term_idx]
 
@@ -94,7 +99,7 @@ if __name__ == "__main__":
 
     for pos_trs_path in pos_trs_paths:
         print 'Sending addPosTrs'
-        req_obj = {'func': 'addPosTrs',
+        req_obj = {'func': 'addPosTrsAndWait',
                    'query_id': query_id,
                    'impath': pos_trs_path}
         send_req_obj(s, req_obj)

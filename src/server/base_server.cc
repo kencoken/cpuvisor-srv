@@ -8,6 +8,8 @@
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
 
+#include <boost/thread.hpp>
+
 #include "server/util/io.h"
 #include "server/util/feat_util.h"
 
@@ -22,9 +24,14 @@ namespace cpuvisor {
     if (!extra_data_s) return; // return if query_ifo cannot be retrieved
     boost::shared_ptr<QueryIfo>& query_ifo = extra_data_s->query_ifo;
     boost::shared_ptr<StatusNotifier>& notifier = extra_data_s->notifier;
-    if (query_ifo->state != QS_DATACOLL) return; // return if state has advanced
+    if (query_ifo->state != QS_DATACOLL) {
+      LOG(INFO) << "Skipping computing feature(s) for query " << query_ifo->id << " as it has advanced past data collection stage";
+      return;
+    }
 
     cv::Mat& feats = query_ifo->data.pos_feats;
+    std::vector<std::string>& feat_paths = query_ifo->data.pos_paths;
+    boost::mutex& feat_mutex = query_ifo->data.pos_mutex;
 
     cv::Mat feat;
 
@@ -49,9 +56,18 @@ namespace cpuvisor {
       CHECK_EQ(feats.cols, feat.cols);
     }
 
+    if (query_ifo->state != QS_DATACOLL) {
+      LOG(INFO) << "Skipping adding feature(s) for query " << query_ifo->id << " as it has advanced past data collection stage";
+      return;
+    }
+
     DLOG(INFO) << "Pushing with sizes: " << feats.rows << "x" << feats.cols
                << " and " << feat.rows << "x" << feat.cols;
-    feats.push_back(feat); // not sure if this is thread safe
+    {
+      boost::mutex::scoped_lock lock(feat_mutex);
+      feats.push_back(feat); // probably not thread safe, so locking here
+      feat_paths.push_back(imfile);
+    }
 
     DLOG(INFO) << "Feats size is now: " << feats.rows << "x" << feats.cols;
 
@@ -209,8 +225,8 @@ namespace cpuvisor {
   // Legacy methods --------------------------------------------------------------
 
   void BaseServer::addTrsFromFile(const std::string& id,
-                                  const std::vector<std::string>& paths) {
-    // note that unlike addTrs this method is blocking
+                                  const std::vector<std::string>& paths,
+                                  const bool block) {
     boost::shared_ptr<QueryIfo> query_ifo = getQueryIfo_(id);
 
     if (paths.size() == 0) throw InvalidRequestError("No paths specified in paths array");
@@ -220,13 +236,10 @@ namespace cpuvisor {
       return;
     }
 
-    boost::shared_ptr<BaseServerExtraData> extra_data(new BaseServerExtraData());
-    extra_data->query_ifo = query_ifo;
-    extra_data->notifier = notifier_; // to allow for notifications
-                                      // from postproc callback
-
-    for (size_t i = 0; i < paths.size(); ++i) {
-      post_processor_->process(paths[i], extra_data);
+    if (block) {
+      addTrsFromFile_(id, paths);
+    } else {
+      boost::thread proc_thread(&BaseServer::addTrsFromFile_, this, id, paths);
     }
   }
 
@@ -254,6 +267,13 @@ namespace cpuvisor {
     query_ifo->state = QS_TRAINING;
     notifier_->post_state_change_(id, query_ifo->state);
 
+    #ifndef NDEBUG // DEBUG
+    DLOG(INFO) << "Will train with features computed from the following positive paths:";
+    for (size_t i = 0; i < query_ifo->data.pos_paths.size(); ++i) {
+      DLOG(INFO) << i+1 << ": " << query_ifo->data.pos_paths[i];
+    }
+    #endif
+
     query_ifo->data.model =
       cpuvisor::trainLinearSvm(query_ifo->data.pos_feats, neg_feats_);
 
@@ -279,6 +299,20 @@ namespace cpuvisor {
 
     query_ifo->state = QS_RANKED;
     notifier_->post_state_change_(id, query_ifo->state);
+  }
+
+  void BaseServer::addTrsFromFile_(const std::string& id,
+                                   const std::vector<std::string>& paths) {
+    boost::shared_ptr<QueryIfo> query_ifo = getQueryIfo_(id);
+
+    boost::shared_ptr<BaseServerExtraData> extra_data(new BaseServerExtraData());
+    extra_data->query_ifo = query_ifo;
+    extra_data->notifier = notifier_; // to allow for notifications
+                                      // from postproc callback
+
+    for (size_t i = 0; i < paths.size(); ++i) {
+      post_processor_->process(paths[i], extra_data);
+    }
   }
 
 }
