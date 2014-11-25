@@ -18,6 +18,21 @@ using google::protobuf::io::CodedOutputStream;
 
 namespace cpuvisor {
 
+  int64_t getTextFileLineCount(const std::string& text_path) {
+    std::ifstream imfiles(text_path.c_str());
+
+    int64_t line_count = 0;
+    std::string imfile;
+    while (std::getline(imfiles, imfile)) {
+      if (!imfile.empty()) {
+        ++line_count;
+      }
+    }
+    CHECK_GE(line_count, 0);
+
+    return line_count;
+  }
+
   void writeFeatsToProto(const cv::Mat& feats, const std::vector<std::string>& paths,
                          const std::string& proto_path) {
     CHECK_EQ(paths.size(), feats.rows);

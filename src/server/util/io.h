@@ -9,14 +9,18 @@
 
 #include <vector>
 #include <string>
-#include <opencv2/opencv.hpp>
+#include <fstream>
+
 #include <glog/logging.h>
+
+#include <opencv2/opencv.hpp>
 
 #include "cpuvisor_srv.pb.h"
 
 using google::protobuf::Message;
 
 namespace cpuvisor {
+  int64_t getTextFileLineCount(const std::string& text_path);
 
   void writeFeatsToProto(const cv::Mat& feats, const std::vector<std::string>& paths,
                          const std::string& proto_path);

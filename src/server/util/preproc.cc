@@ -10,7 +10,9 @@ namespace cpuvisor {
                     const std::string& proto_path,
                     featpipe::CaffeEncoder& encoder,
                     const std::string& base_path,
-                    const size_t limit) {
+                    const int64_t limit,
+                    const int64_t start_idx,
+                    const int64_t end_idx) {
     std::vector<std::string> paths;
 
     std::ifstream imfiles(text_path.c_str());
@@ -24,11 +26,29 @@ namespace cpuvisor {
     }
 
     std::string imfile;
+    int64_t iter_count = 0;
     while (std::getline(imfiles, imfile)) {
-      if ((limit > 0) && (paths.size() >= limit)) break;
-      if (!imfile.empty()) {
-        paths.push_back(imfile);
+      if ((start_idx > -1) && (iter_count < start_idx)) {
+        DLOG(INFO) << "Skipping index: " << iter_count << " (< " << start_idx << ")";
+        if (!imfile.empty()) ++iter_count;
+        continue;
       }
+
+      if ((limit > 0) && (paths.size() >= static_cast<size_t>(limit))) {
+        DLOG(INFO) << "Breaking, paths.size(): " << paths.size() << " > limit of: " << limit;
+        break;
+      }
+      if ((end_idx > -1) && (iter_count == end_idx)) {
+        DLOG(INFO) << "Breaking, iter_count: " << iter_count << " == " << end_idx;
+        break;
+      }
+
+      if (!imfile.empty()) {
+        DLOG(INFO) << "Pushing back: " << imfile;
+        paths.push_back(imfile);
+        ++iter_count;
+      }
+      CHECK_GE(iter_count, 0);
     }
 
     CHECK_GT(paths.size(), 0) << "No paths could be read from file: " << text_path;

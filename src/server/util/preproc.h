@@ -27,7 +27,9 @@ namespace cpuvisor {
                     const std::string& proto_path,
                     featpipe::CaffeEncoder& encoder,
                     const std::string& base_path = std::string(),
-                    const size_t limit = 0);
+                    const int64_t limit = -1,
+                    const int64_t start_idx = -1,
+                    const int64_t end_idx = -1);
 }
 
 #endif
