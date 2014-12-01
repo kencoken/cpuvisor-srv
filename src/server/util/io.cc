@@ -3,6 +3,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/scope_exit.hpp>
 
+#include <boost/filesystem.hpp>
+namespace fs = boost::filesystem;
+
 #include <fstream>
 #include <fcntl.h>
 #include <google/protobuf/io/coded_stream.h>
@@ -100,6 +103,8 @@ namespace cpuvisor {
     bool success = readProtoFromBinaryFile(proto_path, &feats_proto);
     if (!success) return success;
 
+    fs::path proto_dir_fs = fs::path(proto_path).parent_path();
+
     (*feats) = cv::Mat::zeros(feats_proto.num(), feats_proto.dim(), CV_32FC1);
     std::vector<std::string>& paths_ref = (*paths);
     paths_ref = std::vector<std::string>(feats_proto.num());
@@ -118,9 +123,16 @@ namespace cpuvisor {
         cv::Mat chunk_feats;
         std::vector<std::string> chunk_paths;
 
-        if (!readFeatsFromProto(feats_proto.chunks(ci),
+        std::string chunk_proto_path = feats_proto.chunks(ci);
+        fs::path chunk_proto_path_fs = fs::path(chunk_proto_path);
+        if (!chunk_proto_path_fs.is_absolute()) {
+          chunk_proto_path_fs = proto_dir_fs / chunk_proto_path_fs;
+          chunk_proto_path = chunk_proto_path_fs.string();
+        }
+
+        if (!readFeatsFromProto(chunk_proto_path,
                                 &chunk_feats, &chunk_paths)) {
-          LOG(ERROR) << "Error reading chunk: " << feats_proto.chunks(ci);
+          LOG(ERROR) << "Error reading chunk: " << chunk_proto_path;
           return false;
         }
 
