@@ -1,5 +1,7 @@
 #include "base_server.h"
 
+#include <fstream>
+
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -100,7 +102,6 @@ namespace cpuvisor {
                                  &dset_feats_, &dset_paths_);
     dset_base_path_ = preproc_config.dataset_im_base_path();
 
-
     cpuvisor::readFeatsFromProto(preproc_config.neg_feats_file(),
                                  &neg_feats_, &neg_paths_);
     neg_base_path_ = preproc_config.neg_im_base_path();
@@ -110,8 +111,9 @@ namespace cpuvisor {
 
     const cpuvisor::ServerConfig server_config = config.server_config();
 
+    image_cache_path_ = server_config.image_cache_path();
     image_downloader_ =
-      boost::shared_ptr<ImageDownloader>(new ImageDownloader(server_config.image_cache_path(),
+      boost::shared_ptr<ImageDownloader>(new ImageDownloader(image_cache_path_,
                                                              post_processor_));
 
     notifier_ = boost::shared_ptr<StatusNotifier>(new StatusNotifier());
@@ -240,6 +242,99 @@ namespace cpuvisor {
       addTrsFromFile_(id, paths);
     } else {
       boost::thread proc_thread(&BaseServer::addTrsFromFile_, this, id, paths);
+    }
+  }
+
+  void BaseServer::saveAnnotations(const std::string& id, const std::string& filename) {
+    boost::shared_ptr<QueryIfo> query_ifo = getQueryIfo_(id);
+
+    LOG(INFO) << "Saving annotation file to: " << filename << "...";
+
+    std::vector<std::string>& pos_paths = query_ifo->data.pos_paths;
+
+    std::ofstream annofile(filename.c_str());
+
+    size_t base_path_len = image_cache_path_.length();
+    if (image_cache_path_[base_path_len-1] != fs::path("/").make_preferred().string()[0]) {
+      base_path_len += 1;
+    }
+
+    for (size_t fi = 0; fi < pos_paths.size(); ++fi) {
+
+      // get relative path from full path (a bit of a hack below!)
+      std::string rel_path = pos_paths[fi];
+
+      std::string train_img_searchstr = "postrainimgs"; // MAGIC CONSTANT
+      size_t train_img_searchstr_idx = pos_paths[fi].find(train_img_searchstr);
+      if (train_img_searchstr_idx != std::string::npos) {
+        // relative path after searchstr if found
+        size_t start_idx = train_img_searchstr_idx;// + train_img_searchstr.length() + 1;
+
+        rel_path = pos_paths[fi].substr(start_idx, pos_paths[fi].length() - start_idx);
+      } else {
+        // else relative to cache path
+        rel_path = pos_paths[fi].substr(base_path_len,
+                                        pos_paths[fi].length() - base_path_len);
+        CHECK_EQ(pos_paths[fi][base_path_len-1],
+                 fs::path("/").make_preferred().string()[0]);
+      }
+
+      std::string anno = "+1";
+      std::string from_dataset = "-1";
+      std::string featfile = "";
+      annofile << rel_path << " "
+               << anno << " "
+               << from_dataset << " "
+               << featfile << "\n";
+
+      DLOG(INFO) << "save_anno_file:" << fi << ": " << rel_path << " " << anno;
+      DLOG(INFO) << "               " << pos_paths[fi];
+      DLOG(INFO) << "               " << base_path_len << ":" << image_cache_path_;
+    }
+
+    annofile.flush();
+  }
+
+  void BaseServer::loadAnnotations(const std::string& filename,
+                                   std::vector<std::string>* paths,
+                                   std::vector<int32_t>* annos) {
+    LOG(INFO) << "Loading annotation file from: " << filename << "...";
+
+    std::ifstream annofile(filename.c_str());
+    std::string line;
+
+    (*paths) = std::vector<std::string>();
+    (*annos) = std::vector<int32_t>();
+
+    while (std::getline(annofile, line)) {
+      if (!line.empty()) {
+        std::string path;
+        int32_t anno;
+
+        std::vector<std::string> elems;
+        // split fields
+        boost::split(elems, line, boost::is_any_of("\t "));
+        // validate input line
+        if (elems.size() < 2) {
+          throw InvalidAnnoFileError("Could not parse required fields from line of annotation file: " + line);
+        }
+        // first element is string ID
+        path = elems[0];
+        // second element is annotation generally +1/-1/0
+        if ((elems[1] == "1") || (elems[1] == "+1")) {
+          anno = 1;
+        } else if (elems[1] == "0") {
+          anno = 0;
+        } else if (elems[1] == "-1") {
+          anno = -1;
+        } else {
+          throw InvalidAnnoFileError("Unrecognised annotation");
+        }
+
+        DLOG(INFO) << "load_anno_file: " << path << " " << anno;
+        paths->push_back(path);
+        annos->push_back(anno);
+      }
     }
   }
 

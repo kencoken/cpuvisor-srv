@@ -179,3 +179,28 @@ class VisorClientLegacyExt(VisorClient):
         self.req_socket.send(req.SerializeToString())
 
         self.parse_message_(self.req_socket.recv())
+
+    def save_annotations(self, query_id, path):
+        """ Legacy saving of training image annotation file (non-blocking)
+        """
+        log.info('REQ: save_annotations')
+
+        req = self.generate_req_('save_annotations')
+        req.id = query_id
+        req.filepath = path
+        self.req_socket.send(req.SerializeToString())
+
+        self.parse_message_(self.req_socket.recv())
+
+    def get_annotations(self, path):
+        """ Legacy loading of training image annotation file
+        """
+        log.info('REQ: get_annotations')
+
+        req = self.generate_req_('get_annotations')
+        req.filepath = path
+        self.req_socket.send(req.SerializeToString())
+
+        rep = self.parse_message_(self.req_socket.recv())
+
+        return rep.annotations

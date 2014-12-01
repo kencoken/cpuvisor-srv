@@ -34,6 +34,9 @@ namespace cpuvisor {
 
     virtual void getRankingPage_(const Ranking& ranking,
                                  const RPCReq& rpc_req, RPCRep* rpc_rep);
+    virtual void getAnnotations_(const std::vector<std::string>& paths,
+                                 const std::vector<int32_t>& annos,
+                                 const RPCReq& rpc_req, RPCRep* rpc_rep);
 
     virtual void monitor_state_change_();
     virtual void monitor_add_trs_images_();

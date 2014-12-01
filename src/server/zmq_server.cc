@@ -196,6 +196,20 @@ namespace cpuvisor {
 
           base_server_->addTrsFromFile(id, paths, true);
 
+        } else if (req_str == "save_annotations") { // legacy
+
+          const std::string filepath = rpc_req.filepath();
+          base_server_->saveAnnotations(id, filepath);
+
+        } else if (req_str == "get_annotations") { // legacy
+
+          const std::string filepath = rpc_req.filepath();
+          std::vector<std::string> paths;
+          std::vector<int32_t> annos;
+          base_server_->loadAnnotations(filepath, &paths, &annos);
+
+          getAnnotations_(paths, annos, rpc_req, &rpc_rep);
+
         } else {
 
           rpc_rep.set_success(false);
@@ -276,6 +290,18 @@ namespace cpuvisor {
     }
 
 
+  }
+
+  void ZmqServer::getAnnotations_(const std::vector<std::string>& paths,
+                                  const std::vector<int32_t>& annos,
+                                  const RPCReq& rpc_req, RPCRep* rpc_rep) {
+    CHECK_EQ(paths.size(), annos.size());
+
+    for (size_t i = 0; i < paths.size(); ++i) {
+      Annotation* annotation_proto = rpc_rep->add_annotations();
+      annotation_proto->set_path(paths[i]);
+      annotation_proto->set_anno(annos[i]);
+    }
   }
 
   void ZmqServer::monitor_state_change_() {

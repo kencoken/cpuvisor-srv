@@ -15,7 +15,7 @@ import pyclient
 import logging
 log = logging.getLogger(__name__)
 
-DEFAULT_CONFIG_FILE = '/Data/src/cpuvisor-srv/config.prototxt'
+DEFAULT_CONFIG_FILE = 'config.prototxt'
 
 DEFAULT_SERVE_IP = '127.0.0.1'
 DEFAULT_SERVE_PORT = 5005
@@ -150,7 +150,9 @@ class VisorLegacyWrap(object):
         elif req_dict['func'] == 'saveClassifier':
             return self.save_classifier()
         elif req_dict['func'] == 'saveAnnotations':
-            return self.save_annotations()
+            return self.save_annotations(req_dict['query_id'], req_dict['filepath'])
+        elif req_dict['func'] == 'getAnnotations':
+            return self.get_annotations(req_dict['filepath'])
         elif req_dict['func'] == 'train':
             return self.train(req_dict['query_id'])
         elif req_dict['func'] == 'rank':
@@ -199,9 +201,23 @@ class VisorLegacyWrap(object):
         print 'Not supported!'
         return {'success': True}
 
-    def save_annotations(self):
-        print 'Not supported!'
+    def save_annotations(self, num_query_id, path):
+        query_id = self._get_query_id(num_query_id)
+
+        self.client.save_annotations(query_id, path)
+
         return {'success': True}
+
+    def get_annotations(self, path):
+        annos_proto = self.client.get_annotations(path)
+
+        anno_list = []
+        for anno_proto in annos_proto:
+            anno_list.append({'image': anno_proto.path,
+                              'anno': anno_proto.anno})
+
+        return {'success': True,
+                'annos': anno_list}
 
     def train(self, num_query_id):
         query_id = self._get_query_id(num_query_id)

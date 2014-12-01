@@ -22,7 +22,7 @@ TEST_QUERY = 'car'
 
 TCP_TERMINATOR = '$$$'
 
-CONFIG_FILE = '/Data/src/cpuvisor-srv/config.prototxt'
+CONFIG_FILE = 'config.prototxt'
 
 def legacy_serve():
 

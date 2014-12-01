@@ -19,10 +19,6 @@ namespace cpuvisor {
     cv::Mat scores;
     cv::Mat sort_idxs;
   };
-  // struct Ritem {
-  //   std::string path;
-  //   float score;
-  // };
 
   enum QueryState {QS_DATACOLL, QS_DATACOLL_COMPLETE,
                    QS_TRAINING, QS_TRAINED,

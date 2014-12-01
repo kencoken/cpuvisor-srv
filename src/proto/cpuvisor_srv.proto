@@ -17,6 +17,8 @@ message RPCReq {
 
   optional TrainImageUrls train_image_urls = 10;
   optional uint32 retrieve_page = 11 [default = 1];
+
+  optional string filepath = 50; // used only for legacy save/load annotations
 }
 
 message RPCRep {
@@ -25,6 +27,8 @@ message RPCRep {
   optional string err_msg = 16;
 
   optional RankedList ranking = 10;
+
+  repeated Annotation annotations = 50; // used only for legacy save/load annotations
 }
 
 enum NotificationType {
@@ -53,4 +57,9 @@ message RankedList {
   repeated RankedItem rlist = 1;
   optional uint32 page = 2;
   optional uint32 page_count = 3;
+}
+
+message Annotation {
+  optional string path = 1;
+  optional int32 anno = 2;
 }

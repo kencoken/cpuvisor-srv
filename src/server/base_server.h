@@ -40,6 +40,11 @@ namespace cpuvisor {
     CannotReturnRankingError(std::string const& msg): InvalidRequestError(msg) { }
   };
 
+  class InvalidAnnoFileError: public InvalidRequestError {
+    public:
+    InvalidAnnoFileError(std::string const& msg): InvalidRequestError(msg) { }
+  };
+
   // callback functor specializations ----
 
   class BaseServerExtraData : public ExtraDataWrapper {
@@ -98,6 +103,10 @@ namespace cpuvisor {
     // legacy methods
     virtual void addTrsFromFile(const std::string& id, const std::vector<std::string>& paths,
                                 const bool block = false);
+    virtual void saveAnnotations(const std::string& id, const std::string& filename);
+    virtual void loadAnnotations(const std::string& filename,
+                                 std::vector<std::string>* paths,
+                                 std::vector<int32_t>* annos);
 
   protected:
     virtual boost::shared_ptr<QueryIfo> getQueryIfo_(const std::string& id);
@@ -116,6 +125,7 @@ namespace cpuvisor {
     cv::Mat neg_feats_;
     std::vector<std::string> neg_paths_;
     std::string neg_base_path_;
+    std::string image_cache_path_;
 
     boost::shared_ptr<featpipe::CaffeEncoder> encoder_;
     boost::shared_ptr<BaseServerPostProcessor> post_processor_;

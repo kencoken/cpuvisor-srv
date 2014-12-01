@@ -12,7 +12,7 @@ IMAGE_DOWNLOAD_TIMEOUT = 20 # time to wait for images to be downloaded and feats
 
 TEST_QUERY = 'car'
 
-config_file = '/Data/src/cpuvisor-srv/config.prototxt'
+config_file = 'config.prototxt'
 
 # function for receiving notifications
 
