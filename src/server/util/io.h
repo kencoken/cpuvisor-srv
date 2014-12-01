@@ -24,6 +24,9 @@ namespace cpuvisor {
 
   void writeFeatsToProto(const cv::Mat& feats, const std::vector<std::string>& paths,
                          const std::string& proto_path);
+  void writeChunkIndexToProto(const std::vector<std::string>& chunk_fnames,
+                              const size_t feat_num, const size_t feat_dim,
+                              const std::string& proto_path);
   bool readFeatsFromProto(const std::string& proto_path,
                           cv::Mat* feats, std::vector<std::string>* paths);
 

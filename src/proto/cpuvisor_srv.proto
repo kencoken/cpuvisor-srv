@@ -1,10 +1,17 @@
 package cpuvisor;
 
+message FeatProto {
+  repeated float data = 1 [packed = true];
+}
+
 message FeatsProto {
   optional uint32 num = 1 [default = 0];
   optional uint32 dim = 2 [default = 0];
   repeated float data = 3 [packed = true];
   repeated string paths = 4;
+
+  repeated FeatProto feats = 5; // unused
+  repeated string chunks = 10;
 }
 
 

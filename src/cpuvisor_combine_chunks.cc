@@ -51,25 +51,38 @@ int main(int argc, char* argv[]) {
 
   LOG(INFO) << "Combining chunks...";
 
-  cv::Mat feats;
-  std::vector<std::string> paths;
+  // cv::Mat feats;
+  // std::vector<std::string> paths;
+  size_t feat_num, feat_dim;
 
   for (size_t i = 0; i < chunk_files.size(); ++i) {
     LOG(INFO) << "Processing chunk: " << chunk_files[i];
     cv::Mat feats_chunk;
     std::vector<std::string> paths_chunk;
 
-    cpuvisor::readFeatsFromProto(chunk_files[i], &feats_chunk, &paths_chunk);
+    CHECK(cpuvisor::readFeatsFromProto(chunk_files[i], &feats_chunk, &paths_chunk));
 
-    feats.push_back(feats_chunk);
-
-    for (size_t ci = 0; ci < paths_chunk.size(); ++ci) {
-      paths.push_back(paths_chunk[ci]);
+    if (i == 0) {
+      feat_num = feats_chunk.rows;
+      feat_dim = feats_chunk.cols;
+      CHECK_EQ(feat_num, paths_chunk.size());
+    } else {
+      feat_num += feats_chunk.rows;
+      CHECK_EQ(feat_dim, feats_chunk.cols);
     }
 
-    CHECK_EQ(feats.rows, paths.size());
+    // feats.push_back(feats_chunk);
+
+    // for (size_t ci = 0; ci < paths_chunk.size(); ++ci) {
+    //   paths.push_back(paths_chunk[ci]);
+    // }
+
+    // CHECK_EQ(feats.rows, paths.size());
   }
 
   LOG(INFO) << "Saving combined chunks...";
-  cpuvisor::writeFeatsToProto(feats, paths, feats_file);
+  // DLOG(INFO) << "Feats size is: " << feats.rows << "x" << feats.cols;
+  // DLOG(INFO) << "Paths size is: " << paths.size();
+  // cpuvisor::writeFeatsToProto(feats, paths, feats_file);
+  cpuvisor::writeChunkIndexToProto(chunk_files, feat_num, feat_dim, feats_file);
 }

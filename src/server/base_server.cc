@@ -98,12 +98,12 @@ namespace cpuvisor {
 
     const cpuvisor::PreprocConfig preproc_config = config.preproc_config();
 
-    cpuvisor::readFeatsFromProto(preproc_config.dataset_feats_file(),
-                                 &dset_feats_, &dset_paths_);
+    CHECK(cpuvisor::readFeatsFromProto(preproc_config.dataset_feats_file(),
+                                       &dset_feats_, &dset_paths_));
     dset_base_path_ = preproc_config.dataset_im_base_path();
 
-    cpuvisor::readFeatsFromProto(preproc_config.neg_feats_file(),
-                                 &neg_feats_, &neg_paths_);
+    CHECK(cpuvisor::readFeatsFromProto(preproc_config.neg_feats_file(),
+                                       &neg_feats_, &neg_paths_));
     neg_base_path_ = preproc_config.neg_im_base_path();
 
     post_processor_ =

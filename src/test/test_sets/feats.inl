@@ -175,7 +175,7 @@ TEST_CASE("feats/saveLoad",
 
   cv::Mat loaded_feats;
   std::vector<std::string> loaded_paths;
-  cpuvisor::readFeatsFromProto(temp_file, &loaded_feats, &loaded_paths);
+  REQUIRE(cpuvisor::readFeatsFromProto(temp_file, &loaded_feats, &loaded_paths) == true);
 
   removeTempDir(temp_dir);
 

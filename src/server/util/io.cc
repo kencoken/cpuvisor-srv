@@ -48,9 +48,21 @@ namespace cpuvisor {
     CHECK(feats.isContinuous());
 
     const float* feats_data = (float*)feats.data;
-    for (size_t i = 0; i < static_cast<size_t>(feats.rows*feats.cols); ++i) {
-      feats_proto.add_data(feats_data[i]);
+    if (false) {
+      // each feature stored in separate message
+      for (size_t i = 0; i < static_cast<size_t>(feats.rows); ++i) {
+        cpuvisor::FeatProto* feat_proto = feats_proto.add_feats();
+        for (size_t j = 0; j < static_cast<size_t>(feats.cols); ++j) {
+          feat_proto->add_data(feats_data[i*feats.cols + j]);
+        }
+      }
+    } else {
+      // features stored in one large packed message
+      for (size_t i = 0; i < static_cast<size_t>(feats.rows*feats.cols); ++i) {
+        feats_proto.add_data(feats_data[i]);
+      }
     }
+
     for (size_t i = 0; i < paths.size(); ++i) {
       feats_proto.add_paths(paths[i]);
     }
@@ -61,6 +73,22 @@ namespace cpuvisor {
       DLOG(INFO) << feats.row(i);
     }
     // END DEBUG
+
+    writeProtoToBinaryFile(proto_path, feats_proto);
+  }
+
+  void writeChunkIndexToProto(const std::vector<std::string>& chunk_fnames,
+                              const size_t feat_num, const size_t feat_dim,
+                              const std::string& proto_path) {
+    cpuvisor::FeatsProto feats_proto;
+    feats_proto.set_num(feat_num);
+    feats_proto.set_dim(feat_dim);
+    feats_proto.clear_data();
+    feats_proto.clear_paths();
+
+    for (size_t i = 0; i < chunk_fnames.size(); ++i) {
+      feats_proto.add_chunks(chunk_fnames[i]);
+    }
 
     writeProtoToBinaryFile(proto_path, feats_proto);
   }
@@ -78,21 +106,85 @@ namespace cpuvisor {
 
     float* feats_data = (float*)feats->data;
 
-    size_t max_size = feats_proto.num()*feats_proto.dim();
-    for (size_t i = 0; i < max_size; ++i) {
-      feats_data[i] = feats_proto.data(i);
-    }
-    max_size = feats_proto.num();
-    for (size_t i = 0; i < max_size; ++i) {
-      paths_ref[i] = feats_proto.paths(i);
-    }
+    if (feats_proto.chunks_size() > 0) {
+      // 1. read in chunks from index file if applicable
+      // -----------------------------------------------
 
-    // DEBUG
-    for (size_t i = 0; i < 5; ++i) {
-      DLOG(INFO) << (*paths)[i] << ":";
-      DLOG(INFO) << feats->row(i);
+      size_t chunks_count = feats_proto.chunks_size();
+
+      size_t ptr = 0;
+
+      for (size_t ci = 0; ci < chunks_count; ++ci) {
+        cv::Mat chunk_feats;
+        std::vector<std::string> chunk_paths;
+
+        if (!readFeatsFromProto(feats_proto.chunks(ci),
+                                &chunk_feats, &chunk_paths)) {
+          LOG(ERROR) << "Error reading chunk: " << feats_proto.chunks(ci);
+          return false;
+        }
+
+        size_t chunk_size = chunk_paths.size();
+        CHECK_EQ(chunk_feats.rows, chunk_size);
+
+        if ((ptr + chunk_size) > paths_ref.size()) {
+          LOG(ERROR) << "Loaded chunks inconsistent - too many features ("
+                     << ptr + chunk_size << " vs. " << paths_ref.size() << ")";
+          return false;
+        }
+
+        cv::Mat submat = feats->rowRange(ptr, ptr + chunk_size);
+        chunk_feats.copyTo(submat);
+        for (size_t i = 0; i < chunk_size; ++i) {
+          paths_ref[ptr + i] = chunk_paths[i];
+        }
+
+        ptr += chunk_size;
+      }
+
+      if (ptr != paths_ref.size()) {
+        LOG(ERROR) << "Loaded chunks inconsistent - too few features ("
+                   << ptr << " vs. " << paths_ref.size() << ")";
+        return false;
+      }
+
+    } else {
+      // 2. else load in a regular chunk
+      // -------------------------------
+
+      if (feats_proto.feats_size() > 0) {
+        // each feature stored in separate message
+        size_t feat_count = feats_proto.num();
+        size_t feat_dim = feats_proto.dim();
+        CHECK_EQ(feats_proto.feats_size(), feat_count);
+        for (size_t i = 0; i < feat_count; ++i) {
+          const cpuvisor::FeatProto& feat_proto = feats_proto.feats(i);
+          CHECK_EQ(feat_proto.data_size(), feat_dim);
+          for (size_t j = 0; j < feat_dim; ++j) {
+            feats_data[i*feat_dim + j] = feat_proto.data(j);
+          }
+        }
+      } else {
+        // features stored in one large packed message
+        size_t max_size = feats_proto.num()*feats_proto.dim();
+        for (size_t i = 0; i < max_size; ++i) {
+          feats_data[i] = feats_proto.data(i);
+        }
+      }
+
+      size_t max_size = feats_proto.num();
+      for (size_t i = 0; i < max_size; ++i) {
+        paths_ref[i] = feats_proto.paths(i);
+      }
+
+      // DEBUG
+      for (size_t i = 0; i < 5; ++i) {
+        DLOG(INFO) << (*paths)[i] << ":";
+        DLOG(INFO) << feats->row(i);
+      }
+      // END DEBUG
+
     }
-    // END DEBUG
 
     return success;
   }

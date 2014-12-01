@@ -111,10 +111,10 @@ int main(int argc, char* argv[]) {
   std::vector<std::string> train_neg_paths;
   std::vector<std::string> test_pos_paths;
   std::vector<std::string> test_neg_paths;
-  cpuvisor::readFeatsFromProto(train_posproto_file, &train_pos_feats, &train_pos_paths);
-  cpuvisor::readFeatsFromProto(train_negproto_file, &train_neg_feats, &train_neg_paths);
-  cpuvisor::readFeatsFromProto(test_posproto_file, &test_pos_feats, &test_pos_paths);
-  cpuvisor::readFeatsFromProto(test_negproto_file, &test_neg_feats, &test_neg_paths);
+  CHECK(cpuvisor::readFeatsFromProto(train_posproto_file, &train_pos_feats, &train_pos_paths));
+  CHECK(cpuvisor::readFeatsFromProto(train_negproto_file, &train_neg_feats, &train_neg_paths));
+  CHECK(cpuvisor::readFeatsFromProto(test_posproto_file, &test_pos_feats, &test_pos_paths));
+  CHECK(cpuvisor::readFeatsFromProto(test_negproto_file, &test_neg_feats, &test_neg_paths));
 
   // debug
   for (size_t i = 0; i < 5; ++i) {

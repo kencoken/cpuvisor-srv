@@ -16,9 +16,9 @@ int main(int argc, char* argv[]) {
   cv::Mat feats;
   std::vector<std::string> paths;
 
-  cpuvisor::readFeatsFromProto(FLAGS_feats_file,
-                               &feats,
-                               &paths);
+  CHECK(cpuvisor::readFeatsFromProto(FLAGS_feats_file,
+                                     &feats,
+                                     &paths));
 
   for (size_t i = 0; i < 5; ++i) {
     LOG(INFO) << i << ": " << paths[i];

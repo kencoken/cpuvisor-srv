@@ -57,6 +57,11 @@ int main(int argc, char* argv[]) {
     }
     DLOG(INFO) << "Feats file is: " << feats_file;
 
+    if (fs::exists(feats_file)) {
+      LOG(INFO) << "Skipping existing feature file!";
+      return 0;
+    }
+
     cpuvisor::procTextFile(preproc_config.dataset_im_paths(),
                            feats_file,
                            encoder,
