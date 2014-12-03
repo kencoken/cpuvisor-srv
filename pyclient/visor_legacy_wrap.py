@@ -153,6 +153,8 @@ class VisorLegacyWrap(object):
             return self.save_annotations(req_dict['query_id'], req_dict['filepath'])
         elif req_dict['func'] == 'getAnnotations':
             return self.get_annotations(req_dict['filepath'])
+        elif req_dict['func'] == 'loadAnnotationsAndTrs':
+            return self.load_annotations_and_trs()
         elif req_dict['func'] == 'train':
             return self.train(req_dict['query_id'])
         elif req_dict['func'] == 'rank':
@@ -218,6 +220,10 @@ class VisorLegacyWrap(object):
 
         return {'success': True,
                 'annos': anno_list}
+
+    def load_annotations_and_trs(self):
+        print 'Not supported!'
+        return {'success': False}
 
     def train(self, num_query_id):
         query_id = self._get_query_id(num_query_id)
