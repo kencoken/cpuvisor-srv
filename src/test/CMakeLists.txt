@@ -7,8 +7,8 @@ set (test_SOURCES test.cc
   ../server/util/preproc.cc
   ../server/util/feat_util.cc)
 if (MATEXP_DEBUG)
-  list (APPEND test_SOURCES server/util/debug/matfileutils.cc)
-  list (APPEND test_SOURCES server/util/debug/matfileutils_cpp.cc)
+  list (APPEND test_SOURCES ../server/util/debug/matfileutils.cc)
+  list (APPEND test_SOURCES ../server/util/debug/matfileutils_cpp.cc)
 endif(MATEXP_DEBUG)
 
 set (test_LIBRARIES

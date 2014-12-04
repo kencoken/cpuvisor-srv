@@ -24,7 +24,7 @@ namespace cpuvisor {
     std::vector<cv::Mat> debug_input_images;
     cv::Mat feat = encoder.compute(ims, &debug_input_images);
     std::cout << full_path << std::endl;
-    if (full_path.find("JPEGImages/000001.jpg") != string::npos) {
+    if (full_path.find("JPEGImages/000001.jpg") != std::string::npos) {
       MatFile mat_file("sample_feat.mat", true);
       mat_file.writeFloatMat("feat", (float*)feat.data, feat.rows, feat.cols);
 
@@ -83,7 +83,17 @@ namespace cpuvisor {
     mat_file.writeFloatMat("w_vect", w_ptr, 1, feats.cols);
     #endif
 
-    return cv::Mat(feats.cols, 1, CV_32F, w_ptr);
+    // CRAZILY the following lines don't seem to work consistently
+    // (sometimes the c-ptr is not copied across, or is only partially copied)
+    //return cv::Mat(feats.cols, 1, CV_32F, w_ptr);
+    //cv::Mat w_mat(feats.cols, 1, CV_32F, w_ptr);
+    //return w_mat;
+    cv::Mat w_mat(feats.cols, 1, CV_32F);
+    float* w_mat_data = (float*)w_mat.data;
+    for (size_t i = 0; i < static_cast<size_t>(feats.cols); ++i) {
+      w_mat_data[i] = w_ptr[i];
+    }
+    return w_mat;
 
   }
 
@@ -91,6 +101,14 @@ namespace cpuvisor {
                       cv::Mat* scores, cv::Mat* sortIdxs) {
     DLOG(INFO) << "Applying model";
     (*scores) = dset_feats*model;
+    // #ifdef MATEXP_DEBUG
+    // const float* model_ptr = (float*)model.data;
+    // float model_abssum = 0.0;
+    // for (size_t i = 0; i < static_cast<size_t>(model.rows*model.cols); ++i) {
+    //   model_abssum += (model_ptr[i] >= 0 ? model_ptr[i] : -model_ptr[i]);
+    // }
+    // CHECK_NE(model_abssum, 0.0);
+    // #endif
 
     DLOG(INFO) << "Getting sort indexes...";
     size_t dset_sz = scores->rows;
@@ -102,9 +120,9 @@ namespace cpuvisor {
 
     #ifdef MATEXP_DEBUG // DEBUG
     MatFile mat_file("posttrain.mat", true);
-    mat_file.writeFloatMat("dset_feats", (float*)dset_feats.data, dset_feats.rows, dset_feats.cols);
+    //mat_file.writeFloatMat("dset_feats", (float*)dset_feats.data, dset_feats.rows, dset_feats.cols);
     mat_file.writeFloatMat("w_vect", (float*)model.data, model.rows, model.cols);
-    mat_file.writeFloatMat("multiplied_ocv", (float*)scores->data, scores->rows, scores->cols);
+    //mat_file.writeFloatMat("multiplied_ocv", (float*)scores->data, scores->rows, scores->cols);
     #endif
 
   }

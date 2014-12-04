@@ -1,7 +1,7 @@
 #include "preproc.h"
 
 #ifdef MATEXP_DEBUG
-  #include "server/util/matfileutils_cpp.h"
+  #include "server/util/debug/matfileutils_cpp.h"
 #endif
 
 namespace cpuvisor {

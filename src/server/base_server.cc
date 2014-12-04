@@ -15,6 +15,10 @@ namespace fs = boost::filesystem;
 #include "server/util/io.h"
 #include "server/util/feat_util.h"
 
+#ifdef MATEXP_DEBUG
+  #include "server/util/debug/matfileutils_cpp.h"
+#endif
+
 namespace cpuvisor {
 
   void BaseServerPostProcessor::process(const std::string imfile,
@@ -371,6 +375,13 @@ namespace cpuvisor {
 
     query_ifo->data.model =
       cpuvisor::trainLinearSvm(query_ifo->data.pos_feats, neg_feats_);
+
+    #ifdef MATEXP_DEBUG // DEBUG
+    MatFile mat_file("prebasetrain.mat", true);
+    mat_file.writeFloatMat("w_vect", (float*)query_ifo->data.model.data,
+      query_ifo->data.model.rows,
+      query_ifo->data.model.cols);
+    #endif
 
     query_ifo->state = QS_TRAINED;
     notifier_->post_state_change_(id, query_ifo->state);
