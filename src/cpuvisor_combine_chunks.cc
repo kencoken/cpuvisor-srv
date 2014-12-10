@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
   }
 
   LOG(INFO) << "Scanning chunks...";
-  size_t feat_num, feat_dim;
+  size_t feat_num = 0, feat_dim = 0;
 
   for (size_t i = 0; i < chunk_files.size(); ++i) {
     LOG(INFO) << "Processing chunk: " << chunk_files[i];
@@ -71,6 +71,10 @@ int main(int argc, char* argv[]) {
     }
 
   }
+
+  CHECK_GT(chunk_files.size(), 0);
+  CHECK_GT(feat_num, 0);
+  CHECK_GT(feat_dim, 0);
 
   LOG(INFO) << "Saving chunk index file...";
   // save filenames only (with no path - as assumed in same directory as index file)
