@@ -46,14 +46,7 @@ namespace cpuvisor {
     cv::Mat feat;
 
     try {
-
-      cv::Mat im = cv::imread(imfile, CV_LOAD_IMAGE_COLOR);
-      im.convertTo(im, CV_32FC3);
-
-      std::vector<cv::Mat> ims;
-      ims.push_back(im);
-      feat = encoder_.compute(ims);
-
+      feat = computeFeat_(imfile);
     } catch (featpipe::InvalidImageError& e) {
       // delete image here
       DLOG(INFO) << "Removing invalid image: " << imfile;
@@ -82,6 +75,68 @@ namespace cpuvisor {
 
     // notify!
     notifier->post_image_processed_(query_ifo->id, imfile);
+  }
+
+  cv::Mat BaseServerPostProcessor::computeFeat_(const std::string& imfile) {
+
+    cv::Mat im = cv::imread(imfile, CV_LOAD_IMAGE_COLOR);
+    im.convertTo(im, CV_32FC3);
+
+    std::vector<cv::Mat> ims;
+    ims.push_back(im);
+    cv::Mat feat = encoder_.compute(ims);
+
+    return feat;
+
+  }
+
+  cv::Mat BaseServerPostProcessorWithDsetFeats::computeFeat_(const std::string& imfile) {
+
+    // look for precomputed feature from dataset first
+    {
+      bool proc_rel_path = true;
+
+      // get relative path from full path
+      std::string rel_path = imfile;
+      DLOG(INFO) << "dset_base_path is: '" << dset_base_path_ << "'";
+      if (!dset_base_path_.empty()) {
+        size_t base_path_idx = imfile.find(dset_base_path_);
+        if (base_path_idx == std::string::npos) {
+          proc_rel_path = false;
+        } else {
+          size_t start_idx = base_path_idx + dset_base_path_.length();
+          DLOG(INFO) << "Trimming rel_path using: " << dset_base_path_ << " " << start_idx;
+          rel_path = imfile.substr(start_idx, imfile.length() - start_idx);
+          if (rel_path[0] == fs::path("/").make_preferred().string()[0]) {
+            // trim leading dir separator
+            rel_path = rel_path.substr(1, rel_path.length() - 1);
+          }
+          DLOG(INFO) << "Trimmed rel_path is: " << rel_path;
+        }
+      }
+
+      if (proc_rel_path) {
+        DLOG(INFO) << "rel_path to find is: " << rel_path;
+        std::map<std::string, size_t>::const_iterator it =
+          dset_paths_index_.find(rel_path);
+        if (it != dset_paths_index_.end()) {
+          CHECK_EQ(dset_paths_[it->second], rel_path);
+
+          LOG(INFO) << "Looking up feature from dataset: " << rel_path;
+          cv::Mat feat = dset_feats_.row(it->second);
+          return feat;
+        } else {
+          LOG(WARNING) << "Path looked like dataset image, but could not be found in dataset index: " << rel_path;
+        }
+      }
+
+
+    }
+
+    // if it isn't a dataset image, compute directly as normal
+    DLOG(INFO) << "Computing feature from scratch...";
+    return BaseServerPostProcessor::computeFeat_(imfile);
+
   }
 
   void BaseServerCallback::operator()() {
@@ -114,7 +169,7 @@ namespace cpuvisor {
     neg_base_path_ = preproc_config.neg_im_base_path();
 
     post_processor_ =
-      boost::shared_ptr<BaseServerPostProcessor>(new BaseServerPostProcessor(*encoder_));
+      boost::shared_ptr<BaseServerPostProcessorWithDsetFeats>(new BaseServerPostProcessorWithDsetFeats(*encoder_, dset_feats_, dset_paths_, dset_base_path_));
 
     const cpuvisor::ServerConfig server_config = config.server_config();
 
@@ -290,7 +345,10 @@ namespace cpuvisor {
         size_t train_img_searchstr_idx = pos_paths[fi].find(train_img_searchstr);
         if (train_img_searchstr_idx != std::string::npos) {
           // relative path after searchstr if found
-          size_t start_idx = train_img_searchstr_idx;// + train_img_searchstr.length() + 1;
+          size_t start_idx = train_img_searchstr_idx;
+          if (ssi > 0) { // include trailing 'postrainimgs' when ssi == 0
+            start_idx += train_img_searchstr.length() + 1;
+          }
 
           rel_path = pos_paths[fi].substr(start_idx, pos_paths[fi].length() - start_idx);
           break;

@@ -61,7 +61,33 @@ namespace cpuvisor {
                          boost::shared_ptr<ExtraDataWrapper> extra_data
                          = boost::shared_ptr<ExtraDataWrapper>());
   protected:
+    virtual cv::Mat computeFeat_(const std::string& imfile);
+
     featpipe::CaffeEncoder& encoder_;
+  };
+
+  class BaseServerPostProcessorWithDsetFeats : public BaseServerPostProcessor {
+  public:
+    inline BaseServerPostProcessorWithDsetFeats(featpipe::CaffeEncoder& encoder,
+                                                const cv::Mat dset_feats,
+                                                const std::vector<std::string>& dset_paths,
+                                                const std::string dset_base_path)
+      : BaseServerPostProcessor(encoder)
+      , dset_feats_(dset_feats)
+      , dset_paths_(dset_paths)
+      , dset_base_path_(dset_base_path) {
+
+      for (size_t i = 0; i < dset_paths_.size(); ++i) {
+        dset_paths_index_.insert(std::pair<std::string, size_t>(dset_paths_[i], i));
+      }
+    }
+  protected:
+    virtual cv::Mat computeFeat_(const std::string& imfile);
+
+    const cv::Mat dset_feats_;
+    const std::vector<std::string>& dset_paths_;
+    const std::string dset_base_path_;
+    std::map<std::string, size_t> dset_paths_index_;
   };
 
   class BaseServerCallback : public DownloadCompleteCallback {
@@ -129,7 +155,7 @@ namespace cpuvisor {
     std::string image_cache_path_;
 
     boost::shared_ptr<featpipe::CaffeEncoder> encoder_;
-    boost::shared_ptr<BaseServerPostProcessor> post_processor_;
+    boost::shared_ptr<BaseServerPostProcessorWithDsetFeats> post_processor_;
     boost::shared_ptr<ImageDownloader> image_downloader_;
 
     boost::shared_ptr<StatusNotifier> notifier_;
