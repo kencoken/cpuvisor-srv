@@ -141,10 +141,11 @@ class VisorLegacyWrap(object):
         elif req_dict['func'] == 'releaseQueryId':
             return self.release_query_id(req_dict['query_id'])
         elif req_dict['func'] == 'addPosTrs':
-            return self.add_pos_trs(req_dict['query_id'], req_dict['impath'])
-        elif req_dict['func'] == 'addPosTrsAndWait':
+            return self.add_pos_trs(req_dict['query_id'], req_dict['impath'],
+                                    blocking=True)
+        elif req_dict['func'] == 'addPosTrsAsync':
             return self. add_pos_trs(req_dict['query_id'], req_dict['impath'],
-                                     blocking=True)
+                                     blocking=False)
         elif req_dict['func'] == 'addNegTrs':
             return self.add_neg_trs()
         elif req_dict['func'] == 'saveClassifier':

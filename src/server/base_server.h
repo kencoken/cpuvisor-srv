@@ -58,7 +58,8 @@ namespace cpuvisor {
     inline BaseServerPostProcessor(featpipe::CaffeEncoder& encoder)
       : encoder_(encoder) { }
     virtual void process(const std::string imfile,
-                         boost::shared_ptr<ExtraDataWrapper> extra_data = boost::shared_ptr<ExtraDataWrapper>());
+                         boost::shared_ptr<ExtraDataWrapper> extra_data
+                         = boost::shared_ptr<ExtraDataWrapper>());
   protected:
     featpipe::CaffeEncoder& encoder_;
   };

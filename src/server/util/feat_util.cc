@@ -41,8 +41,9 @@ namespace cpuvisor {
   }
 
   cv::Mat trainLinearSvm(const cv::Mat pos_feats, const cv::Mat neg_feats,
-                         std::vector<std::string> _debug_pos_paths,
-                         std::vector<std::string> _debug_neg_paths) {
+                         const std::vector<std::string> _debug_pos_paths,
+                         const std::vector<std::string> _debug_neg_paths,
+                         const double svm_c) {
 
     CHECK_EQ(pos_feats.type(), CV_32F);
     CHECK_EQ(neg_feats.type(), CV_32F);
@@ -54,6 +55,7 @@ namespace cpuvisor {
     DLOG(INFO) << "neg_feats size: " << neg_feats.rows << "x" << neg_feats.cols;
     DLOG(INFO) << "comb feats size: " << feats.rows << "x" << feats.cols;
     DLOG(INFO) << "pos count: " << pos_feats.rows;
+    DLOG(INFO) << "SVM C parameter: " << svm_c;
 
     // train using Liblinear
 
@@ -64,7 +66,7 @@ namespace cpuvisor {
     }
 
     featpipe::Liblinear svm;
-    svm.set_c(1.0);
+    svm.set_c(svm_c);
     //svm.set_eps(0.001);
     svm.train((float*)feats.data, feats.cols, feats.rows, labels);
     float* w_ptr = svm.get_w();
@@ -95,6 +97,14 @@ namespace cpuvisor {
     }
     return w_mat;
 
+  }
+
+  cv::Mat trainLinearSvm(const cv::Mat pos_feats, const cv::Mat neg_feats,
+                         const double svm_c) {
+    return trainLinearSvm(pos_feats, neg_feats,
+                          std::vector<std::string>(),
+                          std::vector<std::string>(),
+                          svm_c);
   }
 
   void rankUsingModel(const cv::Mat model, const cv::Mat dset_feats,

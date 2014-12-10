@@ -99,7 +99,7 @@ if __name__ == "__main__":
 
     for pos_trs_path in pos_trs_paths:
         print 'Sending addPosTrs'
-        req_obj = {'func': 'addPosTrsAndWait',
+        req_obj = {'func': 'addPosTrs',
                    'query_id': query_id,
                    'impath': pos_trs_path}
         send_req_obj(s, req_obj)

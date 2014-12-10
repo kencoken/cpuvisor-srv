@@ -24,6 +24,10 @@ namespace cpuvisor {
   void BaseServerPostProcessor::process(const std::string imfile,
                                         boost::shared_ptr<ExtraDataWrapper> extra_data) {
 
+    // callback function which computes a caffe encoding for a
+    // downloaded image
+
+    DLOG(INFO) << "Postprocessing image: " << imfile;
     // get feats matrix to extend from extra_data
     BaseServerExtraData* extra_data_s =
       dynamic_cast<BaseServerExtraData*>(extra_data.get());
@@ -42,8 +46,7 @@ namespace cpuvisor {
     cv::Mat feat;
 
     try {
-      // callback function which computes a caffe encoding for a
-      // downloaded image
+
       cv::Mat im = cv::imread(imfile, CV_LOAD_IMAGE_COLOR);
       im.convertTo(im, CV_32FC3);
 
@@ -267,20 +270,31 @@ namespace cpuvisor {
 
       // get relative path from full path (a bit of a hack below!)
       std::string rel_path = pos_paths[fi];
+      std::string psep = fs::path("/").make_preferred().string();
 
-      std::string train_img_searchstr = "postrainimgs"; // MAGIC CONSTANT
-      size_t train_img_searchstr_idx = pos_paths[fi].find(train_img_searchstr);
-      if (train_img_searchstr_idx != std::string::npos) {
-        // relative path after searchstr if found
-        size_t start_idx = train_img_searchstr_idx;// + train_img_searchstr.length() + 1;
-
-        rel_path = pos_paths[fi].substr(start_idx, pos_paths[fi].length() - start_idx);
+      std::vector<std::string> searchstrs;
+      searchstrs.push_back("postrainimgs"); // MAGIC CONSTANT
+      if (image_cache_path_[image_cache_path_.length()-1] == psep[0]) {
+        searchstrs.push_back(image_cache_path_.substr(0, image_cache_path_.length()-1));
       } else {
-        // else relative to cache path
-        rel_path = pos_paths[fi].substr(base_path_len,
-                                        pos_paths[fi].length() - base_path_len);
-        CHECK_EQ(pos_paths[fi][base_path_len-1],
-                 fs::path("/").make_preferred().string()[0]);
+        searchstrs.push_back(image_cache_path_);
+      }
+      if (dset_base_path_[dset_base_path_.length()-1] == psep[0]) {
+        searchstrs.push_back(dset_base_path_.substr(0, dset_base_path_.length()-1));
+      } else {
+        searchstrs.push_back(dset_base_path_);
+      }
+
+      for (size_t ssi = 0; ssi < searchstrs.size(); ++ssi) {
+        std::string train_img_searchstr = searchstrs[ssi];
+        size_t train_img_searchstr_idx = pos_paths[fi].find(train_img_searchstr);
+        if (train_img_searchstr_idx != std::string::npos) {
+          // relative path after searchstr if found
+          size_t start_idx = train_img_searchstr_idx;// + train_img_searchstr.length() + 1;
+
+          rel_path = pos_paths[fi].substr(start_idx, pos_paths[fi].length() - start_idx);
+          break;
+        }
       }
 
       std::string anno = "+1";
@@ -373,8 +387,13 @@ namespace cpuvisor {
     }
     #endif
 
+    double svm_c = 1.0;
+    if (query_ifo->data.pos_paths.size() < 10) {
+      svm_c = 10.0;
+    }
+
     query_ifo->data.model =
-      cpuvisor::trainLinearSvm(query_ifo->data.pos_feats, neg_feats_);
+      cpuvisor::trainLinearSvm(query_ifo->data.pos_feats, neg_feats_, svm_c);
 
     #ifdef MATEXP_DEBUG // DEBUG
     MatFile mat_file("prebasetrain.mat", true);
@@ -417,7 +436,17 @@ namespace cpuvisor {
                                       // from postproc callback
 
     for (size_t i = 0; i < paths.size(); ++i) {
-      post_processor_->process(paths[i], extra_data);
+      std::string path = paths[i];
+      // check if path is relative (assume it is a dataset path if so)
+      {
+        fs::path path_fs(path);
+        if (!path_fs.has_root_path()) {
+          path_fs = fs::path(dset_base_path_) / path_fs;
+          path = path_fs.string();
+        }
+      }
+
+      post_processor_->process(path, extra_data);
     }
   }
 
