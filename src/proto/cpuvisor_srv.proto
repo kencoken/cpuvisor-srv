@@ -14,7 +14,10 @@ message FeatsProto {
   repeated string chunks = 10;
 }
 
-
+message ModelProto {
+  optional uint32 dim = 2 [default = 0];
+  repeated float data = 3 [packed = true];
+}
 
 
 message RPCReq {

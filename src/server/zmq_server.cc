@@ -210,6 +210,16 @@ namespace cpuvisor {
 
           getAnnotations_(paths, annos, rpc_req, &rpc_rep);
 
+        } else if (req_str == "save_classifier") { // legacy
+
+          const std::string filepath = rpc_req.filepath();
+          base_server_->saveClassifier(id, filepath);
+
+        } else if (req_str == "load_classifier") {
+
+          const std::string filepath = rpc_req.filepath();
+          base_server_->loadClassifier(id, filepath);
+
         } else {
 
           rpc_rep.set_success(false);

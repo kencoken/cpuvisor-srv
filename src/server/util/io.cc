@@ -201,6 +201,41 @@ namespace cpuvisor {
     return success;
   }
 
+  void writeModelToProto(const cv::Mat& model, const std::string& proto_path) {
+
+    cpuvisor::ModelProto model_proto;
+    model_proto.set_dim(model.rows);
+    model_proto.clear_data();
+
+    CHECK_EQ(model.cols, 1);
+    CHECK(model.isContinuous());
+
+    const float* model_data = (float*)model.data;
+    for (size_t i = 0; i < static_cast<size_t>(model.rows); ++i) {
+      model_proto.add_data(model_data[i]);
+    }
+
+    writeProtoToBinaryFile(proto_path, model_proto);
+
+  }
+
+  bool readModelFromProto(const std::string& proto_path, cv::Mat* model) {
+
+    cpuvisor::ModelProto model_proto;
+    bool success = readProtoFromBinaryFile(proto_path, &model_proto);
+    if (!success) return success;
+
+    (*model) = cv::Mat::zeros(model_proto.dim(), 1, CV_32FC1);
+    float* model_data = (float*)model->data;
+
+    for (size_t i = 0; i < model_proto.dim(); ++i) {
+      model_data[i] = model_proto.data(i);
+    }
+
+    return success;
+
+  }
+
   // ------------------------------------------------------------------------
 
   bool readProtoFromTextFile(const std::string& proto_path, Message* proto) {

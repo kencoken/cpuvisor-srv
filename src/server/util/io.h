@@ -30,6 +30,9 @@ namespace cpuvisor {
   bool readFeatsFromProto(const std::string& proto_path,
                           cv::Mat* feats, std::vector<std::string>* paths);
 
+  void writeModelToProto(const cv::Mat& model, const std::string& proto_path);
+  bool readModelFromProto(const std::string& proto_path, cv::Mat* model);
+
   bool readProtoFromTextFile(const std::string& proto_path, Message* proto);
   void writeProtoToTextFile(const std::string& proto_path, const Message& proto);
   bool readProtoFromBinaryFile(const std::string& proto_path, Message* proto);

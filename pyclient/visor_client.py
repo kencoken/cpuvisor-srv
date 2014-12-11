@@ -204,3 +204,23 @@ class VisorClientLegacyExt(VisorClient):
         rep = self.parse_message_(self.req_socket.recv())
 
         return rep.annotations
+
+    def save_classifier(self, query_id, path):
+        log.info('REQ: save_classifier')
+
+        req = self.generate_req_('save_classifier')
+        req.id = query_id
+        req.filepath = path
+        self.req_socket.send(req.SerializeToString())
+
+        self.parse_message_(self.req_socket.recv())
+
+    def load_classifier(self, query_id, path):
+        log.info('REQ: load_classifier')
+
+        req = self.generate_req_('load_classifier')
+        req.id = query_id
+        req.filepath = path
+        self.req_socket.send(req.SerializeToString())
+
+        self.parse_message_(self.req_socket.recv())

@@ -148,14 +148,16 @@ class VisorLegacyWrap(object):
                                      blocking=False)
         elif req_dict['func'] == 'addNegTrs':
             return self.add_neg_trs()
-        elif req_dict['func'] == 'saveClassifier':
-            return self.save_classifier()
         elif req_dict['func'] == 'saveAnnotations':
             return self.save_annotations(req_dict['query_id'], req_dict['filepath'])
         elif req_dict['func'] == 'getAnnotations':
             return self.get_annotations(req_dict['filepath'])
         elif req_dict['func'] == 'loadAnnotationsAndTrs':
             return self.load_annotations_and_trs()
+        elif req_dict['func'] == 'saveClassifier':
+            return self.save_classifier(req_dict['query_id'], req_dict['filepath'])
+        elif req_dict['func'] == 'loadClassifier':
+            return self.load_classifier(req_dict['query_id'], req_dict['filepath'])
         elif req_dict['func'] == 'train':
             return self.train(req_dict['query_id'])
         elif req_dict['func'] == 'rank':
@@ -200,10 +202,6 @@ class VisorLegacyWrap(object):
         print 'Not supported!'
         return {'success': True}
 
-    def save_classifier(self):
-        print 'Not supported!'
-        return {'success': True}
-
     def save_annotations(self, num_query_id, path):
         query_id = self._get_query_id(num_query_id)
 
@@ -225,6 +223,20 @@ class VisorLegacyWrap(object):
     def load_annotations_and_trs(self):
         print 'Not supported!'
         return {'success': False}
+
+    def save_classifier(self, num_query_id, path):
+        query_id = self._get_query_id(num_query_id)
+
+        self.client.save_classifier(query_id, path)
+
+        return {'success': True}
+
+    def load_classifier(self, num_query_id, path):
+        query_id = self._get_query_id(num_query_id)
+
+        self.client.load_classifier(query_id, path)
+
+        return {'success': True}
 
     def train(self, num_query_id):
         query_id = self._get_query_id(num_query_id)

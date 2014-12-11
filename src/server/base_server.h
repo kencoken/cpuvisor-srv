@@ -134,6 +134,8 @@ namespace cpuvisor {
     virtual void loadAnnotations(const std::string& filename,
                                  std::vector<std::string>* paths,
                                  std::vector<int32_t>* annos);
+    virtual void saveClassifier(const std::string& id, const std::string& filename);
+    virtual void loadClassifier(const std::string& id, const std::string& filename);
 
   protected:
     virtual boost::shared_ptr<QueryIfo> getQueryIfo_(const std::string& id);

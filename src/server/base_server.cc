@@ -414,6 +414,38 @@ namespace cpuvisor {
     }
   }
 
+  void BaseServer::saveClassifier(const std::string& id, const std::string& filename) {
+
+    boost::shared_ptr<QueryIfo> query_ifo = getQueryIfo_(id);
+
+    if (query_ifo->state < QS_TRAINED) {
+      throw WrongQueryStatusError("Cannot save classifier unles state = QS_TRAINED or later");
+    }
+    LOG(INFO) << "Saving classifier to: " << filename << "...";
+
+    cpuvisor::writeModelToProto(query_ifo->data.model, filename);
+
+  }
+
+  void BaseServer::loadClassifier(const std::string& id, const std::string& filename) {
+
+    boost::shared_ptr<QueryIfo> query_ifo = getQueryIfo_(id);
+
+    if (query_ifo->state == QS_DATACOLL) {
+      query_ifo->state = QS_TRAINING;
+      notifier_->post_state_change_(id, query_ifo->state);
+    } else {
+      throw WrongQueryStatusError("Loading classifiers is only supported for new queries (in state QS_DATACOLL)");
+    }
+
+    LOG(INFO) << "Loading classifier from: " << filename << "...";
+    cpuvisor::readModelFromProto(filename, &query_ifo->data.model);
+
+    query_ifo->state = QS_TRAINED;
+    notifier_->post_state_change_(id, query_ifo->state);
+
+  }
+
   // Protected methods -----------------------------------------------------------
 
   boost::shared_ptr<QueryIfo> BaseServer::getQueryIfo_(const std::string& id) {
