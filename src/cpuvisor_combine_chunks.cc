@@ -15,8 +15,8 @@ DEFINE_int64(chunk_sz, 1000, "Size of computation chunks");
 int main(int argc, char* argv[]) {
 
   google::InstallFailureSignalHandler();
-  google::SetUsageMessage("Dataset feature file chunk combination for CPU Visor server");
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  gflags::SetUsageMessage("Dataset feature file chunk combination for CPU Visor server");
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   cpuvisor::Config config;
   cpuvisor::readProtoFromTextFile(FLAGS_config_path, &config);

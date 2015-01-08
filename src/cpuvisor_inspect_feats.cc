@@ -8,8 +8,8 @@ DEFINE_string(feats_file, "", "Features file");
 int main(int argc, char* argv[]) {
 
   google::InstallFailureSignalHandler();
-  google::SetUsageMessage("Inspect binaryproto feature file");
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  gflags::SetUsageMessage("Inspect binaryproto feature file");
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   CHECK_NE(FLAGS_feats_file, "");
 

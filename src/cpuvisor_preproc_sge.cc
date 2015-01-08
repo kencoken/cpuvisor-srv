@@ -35,8 +35,8 @@ int main(int argc, char* argv[]) {
   const std::string launch_path = launch_path_fs.string();
 
   google::InstallFailureSignalHandler();
-  google::SetUsageMessage("Preprocessing for CPU Visor server (using sge cluster)");
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  gflags::SetUsageMessage("Preprocessing for CPU Visor server (using sge cluster)");
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   // construct log directories
   const fs::path log_path_fs = launch_path_fs / fs::path("preproc_logs");

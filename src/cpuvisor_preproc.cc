@@ -21,8 +21,8 @@ DEFINE_int64(endidx, -1, "Ending index for dataset feature computation (exclusiv
 int main(int argc, char* argv[]) {
 
   google::InstallFailureSignalHandler();
-  google::SetUsageMessage("Preprocessing for CPU Visor server");
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  gflags::SetUsageMessage("Preprocessing for CPU Visor server");
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   cpuvisor::Config config;
   cpuvisor::readProtoFromTextFile(FLAGS_config_path, &config);
