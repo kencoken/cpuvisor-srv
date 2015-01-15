@@ -84,7 +84,9 @@ set(CMAKE_CXX_FLAGS_MINSIZEREL "-Os -DNDEBUG"
 
 # add BLAS headers directory if OSX
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/System/Library/Frameworks/vecLib.framework/Versions/A/Headers/"
+  #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/System/Library/Frameworks/vecLib.framework/Versions/A/Headers/"
+  #  CACHE STRING "Edit in CMakeLists.txt" FORCE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/Accelerate.framework/Frameworks/vecLib.framework/Versions/Current/Headers"
     CACHE STRING "Edit in CMakeLists.txt" FORCE)
 endif ()
 
