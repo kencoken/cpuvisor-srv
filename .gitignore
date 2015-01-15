@@ -5,3 +5,5 @@ bin/
 proto/
 test_data/output/*
 server_data/*
+webservice/.idea/*
+webservice/static/app/vendor/*

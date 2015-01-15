@@ -3,9 +3,10 @@ CPUVISOR-SRV backend service for Visor (CPU version)
 
 Author: Ken Chatfield, University of Oxford (ken@robots.ox.ac.uk)
 
-Copyright 2014, all rights reserved.
+Copyright 2014-2015, all rights reserved.
 
-Release: v0.1 (October 2014)
+Release: v0.2 (January 2015)
+Licence: MIT
 
 Installation Instructions
 -------------------------
@@ -46,7 +47,7 @@ Once the backend service is up and running, you can then test it using:
 
 Dependencies
 ------------
-The following packages are required:
+The following C++ libraries are required:
 
  + [Caffe](https://github.com/kencoken/caffe) -- use the `dev` branch of the
    forked version of the repo `kencoken/caffe`
@@ -57,5 +58,22 @@ The following packages are required:
  + OpenCV
  + Google Logging (GLOG)
  + Google Flags (GFLAGS)
- + Google Protobuf (C++ and Python libraries)
- + ZeroMQ (C++ and Python libraries)
+ + Google Protobuf
+ + ZeroMQ
+
+In addition, all dependencies for the Python demo scripts can be installed by
+issuing the following command from the root directory:
+
+    $ pip install -r requirements.txt
+
+Demo Webserver
+--------------
+
+Sample code showing how the server can be used as the backend of a simple web
+service is provided in the `webserver/` directory.
+
+Version History
+---------------
+
+*v0.1* -- October 2014 -- Initial release
+*v0.2* -- January 2015 -- Added webserver demo

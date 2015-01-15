@@ -1,0 +1,25 @@
+img.img-thumbnail {
+    border-width: 2px;
+    background-color: #d8e4e6;
+}
+
+img.img-positive {
+    background-color: #9de871;
+}
+
+img.img-distractor {
+    background-color: #ffffff;
+}
+
+img.img-fn {
+    border-color: #1887e8;
+}
+
+img.img-expanded {
+    -moz-transform: scale(2.5);
+    -webkit-transform: scale(2.5);
+    transform: scale(2.5);
+    z-index: 1;
+    opacity: 0.87;
+    position: relative;
+}
