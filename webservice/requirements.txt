@@ -1,3 +1,4 @@
 numpy>=1.8.0
 flask>=0.10
 Flask-SocketIO>=0.5.0
+protobuf-to-dict>=0.1.0

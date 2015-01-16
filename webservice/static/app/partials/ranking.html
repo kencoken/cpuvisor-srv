@@ -2,38 +2,19 @@
    <a href ng-click="goBack()"><img src="images/visor_mockheader.png?1" style="top:10px; left:0px; position: absolute;"></a></ul>a>
    <input type="text" style="position:absolute; width:355px; left:340px; top:37px; border: none;" value="{{class_name}}">
 </ul>-->
-<ul class="pager">
-   <li class="previous"><a href ng-click="goBack()">&larr; Back</a></li>
-   <li>
-       <h2>{{class_name}}</h2><!--
-       --><span ng-class="{'prec-bubble': true, 'updating-prec': (updating_prec_stat > 0)}">{{prec_stat*100.0 | number:2}} / {{num_im_stat}}
-           <small>({{prec_distr_ono_stat*100.0 | number:2}})</small>
-       </span><!--
-       --><a href ng-class="{'link-bubble-w-spacer': true, 'link-bubble-active': hide_fns}" ng-click="toggleShowFns()">Hide fns</a><!--
-       --><a href ng-class="{'link-bubble': true}" ng-click="showUpToN()">Load to N={{num_im_stat}}</a><!--
-       --><a href ng-class="{'link-bubble-w-spacer': true, 'link-bubble-active': show_ono_distractors}" ng-click="toggleShowOnoDistractors()">Only distractors</a><!--
-       --><a href ng-class="{'link-bubble-w-spacer': true}" ng-click="tailDistractorsToFn()">Tail distractors to fn</a>
-   </li>
-</ul>
 
-<div class="spinner" style="position: absolute; left: 550px; top: 250px;" ng-show="show_spinner">
+<div class="spinner" style="position: absolute; left: 550px; top: 250px;" ng-show="ranking.rlist.length === 0">
     <img src="images/ajax-loader.gif">
 </div>
 
-<div class="container" ng-show="show_container">
+<div class="container" ng-show="ranking.rlist.length > 0">
     <ul class="row imgrid">
-        <li ng-repeat="ritem in ranking" class="col-lg-2 col-md-2 col-sm-3 col-xs-4" ng-hide="(hide_fns && (ritem.fn == 1)) || (show_ono_distractors && (ritem.is_distractor != 1))">
+        <li ng-repeat="ritem in ranking.rlist" class="col-lg-2 col-md-2 col-sm-3 col-xs-4" ng-hide="(hide_fns && (ritem.fn == 1)) || (show_ono_distractors && (ritem.is_distractor != 1))">
             <div>
-                <ranking-image src="dsetimages/{{ritem.path}}"
-                               is-fn="ritem.fn"
-                               is-distractor="{{ritem.is_distractor}}"
+                <ranking-image src="{{getImgSrc(ritem)}}"
                                anno="{{ritem.anno}}"
-                               class-id="{{class_id}}"
                                path="{{ritem.path}}"
-                               update-prec-func="refreshPrecStat()"
-                               will-update-prec-func="willRefreshPrecStat()"
-                               fail-update-prec-func="failRefreshPrecStat()"></ranking-image>
-                <!--{{$index + 1}}-->
+                               score="{{ritem.score}}"></ranking-image>
             </div>
         </li>
     </ul>

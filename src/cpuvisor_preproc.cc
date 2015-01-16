@@ -59,21 +59,26 @@ int main(int argc, char* argv[]) {
 
     if (fs::exists(feats_file)) {
       LOG(INFO) << "Skipping existing feature file!";
-      return 0;
+    } else {
+      cpuvisor::procTextFile(preproc_config.dataset_im_paths(),
+                             feats_file,
+                             encoder,
+                             preproc_config.dataset_im_base_path(),
+                             -1, FLAGS_startidx, FLAGS_endidx);
     }
-
-    cpuvisor::procTextFile(preproc_config.dataset_im_paths(),
-                           feats_file,
-                           encoder,
-                           preproc_config.dataset_im_base_path(),
-                           -1, FLAGS_startidx, FLAGS_endidx);
   }
 
   if (FLAGS_negfeats) {
-    cpuvisor::procTextFile(preproc_config.neg_im_paths(),
-                           preproc_config.neg_feats_file(),
-                           encoder,
-                           preproc_config.neg_im_base_path());
+    DLOG(INFO) << "Neg feats file is: " << preproc_config.neg_feats_file();
+
+    if (fs::exists(preproc_config.neg_feats_file())) {
+      LOG(INFO) << "Skipping existing feature file!";
+    } else {
+      cpuvisor::procTextFile(preproc_config.neg_im_paths(),
+                             preproc_config.neg_feats_file(),
+                             encoder,
+                             preproc_config.neg_im_base_path());
+    }
   }
 
   return 0;

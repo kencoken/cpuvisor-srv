@@ -6,8 +6,10 @@ import matplotlib.image as mpimg
 
 import pyclient
 
+#from proto import cpuvisor_srv_pb2 as protosrv
+
 VISUALISE_RESULTS = True    # if TRUE visualise the output ranking
-GET_NOTIFICATIONS = False   # if TRUE notifications are received from the server
+GET_NOTIFICATIONS = True   # if TRUE notifications are received from the server
 IMAGE_DOWNLOAD_TIMEOUT = 20 # time to wait for images to be downloaded and feats computed
 
 TEST_QUERY = 'car'
@@ -20,6 +22,7 @@ def recv_notification(notification):
 
     print '++++++++++++++++++'
     print notification
+    #print protosrv.NotificationType.Name(notification.type)
     print '++++++++++++++++++'
 
 if __name__ == "__main__":

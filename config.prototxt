@@ -1,21 +1,21 @@
 caffe_config {
-  param_file: "/home/ken/src/modules/caffe/examples/CNN_M_128/VGG_CNN_M_128_deploy.prototxt"
-  model_file: "/home/ken/src/modules/caffe/examples/CNN_M_128/VGG_CNN_M_128.caffemodel"
-  mean_image_file: "/home/ken/src/modules/caffe/examples/CNN_M_128/VGG_mean.binaryproto"
+  param_file: "/Data/src/caffe/examples/CNN_M_128/VGG_CNN_M_128_deploy.prototxt"
+  model_file: "/Data/src/caffe/examples/CNN_M_128/VGG_CNN_M_128.caffemodel"
+  mean_image_file: "/Data/src/caffe/examples/CNN_M_128/VGG_mean.binaryproto"
   data_aug_type: DAT_NONE
   output_blob_name: "fc7"
 }
 preproc_config: {
-  dataset_im_paths: "/home/ken/src/modules/cpuvisor-srv/dsetpaths.txt"
-  dataset_im_base_path: "/data/ken/visor/datasets/VOC2007_full"
-  dataset_feats_file: "/home/ken/src/modules/cpuvisor-srv/server_data/dsetfeats.binaryproto"
-  neg_im_paths: "/home/ken/src/modules/cpuvisor-srv/negpaths.txt"
-  neg_im_base_path: "/data/ken/neg_images"
-  neg_feats_file: "/home/ken/src/modules/cpuvisor-srv/server_data/negfeats.binaryproto"
+  dataset_im_paths: "/Data/src/cpuvisor-srv/dsetpaths.txt"
+  dataset_im_base_path: "/Data/src/cpuvisor-srv/server_data/dset_images/VOCdevkit/VOC2007"
+  dataset_feats_file: "/Data/src/cpuvisor-srv/server_data/dsetfeats.binaryproto"
+  neg_im_paths: "/Data/src/cpuvisor-srv/negpaths.txt"
+  neg_im_base_path: "/data/src/cpuvisor-srv/server_data/neg_images"
+  neg_feats_file: "/Data/src/cpuvisor-srv/server_data/negfeats.binaryproto"
 }
 server_config: {
   server_endpoint: "tcp://localhost:5555"
   notify_endpoint: "tcp://localhost:5556"
-  image_cache_path: "/home/ken/src/modules/cpuvisor-srv/server_data/downloaded"
-  rlist_cache_path: "/home/ken/src/modules/cpuvisor-srv/server_data/rlists"
+  image_cache_path: "/Data/src/cpuvisor-srv/server_data/downloaded"
+  rlist_cache_path: "/Data/src/cpuvisor-srv/server_data/rlists"
 }
