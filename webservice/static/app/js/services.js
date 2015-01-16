@@ -61,9 +61,10 @@ cpuVisorServices.factory('Rank', ['$resource',
 
 cpuVisorServices.factory('Ranking', ['$resource',
   function ($resource) {
-    return $resource('/api/query/:qid/ranking',
+    return $resource('/api/query/:qid/ranking/:page',
       {
-        qid: '@qid'
+        qid: '@qid',
+        page: '@page'
       },
       {
         get: {method: 'GET'}

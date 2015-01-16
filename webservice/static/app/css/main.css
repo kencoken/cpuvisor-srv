@@ -73,3 +73,50 @@ ul.imgrid li {
 .updating-prec {
     color: #aaaaaa !important;
 }
+
+.landing-page-search {
+    width:300px;
+    margin-top: 5em;
+    margin-left: auto;
+    margin-right: auto;
+}
+.results-page-search {
+    left: 4.5em;
+    top: 2em;
+    position: relative;
+    width:300px;
+}
+
+.home-button {
+    left: 4.5em;
+    top: 1em;
+    position: relative;
+}
+.landing-header {
+    text-align: center;
+    margin-top: 2em;
+    font-size: 3em;
+}
+
+.progress-spinner {
+    margin-top: 5em;
+    width: 100%;
+}
+.progress-spinner img {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+.train-preview-box {
+    margin-top: 1em;
+    height: 150px;
+    width: 100%;
+}
+
+.train-preview-box img {
+    max-height: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}

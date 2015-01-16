@@ -31,8 +31,29 @@ app.config.update(dict(
 
 socketio = SocketIO(app)
 
-# setup client
+server_config = protoconfig.Config()
+with open(app.config['SERVER_CONFIG'], 'rb') as f:
+    protobuf.text_format.Merge(f.read(), server_config)
 
+# link dsetimages and downloaded into static dir
+cwd_store = os.getcwd()
+os.chdir('static/app/')
+
+if os.path.islink('dsetimages'):
+    os.unlink('dsetimages')
+if not os.path.exists('dsetimages'):
+    print 'Linking dataset base dir: %s' % server_config.preproc_config.dataset_im_base_path
+    os.symlink(server_config.preproc_config.dataset_im_base_path, 'dsetimages')
+
+if os.path.islink('downloaded'):
+    os.unlink('downloaded')
+if not os.path.exists('downloaded'):
+    print 'Linking downloaded base dir: %s' % server_config.server_config.image_cache_path
+    os.symlink(server_config.server_config.image_cache_path, 'downloaded')
+
+os.chdir(cwd_store)
+
+# setup client
 
 def recv_notification(notification):
 
@@ -40,6 +61,9 @@ def recv_notification(notification):
     print '++++++++++++++++++'
     print notification
     print '++++++++++++++++++'
+
+    if notification.type == protosrv.NTFY_IMAGE_PROCESSED:
+        notification.data = os.path.join('downloaded', os.path.relpath(notification.data, server_config.server_config.image_cache_path))
 
     # TODO: switch to qid specific notifications: '/api/query/%s/notifications' % notification.id
     socketio.emit('notification', {'type': protosrv.NotificationType.Name(notification.type),
@@ -49,20 +73,6 @@ def recv_notification(notification):
 
 client = pyclient.VisorClientLegacyExt(app.config['SERVER_CONFIG'])
 notifier = pyclient.VisorNotifier(app.config['SERVER_CONFIG'], recv_notification)
-
-server_config = protoconfig.Config()
-with open(app.config['SERVER_CONFIG'], 'rb') as f:
-    protobuf.text_format.Merge(f.read(), server_config)
-
-# link dsetimages into static dir
-cwd_store = os.getcwd()
-os.chdir('static/app/')
-if os.path.islink('dsetimages'):
-    os.unlink('dsetimages')
-if not os.path.exists('dsetimages'):
-    print 'Linking dataset base dir: %s' % server_config.preproc_config.dataset_im_base_path
-    os.symlink(server_config.preproc_config.dataset_im_base_path, 'dsetimages')
-os.chdir(cwd_store)
 
 # funcs
 
@@ -92,9 +102,9 @@ def rank(query_id):
     client.rank(query_id, blocking=False)
     return json.dumps({'success': True})
 
-@app.route('/api/query/<string:query_id>/ranking', methods=['GET'])
-def ranking(query_id):
-    ranking_result = client.get_ranking(query_id, page=1)
+@app.route('/api/query/<string:query_id>/ranking/<int:page>', methods=['GET'])
+def ranking(query_id, page):
+    ranking_result = client.get_ranking(query_id, page=page)
     return json.dumps({'success': True, 'ranking': protobuf_to_dict(ranking_result)})
 
 @app.route('/api/query/<string:query_id>/free', methods=['PUT'])
@@ -121,17 +131,6 @@ def static_proxy(path):
     # send_static_file will guess the correct MIME type
 
     return app.send_static_file(os.path.join('app', path))
-
-    # dset_head = 'dsetimages/'
-    # print 'hello there - path is: ' + path
-    # if path[0:len(dset_head)] == dset_head:
-    #     # 1. deal with dataset images
-    #     dset_base = server_config.preproc_config.dataset_im_base_path
-    #     print 'looking for: ' + os.path.join(dset_base, path.replace(dset_head, ''))
-    #     return app.send_static_file(os.path.join(dset_base, path.replace(dset_head, '')))
-    # else:
-    #     # 2. deal with all other static files
-    #     return app.send_static_file(os.path.join('app', path))
 
 if __name__ == "__main__":
     #app.run(processes=10, host='0.0.0.0', port=8915)

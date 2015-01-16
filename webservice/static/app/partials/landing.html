@@ -1,4 +1,9 @@
-<form autocomplete="off">
-    <input type="text" placeholder="search term" ng-model="query_text">
-    <input type="submit" value="search!" ng-click="search(query_text)">
+<div class="landing-header">Web Search Demo</div>
+<form autocomplete="off" class="landing-page-search">
+    <div class="input-group">
+        <input type="text" placeholder="search term" ng-model="query_text" class="form-control">
+        <span class="input-group-btn">
+            <input type="submit" value="Search" ng-click="search(query_text)" class="btn btn-default">
+        </span>
+    </div>
 </form>

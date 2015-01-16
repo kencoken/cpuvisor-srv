@@ -18,7 +18,7 @@ cpuVisorApp.config(['$routeProvider',
         templateUrl: 'partials/landing.html',
         controller: 'LandingCtrl'
       }).
-      when('/results/:queryId/:queryText', {
+      when('/results/:queryText', {
         templateUrl: 'partials/ranking.html',
         controller: 'RankingCtrl'
       }).

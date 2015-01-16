@@ -3,9 +3,25 @@
    <input type="text" style="position:absolute; width:355px; left:340px; top:37px; border: none;" value="{{class_name}}">
 </ul>-->
 
-<div class="spinner" style="position: absolute; left: 550px; top: 250px;" ng-show="ranking.rlist.length === 0">
+<button type="button" class="btn btn-default home-button" aria-label="Home" ng-click="goHome()">
+    <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+</button>
+<form autocomplete="off" class="results-page-search">
+    <div class="input-group">
+        <input type="text" placeholder="search term" ng-model="query_editable" class="form-control">
+        <span class="input-group-btn">
+            <input type="submit" value="Search" ng-click="search(query_editable)" class="btn btn-default">
+        </span>
+    </div>
+</form>
+
+<div class="spinner progress-spinner" ng-show="ranking.rlist.length === 0">
     <img src="images/ajax-loader.gif">
 </div>
+
+<!--<div class="train-preview-box" ng-show="(ranking.rlist.length === 0) && (last_processed_image !== null)">
+    <img src="{{last_processed_image}}">
+</div>-->
 
 <div class="container" ng-show="ranking.rlist.length > 0">
     <ul class="row imgrid">
