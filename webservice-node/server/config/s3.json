@@ -1,0 +1,12 @@
+{
+    "defaults": {
+	"key": "",
+	"secret": "",
+	"bucket": "",
+	"cdn_endpoint": ""
+    },
+    "production": {
+	"bucket": "",
+	"cdn_endpoint": ""
+    }
+}

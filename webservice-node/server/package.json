@@ -1,0 +1,25 @@
+{
+  "name": "webserver",
+  "version": "0.1.0",
+  "author": "Ken Chatfield <ken@robots.ox.ac.uk>",
+  "private": true,
+  "engines": {
+    "node": "0.10.34",
+    "npm": "2.1.x"
+  },
+  "dependencies": {
+    "async": "0.9.x",
+    "coffee-script": "1.8.x",
+    "express": "4.11.x",
+    "request": "2.51.x",
+    "socket.io": "1.2.x",
+    "zmq": "2.9.x",
+    "protobufjs": "3.8.x",
+    "protocol-buffers": "2.4.x",
+    "underscore": "1.7.x",
+    "underscore.string": "3.0.x",
+    "ejs": "2.1.x"
+  },
+  "devDependencies": {
+  }
+}

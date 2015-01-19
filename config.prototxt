@@ -1,4 +1,4 @@
-caffe_config {
+caffe_config: {
   param_file: "/Data/src/caffe/examples/CNN_M_128/VGG_CNN_M_128_deploy.prototxt"
   model_file: "/Data/src/caffe/examples/CNN_M_128/VGG_CNN_M_128.caffemodel"
   mean_image_file: "/Data/src/caffe/examples/CNN_M_128/VGG_mean.binaryproto"
@@ -14,8 +14,8 @@ preproc_config: {
   neg_feats_file: "/Data/src/cpuvisor-srv/server_data/negfeats.binaryproto"
 }
 server_config: {
-  server_endpoint: "tcp://localhost:5555"
-  notify_endpoint: "tcp://localhost:5556"
+  server_endpoint: "tcp://127.0.0.1:5555"
+  notify_endpoint: "tcp://127.0.0.1:5556"
   image_cache_path: "/Data/src/cpuvisor-srv/server_data/downloaded"
   rlist_cache_path: "/Data/src/cpuvisor-srv/server_data/rlists"
 }
