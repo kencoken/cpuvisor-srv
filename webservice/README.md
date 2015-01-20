@@ -1,4 +1,4 @@
-CPUVISOR-SRV sample webserver
+CPUVISOR-SRV Sample Webserver
 =============================
 
 Author: Ken Chatfield, University of Oxford (ken@robots.ox.ac.uk)
@@ -14,7 +14,7 @@ First install all dependencies for the server component:
 
     $ pip install -r requirements.txt
 
-Next install all frontend dependencies using (Bower)[http://bower.io]:
+Next install all frontend dependencies using [Bower](http://bower.io):
 
     $ bower install
 

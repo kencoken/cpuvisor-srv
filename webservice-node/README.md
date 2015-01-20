@@ -1,29 +1,29 @@
-kng-node-seed
-=============
+CPUVISOR-SRV Sample Webserver (node version)
+============================================
 
-This package contains a simple node server in coffeescript.
-It is configured to be used with an angular client.
+Author: Ken Chatfield, University of Oxford (ken@robots.ox.ac.uk)
 
-Installation
-------------
+Copyright 2015, all rights reserved.
+
+Licence: MIT
+
+Usage
+-----
 
 First install the server dependencies:
 
     $ cd server
-	$ npm install
+    $ npm install
 
-Then launch the server:
+Next install all frontend dependencies using [Bower](http://bower.io):
+
+    $ cd client
+    $ bower install
+
+Run the server:
 
     $ coffee server.coffee
 
-Client-side code
-----------------
+Navigate to the homepage in your browser to try out the webservice:
 
-A simple static page is provided in the `client/` folder.
-
-For a more fully-fleged example using angular, use `kng-seed`:
-
-    $ rm -r client
-	$ git clone git@github.com:kencoken/kng-seed.git
-	$ mv kng-seed client
-
+    http://localhost:3000/
