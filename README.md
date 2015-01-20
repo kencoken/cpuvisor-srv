@@ -6,7 +6,7 @@ Author: Ken Chatfield, University of Oxford (ken@robots.ox.ac.uk)
 Copyright 2014-2015, all rights reserved.
 
 Release: v0.2 (January 2015)
-Licence: MIT
+License: MIT (see LICENSE.md)
 
 Installation Instructions
 -------------------------
@@ -39,7 +39,7 @@ files. This can be run as follows:
 
     $ python download_data.py
 
-Now the cpuvisor service can be launched:
+Now the cpuvisor service can be launched from the `/bin` directory:
 
     $ ./cpuvisor_service
 

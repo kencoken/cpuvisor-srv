@@ -5,7 +5,7 @@ Author: Ken Chatfield, University of Oxford (ken@robots.ox.ac.uk)
 
 Copyright 2015, all rights reserved.
 
-Licence: MIT
+License: MIT
 
 Usage
 -----
