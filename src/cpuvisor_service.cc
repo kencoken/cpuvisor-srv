@@ -13,6 +13,7 @@ DEFINE_string(config_path, "../config.prototxt", "Server config file");
 
 int main(int argc, char* argv[]) {
 
+  google::InitGoogleLogging(argv[0]);
   google::InstallFailureSignalHandler();
 
   cpuvisor::Config config;
