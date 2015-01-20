@@ -1,4 +1,5 @@
 fs = require "fs"
+path = require "path"
 events = require "events"
 zmq = require "zmq"
 protobufjs = require "protobufjs"
@@ -7,8 +8,8 @@ class VisorNotifier extends events.EventEmitter
 
   constructor: (protoconfig_path) ->
     @builder = protobufjs.newBuilder({ convertFieldsToCamelCase: false });
-    protobufjs.loadProtoFile("../../../src/proto/cpuvisor_srv.proto", @builder)
-    protobufjs.loadProtoFile("../../../src/proto/cpuvisor_config.proto", @builder)
+    protobufjs.loadProtoFile(path.resolve(__dirname, "../../../src/proto/cpuvisor_srv.proto"), @builder)
+    protobufjs.loadProtoFile(path.resolve(__dirname, "../../../src/proto/cpuvisor_config.proto"), @builder)
     @proto_classes = @builder.build("cpuvisor")
 
     data = fs.readFileSync protoconfig_path, {encoding: 'utf8'}
@@ -42,6 +43,7 @@ class VisorNotifier extends events.EventEmitter
           throw new Error("Unrecognized notification type - shouldn't get here")
 
       @emit event_str, notification_obj.id, notification_obj.data
+      @emit 'notification', notification_type, notification_obj.id, notification_obj.data
 
   unsubscribe: =>
 

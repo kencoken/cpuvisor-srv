@@ -15,10 +15,9 @@
     "socket.io": "1.2.x",
     "zmq": "2.9.x",
     "protobufjs": "3.8.x",
-    "protocol-buffers": "2.4.x",
     "underscore": "1.7.x",
     "underscore.string": "3.0.x",
-    "ejs": "2.1.x"
+    "errorhandler": "1.3.x"
   },
   "devDependencies": {
   }

@@ -1,4 +1,5 @@
 fs = require "fs"
+path = require "path"
 zmq = require "zmq"
 protobufjs = require "protobufjs"
 
@@ -9,8 +10,8 @@ class VisorClient
 
   constructor: (protoconfig_path) ->
     builder = protobufjs.newBuilder({ convertFieldsToCamelCase: false });
-    protobufjs.loadProtoFile("../../../src/proto/cpuvisor_srv.proto", builder)
-    protobufjs.loadProtoFile("../../../src/proto/cpuvisor_config.proto", builder)
+    protobufjs.loadProtoFile(path.resolve(__dirname, "../../../src/proto/cpuvisor_srv.proto"), builder)
+    protobufjs.loadProtoFile(path.resolve(__dirname, "../../../src/proto/cpuvisor_config.proto"), builder)
     @proto_classes = builder.build("cpuvisor")
 
     data = fs.readFileSync protoconfig_path, {encoding: 'utf8'}

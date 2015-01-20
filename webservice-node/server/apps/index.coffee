@@ -1,5 +1,5 @@
-require('./web')
 require('./api')
+require('./web')
 
 app.get "/status", (req, res) ->
   res.send

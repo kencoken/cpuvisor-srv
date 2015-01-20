@@ -2,6 +2,8 @@ express       = require "express"
 #mongoose      = require "mongoose"
 path          = require "path"
 
+errorhandler  = require "errorhandler"
+
 # Global objects
 global.async  = require "async"
 global._      = require "underscore"
@@ -14,6 +16,9 @@ global.app    = express()
 global.utils  = require "./lib/utils"
 global.PROJECT_ROOT = __dirname
 global.CLIENT_ROOT = path.resolve(__dirname, '../client/app')
+
+global.server  = require('http').createServer(app)
+global.io      = require('socket.io')(server)
 
 require('./config')
 
@@ -30,25 +35,19 @@ require('./config')
 # Express Configuration(Common) #
 #################################
 
-app.configure ->
-  app.set "port", process.env.PORT or 3000
-  app.set "views", __dirname + "/views"
-  app.set "view engine", "ejs"
-  #app.use express.static(__dirname + "/public")
-  app.use '/static', express.static(CLIENT_ROOT)
-  app.use app.router
+app.set "port", process.env.PORT or 3000
+#app.set "views", __dirname + "/views"
+#app.set "view engine", "ejs"
+#app.use express.static(__dirname + "/public")
+#app.use '/static', express.static(CLIENT_ROOT)
 
 ########################################
 # Express Configuration(Envinromental) #
 ########################################
 
-app.configure "test", ->
-  app.use express.errorHandler
-    dumpExceptions: true
-    showStack: true
-
-app.configure "development", ->
-  app.use express.errorHandler
+env = process.env.NODE_ENV || 'development';
+if env == 'test' || env == 'development'
+  app.use errorhandler
     dumpExceptions: true
     showStack: true
 
