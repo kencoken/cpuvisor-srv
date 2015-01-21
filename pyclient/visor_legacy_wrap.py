@@ -132,6 +132,7 @@ class VisorLegacyWrap(object):
 
         conn.close()
 
+    @pyclient.decorators.api_err_handler
     def dispatch(self, req_dict):
 
         if req_dict['func'] == 'selfTest':
@@ -164,7 +165,8 @@ class VisorLegacyWrap(object):
             return self.rank(req_dict['query_id'])
         elif req_dict['func'] == 'getRanking' or req_dict['func'] == 'getRankingSubset':
             rep_dict = self.get_ranking(req_dict['query_id'])
-            rep_dict['total_len'] = len(rep_dict['ranklist'])
+            if rep_dict['success']:
+                rep_dict['total_len'] = len(rep_dict['ranklist'])
             return rep_dict
         else:
             raise RuntimeError('Unknown command: %s' % req_dict['func'])
@@ -173,6 +175,7 @@ class VisorLegacyWrap(object):
     def self_test(self):
         return {'success': True}
 
+    @pyclient.decorators.api_err_handler
     def get_query_id(self):
 
         query_id = self.client.start_query()
@@ -184,6 +187,7 @@ class VisorLegacyWrap(object):
         return {'success': True,
                 'query_id': num_query_id}
 
+    @pyclient.decorators.api_err_handler
     def release_query_id(self, num_query_id):
         query_id = self._get_query_id(num_query_id)
 
@@ -191,6 +195,7 @@ class VisorLegacyWrap(object):
 
         return {'success': True}
 
+    @pyclient.decorators.api_err_handler
     def add_pos_trs(self, num_query_id, path, blocking=False):
         query_id = self._get_query_id(num_query_id)
 
@@ -198,10 +203,12 @@ class VisorLegacyWrap(object):
 
         return {'success': True}
 
+    @pyclient.decorators.api_err_handler
     def add_neg_trs(self):
         print 'Not supported!'
         return {'success': True}
 
+    @pyclient.decorators.api_err_handler
     def save_annotations(self, num_query_id, path):
         query_id = self._get_query_id(num_query_id)
 
@@ -209,6 +216,7 @@ class VisorLegacyWrap(object):
 
         return {'success': True}
 
+    @pyclient.decorators.api_err_handler
     def get_annotations(self, path):
         annos_proto = self.client.get_annotations(path)
 
@@ -220,10 +228,12 @@ class VisorLegacyWrap(object):
         return {'success': True,
                 'annos': anno_list}
 
+    @pyclient.decorators.api_err_handler
     def load_annotations_and_trs(self):
         print 'Not supported!'
         return {'success': False}
 
+    @pyclient.decorators.api_err_handler
     def save_classifier(self, num_query_id, path):
         query_id = self._get_query_id(num_query_id)
 
@@ -231,6 +241,7 @@ class VisorLegacyWrap(object):
 
         return {'success': True}
 
+    @pyclient.decorators.api_err_handler
     def load_classifier(self, num_query_id, path):
         query_id = self._get_query_id(num_query_id)
 
@@ -238,18 +249,21 @@ class VisorLegacyWrap(object):
 
         return {'success': True}
 
+    @pyclient.decorators.api_err_handler
     def train(self, num_query_id):
         query_id = self._get_query_id(num_query_id)
 
         self.client.train(query_id)
         return {'success': True}
 
+    @pyclient.decorators.api_err_handler
     def rank(self, num_query_id):
         query_id = self._get_query_id(num_query_id)
 
         self.client.rank(query_id)
         return {'success': True}
 
+    @pyclient.decorators.api_err_handler
     def get_ranking(self, num_query_id):
         query_id = self._get_query_id(num_query_id)
 

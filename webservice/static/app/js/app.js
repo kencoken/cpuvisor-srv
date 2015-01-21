@@ -4,7 +4,9 @@
 
 var cpuVisorApp = angular.module('cpuVisorApp', [
   'ngRoute',
+  'ngAnimate',
   'btford.socket-io',
+  'mgcrea.ngStrap',
 
   'cpuVisorControllers',
   'cpuVisorServices',

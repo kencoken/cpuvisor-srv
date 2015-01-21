@@ -23,6 +23,13 @@ namespace cpuvisor {
     return notification;
   }
 
+  QueryErrorNotification StatusNotifier::wait_error() {
+    QueryErrorNotification notification;
+
+    error_notify_queue_.waitAndPop(notification);
+    return notification;
+  }
+
   void StatusNotifier::post_state_change_(const std::string& id,
                                           const QueryState new_state) {
     QueryStateChangeNotification notification;
@@ -46,6 +53,14 @@ namespace cpuvisor {
     notification.id = id;
 
     allimages_notify_queue_.push(notification);
+  }
+
+  void StatusNotifier::post_error_(const std::string& id, const std::string& err_msg) {
+    QueryErrorNotification notification;
+    notification.id = id;
+    notification.err_msg = err_msg;
+
+    error_notify_queue_.push(notification);
   }
 
 }

@@ -45,6 +45,7 @@ enum NotificationType {
   NTFY_STATE_CHANGE = 1;
   NTFY_IMAGE_PROCESSED = 2;
   NTFY_ALL_IMAGES_PROCESSED = 3;
+  NTFY_ERROR = 100;
 }
 
 message VisorNotification {

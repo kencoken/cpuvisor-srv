@@ -106,6 +106,7 @@ if __name__ == "__main__":
         print 'Received response:'
         rep_obj = recv_rep_obj(s)
         print rep_obj
+        if not rep_obj['success']: raise RuntimeError(rep_obj['err_msg'])
 
     print 'Sending train'
     req_obj = {'func': 'train',
@@ -114,6 +115,7 @@ if __name__ == "__main__":
     print 'Received response:'
     rep_obj = recv_rep_obj(s)
     print rep_obj
+    if not rep_obj['success']: raise RuntimeError(rep_obj['err_msg'])
 
     print 'Sending rank'
     req_obj = {'func': 'rank',
@@ -122,6 +124,7 @@ if __name__ == "__main__":
     print 'Received response:'
     rep_obj = recv_rep_obj(s)
     print rep_obj
+    if not rep_obj['success']: raise RuntimeError(rep_obj['err_msg'])
 
     print 'Sending getRanking'
     req_obj = {'func': 'getRanking',
@@ -130,6 +133,7 @@ if __name__ == "__main__":
     print 'Received response:'
     rep_obj = recv_rep_obj(s)
     print rep_obj
+    if not rep_obj['success']: raise RuntimeError(rep_obj['err_msg'])
 
     rank_result = rep_obj
 
@@ -140,6 +144,7 @@ if __name__ == "__main__":
     print 'Received response:'
     rep_obj = recv_rep_obj(s)
     print rep_obj
+    if not rep_obj['success']: raise RuntimeError(rep_obj['err_msg'])
 
     # cleanup
 

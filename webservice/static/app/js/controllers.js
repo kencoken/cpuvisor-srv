@@ -17,9 +17,9 @@ cpuVisorControllers.controller('LandingCtrl', ['$scope', '$location',
 
   }]);
 
-cpuVisorControllers.controller('RankingCtrl', ['$scope', '$routeParams', '$location', '$http', '$timeout', 'socketFactory',
+cpuVisorControllers.controller('RankingCtrl', ['$scope', '$routeParams', '$location', '$http', '$timeout', '$modal', 'socketFactory',
   'StartQuery', 'AddTrs', 'TrainModel', 'Rank', 'Ranking', 'FreeQuery',
-  function ($scope, $routeParams, $location, $http, $timeout, socketFactory, StartQuery, AddTrs, TrainModel,
+  function ($scope, $routeParams, $location, $http, $timeout, $modal, socketFactory, StartQuery, AddTrs, TrainModel,
             Rank, Ranking, FreeQuery) {
 
     $scope.StateEnum = {
@@ -28,11 +28,25 @@ cpuVisorControllers.controller('RankingCtrl', ['$scope', '$routeParams', '$locat
       QS_TRAINING: 2,
       QS_TRAINED: 3,
       QS_RANKING: 4,
-      QS_RANKED: 5
+      QS_RANKED: 5,
+      QS_ERROR: 100
+    };
+
+    $scope.startQuery = function() {
+      StartQuery.execute({}, function(queryIfo) {
+        $scope.handleErrorMaybe(queryIfo);
+
+        $scope.query_id = queryIfo.query_id;
+        AddTrs.execute({qid: $scope.query_id, q: $scope.query}, $scope.handleErrorMaybe);
+      });
     };
 
     $scope.startTraining = function() {
-      TrainModel.execute({qid: $scope.query_id});
+      TrainModel.execute({qid: $scope.query_id}, $scope.handleErrorMaybe);
+    };
+
+    $scope.startRanking = function() {
+      Rank.execute({qid: $scope.query_id}, $scope.handleErrorMaybe);
     };
 
     // Start -----
@@ -51,6 +65,7 @@ cpuVisorControllers.controller('RankingCtrl', ['$scope', '$routeParams', '$locat
     });
 
     $scope.notification_socket.on('notification', function(notify_data) {
+      console.log('Received notification: ' + notify_data);
       if (notify_data.id === $scope.query_id) {
         switch (notify_data.type) {
           case 'NTFY_STATE_CHANGE':
@@ -62,7 +77,7 @@ cpuVisorControllers.controller('RankingCtrl', ['$scope', '$routeParams', '$locat
                 $scope.startTraining();
                 break;
               case $scope.StateEnum.QS_TRAINED:
-                Rank.execute({qid: $scope.query_id});
+                $scope.startRanking();
                 break;
               case $scope.StateEnum.QS_RANKED:
                 Ranking.get({qid: $scope.query_id, page: 1}, function(ranking_obj) {
@@ -81,14 +96,14 @@ cpuVisorControllers.controller('RankingCtrl', ['$scope', '$routeParams', '$locat
           case 'NTFY_ALL_IMAGES_PROCESSED':
             console.log('All images processed!');
             break;
+          case 'NTFY_ERROR':
+            console.log('Caught error: ' + notify_data.data);
+            $scope.handleError(notify_data.data);
         }
       }
     });
 
-    StartQuery.execute({}, function(queryIfo) {
-      $scope.query_id = queryIfo.query_id;
-      AddTrs.execute({qid: $scope.query_id, q: $scope.query});
-    });
+    $scope.startQuery();
 
     // timeout for image addition
     $timeout(function() {
@@ -107,6 +122,7 @@ cpuVisorControllers.controller('RankingCtrl', ['$scope', '$routeParams', '$locat
       if (next_page <= $scope.ranking.page_count) {
         console.log('Getting the updated ranking...');
         Ranking.get({qid: $scope.query_id, page: next_page}, function(ranking_obj) {
+          if (!ranking_obj.success) $scope.handleError("Ranking failed" + rankingobj.err_msg);
           $scope.ranking.rlist = $scope.ranking.rlist.concat(ranking_obj.ranking.rlist);
           $scope.ranking.page = ranking_obj.ranking.page;
 
@@ -119,6 +135,35 @@ cpuVisorControllers.controller('RankingCtrl', ['$scope', '$routeParams', '$locat
     $scope.goHome = function() {
       $location.path('/');
     };
+
+    $scope.handleError = function(err_msg) {
+      $scope.state = $scope.StateEnum.QS_ERROR;
+
+      console.log('Handling error with err_msg: ' + err_msg);
+      $modal({
+        title: 'Error',
+        content: err_msg,
+        show: true,
+        animation: 'am-fade-and-scale',
+        backdropAnimation: 'am-fade',
+        placement: 'center',
+        container: 'body',
+        backdrop: 'static',
+        prefixEvent: 'modal',
+        scope: $scope
+      });
+    };
+
+    $scope.handleErrorMaybe = function(err_obj) {
+      if (!err_obj.success) $scope.handleError(err_obj.err_msg);
+    };
+
+    $scope.$on('modal.hide',function() {
+      console.log('Going home!');
+      $scope.$apply(function() {
+        $location.path('/');
+      });
+    });
 
     $scope.$on('$locationChangeStart', function(event, newUrl, oldUrl) {
       // free query when leaving the page

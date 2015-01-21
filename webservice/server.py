@@ -7,6 +7,7 @@ from flask import Flask
 from flask.ext.socketio import SocketIO
 from protobuf_to_dict import protobuf_to_dict
 log = logging.getLogger(__name__)
+logging.basicConfig()
 
 file_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(file_dir, '..'))
@@ -65,11 +66,17 @@ def recv_notification(notification):
     if notification.type == protosrv.NTFY_IMAGE_PROCESSED:
         notification.data = os.path.join('downloaded', os.path.relpath(notification.data, server_config.server_config.image_cache_path))
 
+    emit_notification(notification.type, notification.data, notification.id)
+
+
+def emit_notification(type, data, id):
+
     # TODO: switch to qid specific notifications: '/api/query/%s/notifications' % notification.id
-    socketio.emit('notification', {'type': protosrv.NotificationType.Name(notification.type),
-                                   'data': notification.data,
-                                   'id': notification.id},
+    socketio.emit('notification', {'type': protosrv.NotificationType.Name(type),
+                                   'data': data,
+                                   'id': id},
                   namespace='/api/query/notifications')
+
 
 client = pyclient.VisorClientLegacyExt(app.config['SERVER_CONFIG'])
 notifier = pyclient.VisorNotifier(app.config['SERVER_CONFIG'], recv_notification)
@@ -83,31 +90,37 @@ def api_base():
     return "CPU-VISOR Demo API"
 
 @app.route('/api/query/start_query', methods=['POST'])
+@pyclient.decorators.api_err_handler(True)
 def start_query():
     query_id = client.start_query()
     return json.dumps({'success': True, 'query_id': query_id})
 
 @app.route('/api/query/<string:query_id>/add_trs/<string:query_string>', methods=['PUT'])
+@pyclient.decorators.api_err_handler(True)
 def add_trs(query_id, query_string):
     client.download_trs(query_id, query_string)
     return json.dumps({'success': True})
 
 @app.route('/api/query/<string:query_id>/train', methods=['PUT'])
+@pyclient.decorators.api_err_handler(True)
 def train(query_id):
     client.train(query_id, blocking=False)
     return json.dumps({'success': True})
 
 @app.route('/api/query/<string:query_id>/rank', methods=['PUT'])
+@pyclient.decorators.api_err_handler(True)
 def rank(query_id):
     client.rank(query_id, blocking=False)
     return json.dumps({'success': True})
 
 @app.route('/api/query/<string:query_id>/ranking/<int:page>', methods=['GET'])
+@pyclient.decorators.api_err_handler(True)
 def ranking(query_id, page):
     ranking_result = client.get_ranking(query_id, page=page)
     return json.dumps({'success': True, 'ranking': protobuf_to_dict(ranking_result)})
 
 @app.route('/api/query/<string:query_id>/free', methods=['PUT'])
+@pyclient.decorators.api_err_handler(True)
 def free_query(query_id):
     client.free_query(query_id)
     return json.dumps({'success': True})

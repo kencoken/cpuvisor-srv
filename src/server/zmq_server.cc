@@ -17,7 +17,8 @@ namespace cpuvisor {
     , base_server_(new BaseServer(config))
     , monitor_state_change_thread_(new boost::thread(&ZmqServer::monitor_state_change_, this))
     , monitor_add_trs_images_thread_(new boost::thread(&ZmqServer::monitor_add_trs_images_, this))
-    , monitor_add_trs_complete_thread_(new boost::thread(&ZmqServer::monitor_add_trs_complete_, this)) {
+    , monitor_add_trs_complete_thread_(new boost::thread(&ZmqServer::monitor_add_trs_complete_, this))
+    , monitor_errors_thread_(new boost::thread(&ZmqServer::monitor_errors_, this)){
 
   }
 
@@ -27,6 +28,7 @@ namespace cpuvisor {
     if (monitor_state_change_thread_) monitor_state_change_thread_->interrupt();
     if (monitor_add_trs_images_thread_) monitor_add_trs_images_thread_->interrupt();
     if (monitor_add_trs_complete_thread_) monitor_add_trs_complete_thread_->interrupt();
+    if (monitor_errors_thread_) monitor_errors_thread_->interrupt();
   }
 
   void ZmqServer::serve(const bool blocking) {
@@ -79,7 +81,7 @@ namespace cpuvisor {
       std::string rpc_rep_serialized;
       rpc_rep.SerializeToString(&rpc_rep_serialized);
 
-      //std::cout << "***********\n" << rpc_rep_serialized << std::endl << "***********\n" << std::endl;
+      std::cout << "***********\n" << rpc_rep_serialized << std::endl << "***********\n" << std::endl;
 
       // for some reason, this results in corruption of binary data
       // zmq::message_t reply((void*)rpc_rep_serialized.c_str(),
@@ -411,6 +413,35 @@ namespace cpuvisor {
         VisorNotification notify_proto;
         notify_proto.set_type(NTFY_ALL_IMAGES_PROCESSED);
         notify_proto.set_id(notification.id);
+
+        std::string notify_proto_serialized;
+        notify_proto.SerializeToString(&notify_proto_serialized);
+
+        zmq::message_t notify_msg(notify_proto_serialized.size());
+        memcpy((void*)notify_msg.data(), notify_proto_serialized.c_str(),
+               notify_proto_serialized.size());
+
+        notify_socket_->send(notify_msg);
+      }
+    }
+  }
+
+  void ZmqServer::monitor_errors_() {
+    while (true) {
+      QueryErrorNotification notification =
+        base_server_->notifier()->wait_error();
+      std::cout << "*******************************************************" << std::endl
+                << "QUERYERRORNOTIFICATION" << std::endl
+                << "-------------------------------------------------------" << std::endl
+                << "id:    " << notification.id << std::endl
+                << "err:   " << notification.err_msg << std::endl
+                << "*******************************************************" << std::endl;
+
+      if (notify_socket_) {
+        VisorNotification notify_proto;
+        notify_proto.set_type(NTFY_ERROR);
+        notify_proto.set_id(notification.id);
+        notify_proto.set_data(notification.err_msg);
 
         std::string notify_proto_serialized;
         notify_proto.SerializeToString(&notify_proto_serialized);

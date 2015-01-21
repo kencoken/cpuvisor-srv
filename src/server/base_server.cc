@@ -251,6 +251,15 @@ namespace cpuvisor {
   }
 
   void BaseServer::train(const std::string& id, const bool block) {
+    {
+      // check features exist for training
+      boost::shared_ptr<QueryIfo> query_ifo = getQueryIfo_(id);
+      if (query_ifo->data.pos_paths.size() == 0) {
+        throw InvalidRequestError("No training images in pos_paths array");
+      }
+    }
+
+
     if (block) {
       train_(id);
     } else {
@@ -462,58 +471,84 @@ namespace cpuvisor {
   void BaseServer::train_(const std::string& id) {
     boost::shared_ptr<QueryIfo> query_ifo = getQueryIfo_(id);
 
-    if ((query_ifo->state != QS_DATACOLL) && (query_ifo->state != QS_DATACOLL_COMPLETE)) {
-      throw WrongQueryStatusError("Cannot train unles state = QS_DATACOLL or QS_DATACOLL_COMPLETE");
+    try {
+
+      if ((query_ifo->state != QS_DATACOLL) && (query_ifo->state != QS_DATACOLL_COMPLETE)) {
+        throw WrongQueryStatusError("Cannot train unles state = QS_DATACOLL or QS_DATACOLL_COMPLETE");
+      }
+
+      LOG(INFO) << "Entered train in correct state";
+      query_ifo->state = QS_TRAINING;
+      notifier_->post_state_change_(id, query_ifo->state);
+
+#ifndef NDEBUG // DEBUG
+      DLOG(INFO) << "Will train with features computed from the following positive paths:";
+      for (size_t i = 0; i < query_ifo->data.pos_paths.size(); ++i) {
+        DLOG(INFO) << i+1 << ": " << query_ifo->data.pos_paths[i];
+      }
+#endif
+
+      double svm_c = 1.0;
+      if (query_ifo->data.pos_paths.size() < 10) {
+        svm_c = 10.0;
+      }
+
+      query_ifo->data.model =
+        cpuvisor::trainLinearSvm(query_ifo->data.pos_feats, neg_feats_, svm_c);
+
+#ifdef MATEXP_DEBUG // DEBUG
+      MatFile mat_file("prebasetrain.mat", true);
+      mat_file.writeFloatMat("w_vect", (float*)query_ifo->data.model.data,
+                             query_ifo->data.model.rows,
+                             query_ifo->data.model.cols);
+#endif
+
+      query_ifo->state = QS_TRAINED;
+      notifier_->post_state_change_(id, query_ifo->state);
+
+    } catch (const cv::Exception& e) {
+
+      notifier_->post_error_(id, std::string("OpenCV Exception: ") + std::string(e.what()));
+
+    } catch (const std::runtime_error& e) {
+
+      notifier_->post_error_(id, std::string("Runtime Exception: ") + std::string(e.what()));
+
     }
 
-    LOG(INFO) << "Entered train in correct state";
-    query_ifo->state = QS_TRAINING;
-    notifier_->post_state_change_(id, query_ifo->state);
-
-    #ifndef NDEBUG // DEBUG
-    DLOG(INFO) << "Will train with features computed from the following positive paths:";
-    for (size_t i = 0; i < query_ifo->data.pos_paths.size(); ++i) {
-      DLOG(INFO) << i+1 << ": " << query_ifo->data.pos_paths[i];
-    }
-    #endif
-
-    double svm_c = 1.0;
-    if (query_ifo->data.pos_paths.size() < 10) {
-      svm_c = 10.0;
-    }
-
-    query_ifo->data.model =
-      cpuvisor::trainLinearSvm(query_ifo->data.pos_feats, neg_feats_, svm_c);
-
-    #ifdef MATEXP_DEBUG // DEBUG
-    MatFile mat_file("prebasetrain.mat", true);
-    mat_file.writeFloatMat("w_vect", (float*)query_ifo->data.model.data,
-      query_ifo->data.model.rows,
-      query_ifo->data.model.cols);
-    #endif
-
-    query_ifo->state = QS_TRAINED;
-    notifier_->post_state_change_(id, query_ifo->state);
   }
 
   void BaseServer::rank_(const std::string& id) {
     boost::shared_ptr<QueryIfo> query_ifo = getQueryIfo_(id);
 
-    if (query_ifo->state != QS_TRAINED) {
-      throw WrongQueryStatusError("Cannot rank unles state = QS_TRAINED");
+    try {
+
+      if (query_ifo->state != QS_TRAINED) {
+        throw WrongQueryStatusError("Cannot rank unles state = QS_TRAINED");
+      }
+
+      LOG(INFO) << "Entered rank in correct state";
+      query_ifo->state = QS_RANKING;
+      notifier_->post_state_change_(id, query_ifo->state);
+
+      cpuvisor::rankUsingModel(query_ifo->data.model,
+                               dset_feats_,
+                               &query_ifo->data.ranking.scores,
+                               &query_ifo->data.ranking.sort_idxs);
+
+      query_ifo->state = QS_RANKED;
+      notifier_->post_state_change_(id, query_ifo->state);
+
+    } catch (const cv::Exception& e) {
+
+      notifier_->post_error_(id, std::string("OpenCV Exception: ") + std::string(e.what()));
+
+    } catch (const std::runtime_error& e) {
+
+      notifier_->post_error_(id, std::string("Runtime Exception: ") + std::string(e.what()));
+
     }
 
-    LOG(INFO) << "Entered rank in correct state";
-    query_ifo->state = QS_RANKING;
-    notifier_->post_state_change_(id, query_ifo->state);
-
-    cpuvisor::rankUsingModel(query_ifo->data.model,
-                             dset_feats_,
-                             &query_ifo->data.ranking.scores,
-                             &query_ifo->data.ranking.sort_idxs);
-
-    query_ifo->state = QS_RANKED;
-    notifier_->post_state_change_(id, query_ifo->state);
   }
 
   void BaseServer::addTrsFromFile_(const std::string& id,

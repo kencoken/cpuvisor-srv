@@ -41,6 +41,7 @@ namespace cpuvisor {
     virtual void monitor_state_change_();
     virtual void monitor_add_trs_images_();
     virtual void monitor_add_trs_complete_();
+    virtual void monitor_errors_();
 
     Config config_;
 
@@ -50,6 +51,7 @@ namespace cpuvisor {
     boost::shared_ptr<boost::thread> monitor_state_change_thread_;
     boost::shared_ptr<boost::thread> monitor_add_trs_images_thread_;
     boost::shared_ptr<boost::thread> monitor_add_trs_complete_thread_;
+    boost::shared_ptr<boost::thread> monitor_errors_thread_;
 
     boost::shared_ptr<zmq::socket_t> notify_socket_;
   };
