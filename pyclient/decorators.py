@@ -6,7 +6,7 @@ import traceback
 log = logging.getLogger(__name__)
 
 
-def api_err_handler(jsonify=False):
+def api_err_handler(jsonify):
     """ Decorator returns an object with success field set to False and containing an error
         message when an exception is caught.
     """
