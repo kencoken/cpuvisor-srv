@@ -14,6 +14,8 @@ namespace fs = boost::filesystem;
 
 #include "server/util/io.h"
 #include "server/util/feat_util.h"
+#include "server/util/file_util.h"
+#include "server/util/preproc.h" // for incremental indexing
 
 #ifdef MATEXP_DEBUG
   #include "server/util/debug/matfileutils_cpp.h"
@@ -94,26 +96,9 @@ namespace cpuvisor {
 
     // look for precomputed feature from dataset first
     {
-      bool proc_rel_path = true;
-
-      // get relative path from full path
-      std::string rel_path = imfile;
-      DLOG(INFO) << "dset_base_path is: '" << dset_base_path_ << "'";
-      if (!dset_base_path_.empty()) {
-        size_t base_path_idx = imfile.find(dset_base_path_);
-        if (base_path_idx == std::string::npos) {
-          proc_rel_path = false;
-        } else {
-          size_t start_idx = base_path_idx + dset_base_path_.length();
-          DLOG(INFO) << "Trimming rel_path using: " << dset_base_path_ << " " << start_idx;
-          rel_path = imfile.substr(start_idx, imfile.length() - start_idx);
-          if (rel_path[0] == fs::path("/").make_preferred().string()[0]) {
-            // trim leading dir separator
-            rel_path = rel_path.substr(1, rel_path.length() - 1);
-          }
-          DLOG(INFO) << "Trimmed rel_path is: " << rel_path;
-        }
-      }
+      // get relative path from full path (to check if in dataset)
+      std::string rel_path;
+      bool proc_rel_path = relativePath(imfile, dset_base_path_, &rel_path);
 
       if (proc_rel_path) {
         DLOG(INFO) << "rel_path to find is: " << rel_path;
@@ -163,6 +148,7 @@ namespace cpuvisor {
     CHECK(cpuvisor::readFeatsFromProto(preproc_config.dataset_feats_file(),
                                        &dset_feats_, &dset_paths_));
     dset_base_path_ = preproc_config.dataset_im_base_path();
+    dset_feats_file_ = preproc_config.dataset_feats_file();
 
     CHECK(cpuvisor::readFeatsFromProto(preproc_config.neg_feats_file(),
                                        &neg_feats_, &neg_paths_));
@@ -455,6 +441,84 @@ namespace cpuvisor {
 
   }
 
+  void BaseServer::addDsetImages(const std::vector<std::string>& dset_paths) {
+
+    LOG(INFO) << "Adding dataset features to incremental index...";
+
+    if (dset_paths.size() < 1) {
+      throw InvalidDsetIncrementalUpdateError("Issued incremental dataset update with no paths");
+    }
+
+    // get a temporary filename for the newly processed features
+    fs::path tmp_feats_path;
+    for (int i = 0; i < 100; i++) {
+      tmp_feats_path = fs::path(dset_feats_file_ + "." + boost::lexical_cast<std::string>(i));
+      if (!fs::exists(tmp_feats_path)) break;
+    }
+
+    // check if paths are relative or absolute
+    bool paths_are_absolute = fs::path(dset_paths[0]).has_root_path();
+
+    // ensure all paths exist, are relative and are ancestors of dset_base_path_
+    const fs::path dset_base_path_fs(dset_base_path_);
+    std::vector<std::string> paths(dset_paths.size());
+
+    for (size_t i = 0; i < dset_paths.size(); ++i) {
+
+      std::string abs_path;
+      std::string rel_path;
+
+      // set abs_path and rel_path
+      if (paths_are_absolute) {
+        if (!relativePath(dset_paths[i], dset_base_path_, &rel_path)) {
+          throw InvalidDsetIncrementalUpdateError("Path: " + dset_paths[i] + " was not relative to dataset path");
+        }
+        abs_path = dset_paths[i];
+      } else {
+        rel_path = dset_paths[i];
+        fs::path abs_path_fs = dset_base_path_fs / fs::path(dset_paths[i]);
+        abs_path = abs_path_fs.string();
+      }
+
+      // check existance and do update
+      if (!fs::exists(fs::path(abs_path))) {
+        throw InvalidDsetIncrementalUpdateError("Path: " + rel_path + " does not exist");
+      }
+      paths[i] = rel_path;
+    }
+
+
+    // process, append to in-memory index and save to temporary file
+    {
+      boost::unique_lock<boost::shared_mutex> lock(dset_update_mutex_);
+      procPathListAppend(paths, tmp_feats_path.string(), *encoder_.get(),
+                         &dset_feats_, &dset_paths_, dset_base_path_);
+    }
+
+    // replace old on-disk file with new on-disk feature file
+    fs::path dset_feats_file_fs(dset_feats_file_);
+    fs::path dset_feats_file_bak_fs(dset_feats_file_ + ".bak");
+
+    try {
+      fs::rename(dset_feats_file_fs, dset_feats_file_bak_fs);
+    } catch (fs::filesystem_error& e) {
+      throw InvalidDsetIncrementalUpdateError("Could not create backup of original index");
+    }
+
+    try {
+      fs::rename(tmp_feats_path, dset_feats_file_fs);
+    } catch (fs::filesystem_error& e) {
+      throw InvalidDsetIncrementalUpdateError("Could not replace original index with updated index. Original index was removed, and can be found as .bak file in origin directory");
+    }
+
+    try {
+      fs::remove(dset_feats_file_bak_fs);
+    } catch (fs::filesystem_error& e) {
+      LOG(WARNING) << "Could not remove temporary dataset features backup file";
+    }
+
+  }
+
   // Protected methods -----------------------------------------------------------
 
   boost::shared_ptr<QueryIfo> BaseServer::getQueryIfo_(const std::string& id) {
@@ -531,10 +595,13 @@ namespace cpuvisor {
       query_ifo->state = QS_RANKING;
       notifier_->post_state_change_(id, query_ifo->state);
 
-      cpuvisor::rankUsingModel(query_ifo->data.model,
-                               dset_feats_,
-                               &query_ifo->data.ranking.scores,
-                               &query_ifo->data.ranking.sort_idxs);
+      {
+        boost::shared_lock<boost::shared_mutex> lock(dset_update_mutex_);
+        cpuvisor::rankUsingModel(query_ifo->data.model,
+                                 dset_feats_,
+                                 &query_ifo->data.ranking.scores,
+                                 &query_ifo->data.ranking.sort_idxs);
+      }
 
       query_ifo->state = QS_RANKED;
       notifier_->post_state_change_(id, query_ifo->state);

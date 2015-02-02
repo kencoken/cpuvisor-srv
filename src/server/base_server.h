@@ -45,6 +45,11 @@ namespace cpuvisor {
     InvalidAnnoFileError(std::string const& msg): InvalidRequestError(msg) { }
   };
 
+  class InvalidDsetIncrementalUpdateError: public InvalidRequestError {
+    public:
+    InvalidDsetIncrementalUpdateError(std::string const& msg): InvalidRequestError(msg) { }
+  };
+
   // callback functor specializations ----
 
   class BaseServerExtraData : public ExtraDataWrapper {
@@ -137,6 +142,8 @@ namespace cpuvisor {
     virtual void saveClassifier(const std::string& id, const std::string& filename);
     virtual void loadClassifier(const std::string& id, const std::string& filename);
 
+    virtual void addDsetImages(const std::vector<std::string>& dset_paths);
+
   protected:
     virtual boost::shared_ptr<QueryIfo> getQueryIfo_(const std::string& id);
 
@@ -150,6 +157,9 @@ namespace cpuvisor {
     cv::Mat dset_feats_;
     std::vector<std::string> dset_paths_;
     std::string dset_base_path_;
+
+    std::string dset_feats_file_;
+    boost::shared_mutex dset_update_mutex_;
 
     cv::Mat neg_feats_;
     std::vector<std::string> neg_paths_;

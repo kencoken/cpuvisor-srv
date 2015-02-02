@@ -17,8 +17,6 @@ namespace cpuvisor {
 
     std::ifstream imfiles(text_path.c_str());
 
-    // std::string base_path;
-    // std::getline(imfiles, base_path);
     fs::path base_path_fs(base_path);
     if (!base_path.empty()) {
       CHECK(fs::exists(base_path_fs) && fs::is_directory(fs::canonical(base_path_fs)))
@@ -53,6 +51,57 @@ namespace cpuvisor {
 
     CHECK_GT(paths.size(), 0) << "No paths could be read from file: " << text_path;
 
+    procPathList(paths, proto_path, encoder, base_path);
+
+  }
+
+  void procPathList(const std::vector<std::string>& paths,
+                    const std::string& proto_path,
+                    featpipe::CaffeEncoder& encoder,
+                    const std::string& base_path) {
+
+    cv::Mat feats = procPaths_(paths, encoder, base_path);
+    writeFeatsToProto_(feats, paths, proto_path);
+
+  }
+
+  void procPathListAppend(const std::vector<std::string>& new_paths,
+                          const std::string& proto_path,
+                          featpipe::CaffeEncoder& encoder,
+                          cv::Mat* existing_feats,
+                          std::vector<std::string>* existing_paths,
+                          const std::string& base_path) {
+
+    cv::Mat& feats = *existing_feats;
+    std::vector<std::string>& paths = *existing_paths;
+
+    cv::Mat new_feats = procPaths_(new_paths, encoder, base_path);
+
+    CHECK_EQ(feats.rows, paths.size());
+    CHECK_EQ(feats.cols, new_feats.cols);
+    CHECK_EQ(new_feats.rows, new_paths.size());
+
+    // always add features before paths to the index to prevent false lookups
+
+    for (size_t i = 0; i < new_feats.rows; ++i) {
+      feats.push_back(new_feats.row(i)); // could be done more efficiently
+    }
+    paths.insert(paths.end(), new_paths.begin(), new_paths.end());
+
+    writeFeatsToProto_(feats, paths, proto_path);
+
+  }
+
+  cv::Mat procPaths_(const std::vector<std::string>& paths,
+                     featpipe::CaffeEncoder& encoder,
+                     const std::string& base_path) {
+
+    fs::path base_path_fs(base_path);
+    if (!base_path.empty()) {
+      CHECK(fs::exists(base_path_fs) && fs::is_directory(fs::canonical(base_path_fs)))
+        << "Base path should exist or be blank: " << base_path;
+    }
+
     cv::Mat feats(paths.size(), encoder.get_code_size(), CV_32F);
 
     for (size_t i = 0; i < paths.size(); ++i) {
@@ -67,11 +116,13 @@ namespace cpuvisor {
 
     }
 
-    #ifdef MATEXP_DEBUG // DEBUG
-    MatFile mat_file(proto_path + ".mat", true);
-    mat_file.writeFloatMat("feats", (float*)feats.data, feats.rows, feats.cols);
-    mat_file.writeVectOfStrs("paths", paths);
-    #endif
+    return feats;
+
+  }
+
+  void writeFeatsToProto_(const cv::Mat feats,
+                          const std::vector<std::string>& paths,
+                          const std::string& proto_path) {
 
     // ensure output dir exists
     fs::path proto_dir_fs = fs::path(proto_path).parent_path();
@@ -81,6 +132,7 @@ namespace cpuvisor {
 
     LOG(INFO) << "Writing features to: " << proto_path;
     cpuvisor::writeFeatsToProto(feats, paths, proto_path);
+
   }
 
 }
