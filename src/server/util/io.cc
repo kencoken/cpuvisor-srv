@@ -71,10 +71,14 @@ namespace cpuvisor {
     }
 
     // DEBUG
-    for (size_t i = 0; i < 5; ++i) {
-      DLOG(INFO) << paths[i] << ":";
-      DLOG(INFO) << feats.row(i);
+    #ifndef NDEBUG
+    {
+      for (size_t i = 0; i < 5; ++i) {
+        DLOG(INFO) << paths[i] << ":";
+        DLOG(INFO) << feats(cv::Rect(0,0,std::min(10, feats.cols),1));
+      }
     }
+    #endif
     // END DEBUG
 
     writeProtoToBinaryFile(proto_path, feats_proto);
@@ -190,10 +194,14 @@ namespace cpuvisor {
       }
 
       // DEBUG
-      for (size_t i = 0; i < 5; ++i) {
-        DLOG(INFO) << (*paths)[i] << ":";
-        DLOG(INFO) << feats->row(i);
+      #ifndef NDEBUG
+      {
+        for (size_t i = 0; i < 5; ++i) {
+          DLOG(INFO) << (*paths)[i] << ":";
+          DLOG(INFO) << (*feats)(cv::Rect(0,0,std::min(10, feats->cols),1));
+        }
       }
+      #endif
       // END DEBUG
 
     }

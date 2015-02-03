@@ -18,7 +18,7 @@ namespace cpuvisor {
     , monitor_state_change_thread_(new boost::thread(&ZmqServer::monitor_state_change_, this))
     , monitor_add_trs_images_thread_(new boost::thread(&ZmqServer::monitor_add_trs_images_, this))
     , monitor_add_trs_complete_thread_(new boost::thread(&ZmqServer::monitor_add_trs_complete_, this))
-    , monitor_errors_thread_(new boost::thread(&ZmqServer::monitor_errors_, this)){
+    , monitor_errors_thread_(new boost::thread(&ZmqServer::monitor_errors_, this)) {
 
   }
 
@@ -70,10 +70,18 @@ namespace cpuvisor {
       RPCReq rpc_req;
       rpc_req.ParseFromArray(request.data(), request.size());
 
-      std::string rpc_req_str;
-      google::protobuf::TextFormat::PrintToString(rpc_req, &rpc_req_str);
-      std::cout << "Received Protobuf:\n" << "-----------------\n"
-                << rpc_req_str << "-----------------\n" << std::endl;
+      #ifndef NDEBUG
+      {
+        std::string rpc_req_str;
+        google::protobuf::TextFormat::PrintToString(rpc_req, &rpc_req_str);
+        DLOG(INFO) << "Received Protobuf:\n" << "->->->->->->->->\n"
+                   << rpc_req_str << "->->->->->->->->\n";
+      }
+      #endif
+      std::cout << "**********************************\n"
+                << "Received request: " << rpc_req.request_string()
+                << ", query_id: " << rpc_req.id() << ", tag: " << rpc_req.tag() << std::endl
+                << "**********************************\n";
 
       RPCRep rpc_rep = dispatch_(rpc_req);
 
@@ -81,7 +89,19 @@ namespace cpuvisor {
       std::string rpc_rep_serialized;
       rpc_rep.SerializeToString(&rpc_rep_serialized);
 
-      std::cout << "***********\n" << rpc_rep_serialized << std::endl << "***********\n" << std::endl;
+      #ifndef NDEBUG
+      {
+        std::string rpc_rep_str;
+        google::protobuf::TextFormat::PrintToString(rpc_rep, &rpc_rep_str);
+
+        DLOG(INFO) << "Sending Protobuf:\n" << "<-<-<-<-<-<-<-<-\n"
+                   << "**** Formatted:\n"
+                   << rpc_rep_str
+                   << "**** Raw:\n"
+                   << rpc_rep_serialized << std::endl
+                   << "<-<-<-<-<-<-<-<-\n";
+      }
+      #endif
 
       // for some reason, this results in corruption of binary data
       // zmq::message_t reply((void*)rpc_rep_serialized.c_str(),
@@ -105,6 +125,10 @@ namespace cpuvisor {
 
     RPCRep rpc_rep;
     rpc_rep.set_id(id);
+    // not sure why, but need to set the success flag explicitly for
+    // some protobuf installations, despite the fact that it has a
+    // default value of true
+    rpc_rep.set_success(true);
 
     LOG(INFO) << "Dispatch to " << req_str;
 
@@ -221,6 +245,18 @@ namespace cpuvisor {
 
           const std::string filepath = rpc_req.filepath();
           base_server_->loadClassifier(id, filepath);
+
+        } else if (req_str == "add_dset_images_to_index") {
+
+          const TrainImageUrls& urls_proto = rpc_req.train_image_urls();
+          const int path_count = rpc_req.image_paths_size();
+
+          std::vector<std::string> paths;
+          for (int i = 0; i < path_count; ++i) {
+            paths.push_back(rpc_req.image_paths(i));
+          }
+
+          base_server_->addDsetImagesToIndex(paths);
 
         } else {
 

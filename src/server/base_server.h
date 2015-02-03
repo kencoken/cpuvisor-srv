@@ -35,6 +35,11 @@ namespace cpuvisor {
     WrongQueryStatusError(std::string const& msg): InvalidRequestError(msg) { }
   };
 
+  class TrainingError: public InvalidRequestError {
+  public:
+    TrainingError(std::string const& msg): InvalidRequestError(msg) { }
+  };
+
   class CannotReturnRankingError: public InvalidRequestError {
   public:
     CannotReturnRankingError(std::string const& msg): InvalidRequestError(msg) { }
@@ -142,13 +147,13 @@ namespace cpuvisor {
     virtual void saveClassifier(const std::string& id, const std::string& filename);
     virtual void loadClassifier(const std::string& id, const std::string& filename);
 
-    virtual void addDsetImages(const std::vector<std::string>& dset_paths);
+    virtual void addDsetImagesToIndex(const std::vector<std::string>& dset_paths);
 
   protected:
     virtual boost::shared_ptr<QueryIfo> getQueryIfo_(const std::string& id);
 
-    virtual void train_(const std::string& id);
-    virtual void rank_(const std::string& id);
+    virtual void train_(const std::string& id, bool post_errors = false);
+    virtual void rank_(const std::string& id, bool post_errors = false);
 
     virtual void addTrsFromFile_(const std::string& id, const std::vector<std::string>& paths);
 

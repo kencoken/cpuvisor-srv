@@ -249,7 +249,7 @@ namespace cpuvisor {
     if (block) {
       train_(id);
     } else {
-      boost::thread proc_thread(&BaseServer::train_, this, id);
+      boost::thread proc_thread(&BaseServer::train_, this, id, true);
     }
   }
 
@@ -257,7 +257,7 @@ namespace cpuvisor {
     if (block) {
       rank_(id);
     } else {
-      boost::thread proc_thread(&BaseServer::rank_, this, id);
+      boost::thread proc_thread(&BaseServer::rank_, this, id, true);
     }
   }
 
@@ -441,7 +441,7 @@ namespace cpuvisor {
 
   }
 
-  void BaseServer::addDsetImages(const std::vector<std::string>& dset_paths) {
+  void BaseServer::addDsetImagesToIndex(const std::vector<std::string>& dset_paths) {
 
     LOG(INFO) << "Adding dataset features to incremental index...";
 
@@ -480,7 +480,7 @@ namespace cpuvisor {
         abs_path = abs_path_fs.string();
       }
 
-      // check existance and do update
+      // check existence and do update
       if (!fs::exists(fs::path(abs_path))) {
         throw InvalidDsetIncrementalUpdateError("Path: " + rel_path + " does not exist");
       }
@@ -488,34 +488,51 @@ namespace cpuvisor {
     }
 
 
-    // process, append to in-memory index and save to temporary file
-    {
-      boost::unique_lock<boost::shared_mutex> lock(dset_update_mutex_);
-      procPathListAppend(paths, tmp_feats_path.string(), *encoder_.get(),
-                         &dset_feats_, &dset_paths_, dset_base_path_);
-    }
-
-    // replace old on-disk file with new on-disk feature file
-    fs::path dset_feats_file_fs(dset_feats_file_);
-    fs::path dset_feats_file_bak_fs(dset_feats_file_ + ".bak");
-
     try {
-      fs::rename(dset_feats_file_fs, dset_feats_file_bak_fs);
-    } catch (fs::filesystem_error& e) {
-      throw InvalidDsetIncrementalUpdateError("Could not create backup of original index");
+
+      // process!!
+      // (append new features to in-memory index and save to temporary file)
+      {
+        boost::unique_lock<boost::shared_mutex> lock(dset_update_mutex_);
+        procPathListAppend(paths, tmp_feats_path.string(), *encoder_.get(),
+                           &dset_feats_, &dset_paths_, dset_base_path_);
+      }
+
+      // replace old on-disk file with new on-disk feature file
+      fs::path dset_feats_file_fs(dset_feats_file_);
+      fs::path dset_feats_file_bak_fs(dset_feats_file_ + ".bak");
+
+      std::string err_msg;
+      try {
+
+        err_msg = "Could not create backup of original index";
+        fs::rename(dset_feats_file_fs, dset_feats_file_bak_fs);
+
+        err_msg = "Could not replace original index with updated index. Original index was removed, and can be found as .bak file in origin directory";
+        fs::rename(tmp_feats_path, dset_feats_file_fs);
+
+      } catch (fs::filesystem_error& e) {
+        throw InvalidDsetIncrementalUpdateError(err_msg);
+      }
+
+      try {
+        fs::remove(dset_feats_file_bak_fs);
+      } catch (fs::filesystem_error& e) {
+        LOG(WARNING) << "Could not remove temporary dataset features backup file";
+      }
+
+    } catch (InvalidDsetIncrementalUpdateError& e) {
+
+      // notify of any errors during the update, but also throw (as it
+      // is likely caller is not the same as notify subscriber for
+      // index updates)
+      notifier_->post_index_update_failed_(e.what());
+      throw;
+
     }
 
-    try {
-      fs::rename(tmp_feats_path, dset_feats_file_fs);
-    } catch (fs::filesystem_error& e) {
-      throw InvalidDsetIncrementalUpdateError("Could not replace original index with updated index. Original index was removed, and can be found as .bak file in origin directory");
-    }
-
-    try {
-      fs::remove(dset_feats_file_bak_fs);
-    } catch (fs::filesystem_error& e) {
-      LOG(WARNING) << "Could not remove temporary dataset features backup file";
-    }
+    // notify successful completion
+    notifier_->post_index_updated_(dset_paths.size());
 
   }
 
@@ -532,7 +549,7 @@ namespace cpuvisor {
     return query_iter->second;
   }
 
-  void BaseServer::train_(const std::string& id) {
+  void BaseServer::train_(const std::string& id, const bool post_errors) {
     boost::shared_ptr<QueryIfo> query_ifo = getQueryIfo_(id);
 
     try {
@@ -572,17 +589,27 @@ namespace cpuvisor {
 
     } catch (const cv::Exception& e) {
 
-      notifier_->post_error_(id, std::string("OpenCV Exception: ") + std::string(e.what()));
+      std::string err_msg = std::string("OpenCV Exception: ") + std::string(e.what());
+      if (post_errors) {
+        notifier_->post_error_(id, err_msg);
+      } else {
+        throw TrainingError(err_msg);
+      }
 
     } catch (const std::runtime_error& e) {
 
-      notifier_->post_error_(id, std::string("Runtime Exception: ") + std::string(e.what()));
+      std::string err_msg = std::string("Runtime Exception: ") + std::string(e.what());
+      if (post_errors) {
+        notifier_->post_error_(id, err_msg);
+      } else {
+        throw TrainingError(err_msg);
+      }
 
     }
 
   }
 
-  void BaseServer::rank_(const std::string& id) {
+  void BaseServer::rank_(const std::string& id, const bool post_errors) {
     boost::shared_ptr<QueryIfo> query_ifo = getQueryIfo_(id);
 
     try {
@@ -608,11 +635,21 @@ namespace cpuvisor {
 
     } catch (const cv::Exception& e) {
 
-      notifier_->post_error_(id, std::string("OpenCV Exception: ") + std::string(e.what()));
+      std::string err_msg = std::string("OpenCV Exception: ") + std::string(e.what());
+      if (post_errors) {
+        notifier_->post_error_(id, err_msg);
+      } else {
+        throw CannotReturnRankingError(err_msg);
+      }
 
     } catch (const std::runtime_error& e) {
 
-      notifier_->post_error_(id, std::string("Runtime Exception: ") + std::string(e.what()));
+      std::string err_msg = std::string("Runtime Exception: ") + std::string(e.what());
+      if (post_errors) {
+        notifier_->post_error_(id, err_msg);
+      } else {
+        throw CannotReturnRankingError(err_msg);
+      }
 
     }
 

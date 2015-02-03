@@ -11,10 +11,29 @@
 
 DEFINE_string(config_path, "../config.prototxt", "Server config file");
 
+void setupGoogleLogging(char* argv[]) {
+
+  FLAGS_stderrthreshold = 1; // log WARNING or above to stderr
+
+  #ifndef NDEBUG
+  // in debug mode, output all glog messages to console unless a
+  // custom logging directory is specified
+  if (!FLAGS_log_dir.empty()) {
+    google::InitGoogleLogging(argv[0]);
+  }
+  #else
+  // in release mode, enable google logging as usual
+  // (logs stored in /tmp/cpuvisor_service.<hostname>.<user name>.log.<severity level>.<date>.<time>.<pid>)
+  google::InitGoogleLogging(argv[0]);
+  #endif
+
+  google::InstallFailureSignalHandler();
+
+}
+
 int main(int argc, char* argv[]) {
 
-  google::InitGoogleLogging(argv[0]);
-  google::InstallFailureSignalHandler();
+  setupGoogleLogging(argv);
 
   cpuvisor::Config config;
   cpuvisor::readProtoFromTextFile(FLAGS_config_path, &config);

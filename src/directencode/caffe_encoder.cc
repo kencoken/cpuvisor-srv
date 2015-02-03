@@ -52,12 +52,12 @@ cv::Mat featpipe::CaffeEncoder::compute(const std::vector<cv::Mat>& images,
     {
       boost::lock_guard<boost::mutex> compute_lock(compute_mutex_);
 
-      std::cout << "Copy test images to network" << std::endl;
+      VLOG(1) << "Copying images to network for feature computation...";
       setNetTestImages(caffe_images, (*net_));
 
-      std::cout << "Forwarding test images through network" << std::endl;
+      VLOG(1) << "Forwarding test images through network...";
       const:: std::vector<caffe::Blob<float>*>& last_blobs = net_->ForwardPrefilled();
-      std::cout << "Done forwarding!" << std::endl;
+      VLOG(1) << "Done forwarding!";
 
       caffe::Blob<float>* output_blob = 0;
       if (config_.output_blob_name == LAST_BLOB_STR) {
@@ -69,13 +69,12 @@ cv::Mat featpipe::CaffeEncoder::compute(const std::vector<cv::Mat>& images,
         output_blob = const_cast<caffe::Blob<float>*>(blob.get());
       }
 
-      std::cout << "Copy to output vector" << std::endl;
       scores = cv::Mat(output_blob->num(),
                        output_blob->count()/output_blob->num(),
                        CV_32FC1);
       switch (caffe::Caffe::mode()) {
       case caffe::Caffe::CPU: {
-        DLOG(INFO) << "Copying from CPU";
+        VLOG(1) << "Copying from CPU";
         CHECK_EQ(output_blob->count(), scores.rows*scores.cols);
 
         caffe::caffe_copy(output_blob->count(), output_blob->cpu_data(),
@@ -90,7 +89,7 @@ cv::Mat featpipe::CaffeEncoder::compute(const std::vector<cv::Mat>& images,
 
         } break;
       case caffe::Caffe::GPU:
-        DLOG(INFO) << "Copying from GPU";
+        VLOG(1) << "Copying from GPU";
         caffe::caffe_copy(output_blob->count(), output_blob->gpu_data(),
                           (float*)scores.data);
         break;
@@ -99,10 +98,10 @@ cv::Mat featpipe::CaffeEncoder::compute(const std::vector<cv::Mat>& images,
       #ifndef NDEBUG // DEBUG
       double max_val, min_val;
       cv::minMaxLoc(scores, &min_val, &max_val);
-      DLOG(INFO) << "scores size: " << scores.rows << " x " << scores.cols;
-      DLOG(INFO) << "scores max: " << max_val;
-      DLOG(INFO) << "scores min: " << min_val;
-      DLOG(INFO) << "scores mean: " << cv::mean(scores);
+      VLOG(1) << "scores size: " << scores.rows << " x " << scores.cols;
+      VLOG(1) << "scores max: " << max_val;
+      VLOG(1) << "scores min: " << min_val;
+      VLOG(1) << "scores mean: " << cv::mean(scores);
       #endif
 
     }
@@ -110,7 +109,7 @@ cv::Mat featpipe::CaffeEncoder::compute(const std::vector<cv::Mat>& images,
     cv::reduce(scores, features.row(im_idx), 0, CV_REDUCE_AVG);
   }
 
-  std::cout << "Normalize features" << std::endl;
+  VLOG(1) << "Normalizing features...";
   for (size_t im_idx = 0; im_idx < images.size(); ++im_idx) {
     cv::normalize(features.row(im_idx), features.row(im_idx));
   }
