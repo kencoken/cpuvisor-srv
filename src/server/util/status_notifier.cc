@@ -30,6 +30,13 @@ namespace cpuvisor {
     return notification;
   }
 
+  IndexUpdatedNotification StatusNotifier::wait_index_updated() {
+    IndexUpdatedNotification notification;
+
+    indexupdate_notify_queue_.waitAndPop(notification);
+    return notification;
+  }
+
   void StatusNotifier::post_state_change_(const std::string& id,
                                           const QueryState new_state) {
     QueryStateChangeNotification notification;
@@ -61,6 +68,23 @@ namespace cpuvisor {
     notification.err_msg = err_msg;
 
     error_notify_queue_.push(notification);
+  }
+
+  void StatusNotifier::post_index_updated_(const size_t images_added) {
+    IndexUpdatedNotification notification;
+    notification.images_added = images_added;
+    notification.success = true;
+
+    indexupdate_notify_queue_.push(notification);
+  }
+
+  void StatusNotifier::post_index_update_failed_(const std::string& err_msg) {
+    IndexUpdatedNotification notification;
+    notification.images_added = 0;
+    notification.success = false;
+    notification.err_msg = err_msg;
+
+    indexupdate_notify_queue_.push(notification);
   }
 
 }

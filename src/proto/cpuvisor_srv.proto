@@ -28,6 +28,7 @@ message RPCReq {
   optional TrainImageUrls train_image_urls = 10;
   optional uint32 retrieve_page = 11 [default = 1];
 
+  repeated string image_paths = 40; // used only for add_dset_images
   optional string filepath = 50; // used only for legacy save/load annotations
 }
 
