@@ -5,7 +5,7 @@ Author: Ken Chatfield, University of Oxford (ken@robots.ox.ac.uk)
 
 Copyright 2014-2015, all rights reserved.
 
-Release: v0.2 (January 2015)
+Release: v0.2.1 (February 2015)
 License: MIT (see LICENSE.md)
 
 Installation Instructions
@@ -86,8 +86,42 @@ The demo scripts also require the `imsearch-tools` submodule to have been initia
     $ git submodule init
     $ git submodule update
 
+Utilities
+---------
+
+The following utilities are provided in the `utils/` subdirectory:
+
+  * `cpuvisor_service_forever.sh` – launches the CPUVISOR service, restarting
+      automatically if it ends unexpectedly, and places a log of all errors and crashes
+      in the `logs/` subdirectory
+  * `generate_imagelist.py` – scans a directory tree for images and saves their relative
+      paths to a text file – useful for generating dataset path indexes for use with
+      CPUVISOR
+
+Incremental Indexing
+--------------------
+
+It is possible to add images to the test dataset index in a live manner (without stopping
+CPUVISOR serving requests). To do this, first ensure the CPUVISOR service is running:
+
+    $ ./cpuvisor_service
+
+And then use the `cpuvisor_add_dset_images` to add new dataset images on the fly:
+
+    $ ./cpuvisor_add_dset_images --paths=/PATH/TO/IMAGE/LIST.txt
+
+Where the `paths` parameter specifies the location of a text file which contains the paths
+of the dataset images to add to the index. Note that these paths should be relative to
+the dataset root directory (specified in `config.prototxt` as
+*preproc_config->dataset_im_base_path*) and should be contained within this directory.
+
+Note also that whilst it is possible to continue using the CPUVISOR service whilst images
+are added to the index, the processing of queries is likely to be slower until the process
+has completed.
+
 Version History
 ---------------
 
 - **v0.1** – *October 2014* – Initial release
 - **v0.2** – *January 2015* – Added webserver demo
+- **v0.2.1** – *February 2015* – Added incremental indexing

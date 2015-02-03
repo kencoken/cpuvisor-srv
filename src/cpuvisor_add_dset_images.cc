@@ -9,24 +9,28 @@
 #include "server/zmq_client.h"
 
 DEFINE_string(config_path, "../config.prototxt", "Server config file");
-DEFINE_string(list_path, "", "Text file containing images to add to index");
+DEFINE_string(paths, "", "Text file containing images to add to index");
 
 int main(int argc, char* argv[]) {
 
   //google::InitGoogleLogging(argv[0]);
-  //google::InstallFailureSignalHandler();
+  google::InstallFailureSignalHandler();
 
   cpuvisor::Config config;
   cpuvisor::readProtoFromTextFile(FLAGS_config_path, &config);
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-  CHECK(!FLAGS_list_path.empty()) << "list_path parameter must be specified!";
+  if (FLAGS_paths.empty()) {
+    CHECK(argc >= 2) << "paths parameter must be specified!";
+    FLAGS_paths = std::string(argv[1]);
+  }
 
   cpuvisor::ZmqClient zmq_client(config);
 
   // read in image paths
   std::vector<std::string> dset_paths;
-  std::ifstream imfiles(FLAGS_list_path.c_str());
+  std::ifstream imfiles(FLAGS_paths.c_str());
+  CHECK(imfiles.is_open()) << "Error opening file: " << FLAGS_paths;
 
   std::string imfile;
   while (std::getline(imfiles, imfile)) {
