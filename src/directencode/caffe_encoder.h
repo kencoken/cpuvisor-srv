@@ -93,7 +93,7 @@ namespace featpipe {
     // virtual setter / getters
     inline virtual size_t get_code_size() const {
       if (config_.output_blob_name == LAST_BLOB_STR) {
-        std::vector<caffe::Blob<float>* >& output_blobs = net_->output_blobs();
+        const std::vector<caffe::Blob<float>* >& output_blobs = net_->output_blobs();
         return output_blobs[0]->count() / output_blobs[0]->num();
       } else {
         boost::shared_ptr<caffe::Blob<float> > blob = net_->blob_by_name(config_.output_blob_name);

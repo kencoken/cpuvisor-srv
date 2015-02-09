@@ -15,6 +15,13 @@ if (MATEXP_DEBUG)
   list (APPEND cpuvisor_testimg_SOURCES server/util/debug/matfileutils_cpp.cc)
 endif(MATEXP_DEBUG)
 
+set (cpuvisor_timeit_SOURCES
+  cpuvisor_timeit.cc
+  directencode/caffe_encoder.cc
+  directencode/caffe_encoder_utils.cc
+  directencode/augmentation_helper.cc
+  server/util/io.cc)
+
 set (cpuvisor_netlib_SOURCES
   cpuvisor_netlib.cc)
 
@@ -83,6 +90,15 @@ set (cpuvisor_testimg_LIBRARIES
 if (MATEXP_DEBUG)
   list (APPEND cpuvisor_testimg_LIBRARIES ${MATIO_LIBRARIES})
 endif(MATEXP_DEBUG)
+
+set (cpuvisor_timeit_LIBRARIES
+  ${Boost_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  ${Caffe_LIBRARIES}
+  ${GLOG_LIBRARIES}
+  ${GLFAGS_LIBRARIES}
+  ${PROTOBUF_LIBRARIES}
+  protodefs)
 
 set (cpuvisor_netlib_LIBRARIES
   ${Boost_LIBRARIES}
@@ -154,6 +170,7 @@ set (cpuvisor_add_dset_images_LIBRARIES
 # -------------------------------------
 
 add_executable(cpuvisor_testimg ${cpuvisor_testimg_SOURCES})
+add_executable(cpuvisor_timeit ${cpuvisor_timeit_SOURCES})
 add_executable(cpuvisor_netlib ${cpuvisor_netlib_SOURCES})
 add_executable(cpuvisor_preproc ${cpuvisor_preproc_SOURCES})
 add_executable(cpuvisor_service ${cpuvisor_service_SOURCES})
@@ -166,6 +183,7 @@ add_executable(cpuvisor_add_dset_images ${cpuvisor_add_dset_images_SOURCES})
 # -------------------------------------
 
 target_link_libraries(cpuvisor_testimg ${cpuvisor_testimg_LIBRARIES})
+target_link_libraries(cpuvisor_timeit ${cpuvisor_timeit_LIBRARIES})
 target_link_libraries(cpuvisor_netlib ${cpuvisor_netlib_LIBRARIES})
 target_link_libraries(cpuvisor_preproc ${cpuvisor_preproc_LIBRARIES})
 target_link_libraries(cpuvisor_service ${cpuvisor_service_LIBRARIES})
@@ -179,6 +197,7 @@ target_link_libraries(cpuvisor_add_dset_images ${cpuvisor_add_dset_images_LIBRAR
 
 install(TARGETS
   cpuvisor_testimg
+  cpuvisor_timeit
   cpuvisor_netlib
   cpuvisor_preproc
   cpuvisor_service

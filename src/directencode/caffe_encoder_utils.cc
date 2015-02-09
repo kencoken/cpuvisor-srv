@@ -152,7 +152,7 @@ namespace featpipe {
 
   /// Add test images to a Caffe net
   void setNetTestImages(const std::vector<cv::Mat>& images, caffe::Net<float>& net) {
-    std::vector<caffe::Blob<float>*>& input_blobs = net.input_blobs();
+    const std::vector<caffe::Blob<float>*>& input_blobs = net.input_blobs();
     CHECK_EQ(input_blobs.size(), 1);
 
     DLOG(INFO) << "Input blob info:" << std::endl
