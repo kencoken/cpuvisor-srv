@@ -149,6 +149,10 @@ namespace cpuvisor {
 
     virtual void addDsetImagesToIndex(const std::vector<std::string>& dset_paths);
 
+    virtual void returnClassifiersScoresForImages(const std::vector<std::string>& paths,
+                                                  const std::vector<std::string>& classifier_paths,
+                                                  std::vector<Ranking>* rankings = 0);
+
   protected:
     virtual boost::shared_ptr<QueryIfo> getQueryIfo_(const std::string& id);
 

@@ -30,6 +30,8 @@ message RPCReq {
 
   repeated string image_paths = 40; // used only for add_dset_images
   optional string filepath = 50; // used only for legacy save/load annotations
+
+  repeated string classifier_paths = 100; // used only for returnClassifiersScoresForImages
 }
 
 message RPCRep {
@@ -40,6 +42,8 @@ message RPCRep {
   optional RankedList ranking = 10;
 
   repeated Annotation annotations = 50; // used only for legacy save/load annotations
+
+  repeated RankedList scores_collection = 100; // used only for returnClassifiersScoresForImages
 }
 
 enum NotificationType {

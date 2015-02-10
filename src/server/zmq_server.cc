@@ -248,15 +248,38 @@ namespace cpuvisor {
 
         } else if (req_str == "add_dset_images_to_index") {
 
-          const TrainImageUrls& urls_proto = rpc_req.train_image_urls();
           const int path_count = rpc_req.image_paths_size();
-
           std::vector<std::string> paths;
           for (int i = 0; i < path_count; ++i) {
             paths.push_back(rpc_req.image_paths(i));
           }
 
           base_server_->addDsetImagesToIndex(paths);
+
+        } else if (req_str == "return_classifiers_scores_for_images") {
+
+          const int path_count = rpc_req.image_paths_size();
+          std::vector<std::string> paths;
+          for (int i = 0; i < path_count; ++i) {
+            paths.push_back(rpc_req.image_paths(i));
+          }
+
+          const int classifier_path_count = rpc_req.classifier_paths_size();
+          std::vector<std::string> classifier_paths;
+          for (int i = 0; i < classifier_path_count; ++i) {
+            classifier_paths.push_back(rpc_req.classifier_paths(i));
+          }
+
+          std::vector<Ranking> rankings;
+          base_server_->returnClassifiersScoresForImages(paths, classifier_paths,
+                                                         &rankings);
+
+          for (size_t i = 0; i < rankings.size(); ++i) {
+            RankedList* ranking_proto = rpc_rep.add_scores_collection();
+            getRankingProto_(rankings[i],
+                             ranking_proto);
+          }
+
 
         } else {
 
@@ -297,14 +320,31 @@ namespace cpuvisor {
     // extract n-th page
     uint32_t page_num = rpc_req.retrieve_page();
 
+    // construct ranking proto object
+    getRankingProto_(ranking, ranking_proto, page_sz, page_num);
+
+  }
+
+  void ZmqServer::getRankingProto_(const Ranking& ranking,
+                                   RankedList* ranking_proto,
+                                   const size_t page_sz,
+                                   const size_t page_num) {
+
     uint32_t dset_sz = ranking.scores.rows;
     CHECK_GE(dset_sz, ranking.scores.cols);
     CHECK_EQ(ranking.scores.cols, 1);
 
-    uint32_t page_count = std::ceil(static_cast<float>(dset_sz) /
-                                    static_cast<float>(page_sz));
+    uint32_t page_count;
+    size_t actual_page_sz = page_sz;
+    if (page_sz < 0) {
+      page_count = 1;
+    } else {
+      page_count = std::ceil(static_cast<float>(dset_sz) /
+                             static_cast<float>(page_sz));
+      actual_page_sz = dset_sz;
+    }
 
-    DLOG(INFO) << "Page size is: " << page_sz;
+    DLOG(INFO) << "Page size is: " << actual_page_sz;
     DLOG(INFO) << "Page num is: " << page_num;
     DLOG(INFO) << "Page count is: " << page_count;
 
@@ -314,8 +354,8 @@ namespace cpuvisor {
     ranking_proto->set_page_count(page_count);
     ranking_proto->set_page(page_num);
 
-    size_t start_idx = page_sz*(page_num - 1);
-    size_t end_idx = std::min(page_sz*page_num, dset_sz);
+    size_t start_idx = actual_page_sz*(page_num - 1);
+    size_t end_idx = std::min(actual_page_sz*page_num, static_cast<size_t>(dset_sz));
 
     CHECK_EQ(ranking.sort_idxs.type(), CV_32S);
     CHECK_EQ(ranking.scores.type(), CV_32F);
@@ -336,7 +376,6 @@ namespace cpuvisor {
       ritem_proto->set_path(base_server_->dset_path(sort_idx));
       ritem_proto->set_score(scores_ptr[sort_idx]);
     }
-
 
   }
 

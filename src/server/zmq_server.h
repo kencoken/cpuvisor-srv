@@ -34,6 +34,11 @@ namespace cpuvisor {
 
     virtual void getRankingPage_(const Ranking& ranking,
                                  const RPCReq& rpc_req, RPCRep* rpc_rep);
+    virtual void getRankingProto_(const Ranking& ranking,
+                                  RankedList* ranking_proto,
+                                  const size_t page_sz = -1,
+                                  const size_t page_num = 0);
+
     virtual void getAnnotations_(const std::vector<std::string>& paths,
                                  const std::vector<int32_t>& annos,
                                  const RPCReq& rpc_req, RPCRep* rpc_rep);

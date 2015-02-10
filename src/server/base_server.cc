@@ -81,14 +81,16 @@ namespace cpuvisor {
 
   cv::Mat BaseServerPostProcessor::computeFeat_(const std::string& imfile) {
 
-    cv::Mat im = cv::imread(imfile, CV_LOAD_IMAGE_COLOR);
-    im.convertTo(im, CV_32FC3);
+    return computeFeat(imfile, encoder_);
 
-    std::vector<cv::Mat> ims;
-    ims.push_back(im);
-    cv::Mat feat = encoder_.compute(ims);
+    // cv::Mat im = cv::imread(imfile, CV_LOAD_IMAGE_COLOR);
+    // im.convertTo(im, CV_32FC3);
 
-    return feat;
+    // std::vector<cv::Mat> ims;
+    // ims.push_back(im);
+    // cv::Mat feat = encoder_.compute(ims);
+
+    // return feat;
 
   }
 
@@ -534,6 +536,45 @@ namespace cpuvisor {
     // notify successful completion
     notifier_->post_index_updated_(dset_paths.size());
 
+  }
+
+  void BaseServer::returnClassifiersScoresForImages(const std::vector<std::string>& paths,
+                                                    const std::vector<std::string>& classifier_paths,
+                                                    std::vector<Ranking>* rankings) {
+    LOG(INFO) << "Applying pretrained classifiers over image...";
+
+    (*rankings) = std::vector<Ranking>(classifier_paths.size());
+
+    cv::Mat feats;
+
+    for (size_t i = 0; i< paths.size(); ++i) {
+      std::string path = paths[i];
+      LOG(INFO) << "Precomputing feature for path: " << path << "...";
+      // check if path is relative (assume it is a dataset path if so)
+      {
+        fs::path path_fs(path);
+        if (!path_fs.has_root_path()) {
+          path_fs = fs::path(dset_base_path_) / path_fs;
+          path = path_fs.string();
+        }
+      }
+
+      // N.B. not using postprocessor (so no support for lookup of dataset images)
+      cv::Mat feat = computeFeat(path, *encoder_);
+
+      feats.push_back(feat);
+    }
+
+    for (size_t i = 0; i < classifier_paths.size(); ++i) {
+      LOG(INFO) << "Ranking using classifier from: " << classifier_paths[i] << "...";
+      cv::Mat model;
+      cpuvisor::readModelFromProto(classifier_paths[i], &model);
+
+      cpuvisor::rankUsingModel(model,
+                               feats,
+                               &(*rankings)[i].scores,
+                               &(*rankings)[i].sort_idxs);
+    }
   }
 
   // Protected methods -----------------------------------------------------------
