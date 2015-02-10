@@ -68,22 +68,33 @@ namespace cpuvisor {
       //  Wait for next request from client
       socket.recv(&request);
       RPCReq rpc_req;
-      rpc_req.ParseFromArray(request.data(), request.size());
+      RPCRep rpc_rep;
+      if (rpc_req.ParseFromArray(request.data(), request.size())) {
 
-      #ifndef NDEBUG
-      {
-        std::string rpc_req_str;
-        google::protobuf::TextFormat::PrintToString(rpc_req, &rpc_req_str);
-        DLOG(INFO) << "Received Protobuf:\n" << "->->->->->->->->\n"
-                   << rpc_req_str << "->->->->->->->->\n";
+        #ifndef NDEBUG
+        {
+          std::string rpc_req_str;
+          google::protobuf::TextFormat::PrintToString(rpc_req, &rpc_req_str);
+          DLOG(INFO) << "Received Protobuf:\n" << "->->->->->->->->\n"
+                     << rpc_req_str << "->->->->->->->->\n";
+        }
+        #endif
+        std::cout << "**********************************\n"
+                  << "Received request: " << rpc_req.request_string()
+                  << ", query_id: " << rpc_req.id() << ", tag: " << rpc_req.tag() << std::endl
+                  << "**********************************\n";
+
+        rpc_rep = dispatch_(rpc_req);
+
+      } else {
+
+        rpc_rep.set_success(false);
+        rpc_rep.set_err_msg("Could not parse request object");
+
+        LOG(ERROR) << "Could not parse request object - ignoring...";
+
+
       }
-      #endif
-      std::cout << "**********************************\n"
-                << "Received request: " << rpc_req.request_string()
-                << ", query_id: " << rpc_req.id() << ", tag: " << rpc_req.tag() << std::endl
-                << "**********************************\n";
-
-      RPCRep rpc_rep = dispatch_(rpc_req);
 
       //  Send reply back to client
       std::string rpc_rep_serialized;
