@@ -18,6 +18,7 @@ message CaffeConfig {
   optional string mean_image_file = 3;
   optional string output_blob_name = 4 [default = "fc7"];
   optional DataAugType data_aug_type = 5 [default = DAT_NONE];
+  optional uint32 batch_sz = 10 [default = 1];
   optional bool use_rgb_images = 16 [default = false];
 }
 

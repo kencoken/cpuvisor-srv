@@ -1,5 +1,6 @@
 #include "caffe_encoder.h"
 
+#include <queue>
 #include <glog/logging.h>
 
 //#define DEBUG_CAFFE_CHECKSUM
@@ -13,7 +14,59 @@ cv::Mat featpipe::CaffeEncoder::compute(const std::vector<cv::Mat>& images,
 
   cv::Mat feats;
 
-  compute_(images, &feats, _debug_input_images);
+  if (config_.batch_sz == 1) {
+
+    compute_(images, &feats, _debug_input_images);
+
+  } else {
+
+    std::queue<cv::Mat> images_queue;
+    for (size_t im_idx = 0; im_idx < images.size(); ++im_idx) {
+      images_queue.push(images[im_idx]);
+    }
+
+    // add image to processing queue
+    bool input_im_array_ready;
+    size_t proc_idx;
+    size_t proc_count;
+    {
+      boost::mutex::scoped_lock prelock(precomp_mutex_);
+
+      CHECK_LT(input_im_array_.size(), config_.batch_sz);
+      size_t slots_left = config_.batch_sz - input_im_array_.size();
+
+      proc_idx = input_im_array_.size();
+      proc_count = std::min(images_queue.size(), slots_left);
+      for (size_t i = 0; i < proc_count; ++i) {
+        input_im_array_.push_back(images_queue.front());
+        images_queue.pop();
+      }
+
+      input_im_array_ready = (input_im_array_.size() == config_.batch_sz);
+    }
+
+    if (input_im_array_ready) {
+      // notify if batch_sz images have been collected - start processing batch
+      precomp_cond_var_.notify_one();
+    }
+
+    {
+      boost::shared_lock<boost::shared_mutex> postlock(postcomp_mutex_);
+
+      boost::mutex local_mutex;
+      boost::mutex::scoped_lock locallock(local_mutex);
+      // wait until batch has finished processing
+      while (!batch_was_processed_) {
+        postcomp_cond_var_.wait(locallock);
+      }
+
+      // extract relevant feature(s)
+      feats = output_feat_array_(cv::Rect(0, proc_idx,
+                                          output_feat_array_.cols,
+                                          proc_count));
+    }
+
+  }
 
   return feats;
 
@@ -34,6 +87,9 @@ void featpipe::CaffeEncoder::initNetFromConfig_() {
     LOG(FATAL) << "Unsupported aug_type!";
   }
 
+  // account for image batch size
+  image_count *= config_.batch_sz;
+
   caffe::Caffe::set_mode(caffe::Caffe::CPU);
   caffe::Caffe::set_phase(caffe::Caffe::TEST);
 
@@ -43,6 +99,56 @@ void featpipe::CaffeEncoder::initNetFromConfig_() {
 
   augmentation_helper_ = AugmentationHelper(config_.mean_image_file);
   augmentation_helper_.aug_type = config_.data_aug_type;
+
+  // start background processing service for batch operations if required
+  if (compute_batch_thread_) {
+    compute_batch_thread_->interrupt();
+    compute_batch_thread_.reset();
+  }
+
+  if (config_.batch_sz > 1) {
+    compute_batch_thread_ =
+      boost::shared_ptr<boost::thread>(new boost::thread(&CaffeEncoder::computeProc_,
+                                                         this));
+  }
+}
+
+void featpipe::CaffeEncoder::computeProc_() {
+
+  batch_was_processed_ = false;
+
+  while (true) {
+
+    boost::mutex::scoped_lock prelock(precomp_mutex_);
+
+    // wait until batch_sz have been collected
+    while (input_im_array_.size() < config_.batch_sz) {
+      precomp_cond_var_.wait(prelock);
+      boost::this_thread::interruption_point();
+    }
+
+    // encode current batch and flag results are ready
+    compute_(input_im_array_, &output_feat_array_);
+    boost::this_thread::interruption_point();
+
+    batch_was_processed_ = true;
+
+    // notify waiting compute calls batch has been processed
+    postcomp_cond_var_.notify_all();
+
+    {
+      // wait for previous batch to finish processing before starting new batch
+      boost::unique_lock<boost::shared_mutex> postlock(postcomp_mutex_);
+    }
+
+    boost::this_thread::interruption_point();
+
+    // clear the input/output arrays
+    input_im_array_.clear();
+    output_feat_array_ = cv::Mat();
+    batch_was_processed_ = false;
+
+  }
 
 }
 

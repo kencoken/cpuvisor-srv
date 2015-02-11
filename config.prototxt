@@ -3,6 +3,7 @@ caffe_config: {
   model_file: "<BASE_DIR>/model_data/VGG_CNN_M_128.caffemodel"
   mean_image_file: "<BASE_DIR>/model_data/VGG_mean.binaryproto"
   output_blob_name: "fc7"
+  batch_sz: 10
 }
 preproc_config: {
   dataset_im_paths: "<BASE_DIR>/dsetpaths.txt"

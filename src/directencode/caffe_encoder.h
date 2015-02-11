@@ -33,6 +33,7 @@ namespace featpipe {
     DataAugType data_aug_type;
     std::string output_blob_name;
     bool use_rgb_images;
+    uint32_t batch_sz;
     inline virtual void configureFromPtree(const boost::property_tree::ptree& properties) {
       param_file = properties.get<std::string>("param_file");
       model_file = properties.get<std::string>("model_file");
@@ -47,6 +48,7 @@ namespace featpipe {
       }
       output_blob_name = properties.get<std::string>("output_blob", DEFAULT_BLOB_STR);
       use_rgb_images = properties.get<bool>("use_rgb_images", false);
+      batch_sz = properties.get<uint32_t>("batch_sz", 1);
     }
     inline virtual void configureFromProtobuf(const cpuvisor::CaffeConfig& proto_config) {
       param_file = proto_config.param_file();
@@ -63,6 +65,7 @@ namespace featpipe {
       }
       output_blob_name = proto_config.output_blob_name();
       use_rgb_images = proto_config.use_rgb_images();
+      batch_sz = proto_config.batch_sz();
     }
   };
 
@@ -91,6 +94,10 @@ namespace featpipe {
       initNetFromConfig_();
       return (*this);
     }
+    virtual ~CaffeEncoder() {
+      // interrupt compute batch thread to ensure termination before auto-detaching
+      if (compute_batch_thread_) compute_batch_thread_->interrupt();
+    }
     // main functions
     virtual cv::Mat compute(const std::vector<cv::Mat>& images,
                             std::vector<std::vector<cv::Mat> >* _debug_input_images = 0);
@@ -118,6 +125,18 @@ namespace featpipe {
     boost::shared_ptr<caffe::Net<float> > net_;
     boost::mutex compute_mutex_;
 
+    // batch computation variables
+    std::vector<cv::Mat> input_im_array_;
+    cv::Mat output_feat_array_;
+    bool batch_was_processed_;
+    boost::shared_ptr<boost::thread> compute_batch_thread_;
+
+    boost::condition_variable precomp_cond_var_;
+    boost::mutex precomp_mutex_;
+    boost::condition_variable postcomp_cond_var_;
+    boost::shared_mutex postcomp_mutex_;
+
+    virtual void computeProc_();
     virtual void compute_(const std::vector<cv::Mat>& images,
                           cv::Mat* feats,
                           std::vector<std::vector<cv::Mat> >* _debug_input_images = 0);
