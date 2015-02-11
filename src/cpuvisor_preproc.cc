@@ -27,10 +27,17 @@ int main(int argc, char* argv[]) {
   cpuvisor::Config config;
   cpuvisor::readProtoFromTextFile(FLAGS_config_path, &config);
 
-  const cpuvisor::CaffeConfig& caffe_config = config.caffe_config();
-  featpipe::CaffeEncoder encoder(caffe_config);
-
   const cpuvisor::PreprocConfig& preproc_config = config.preproc_config();
+  const cpuvisor::CaffeConfig caffe_config = config.caffe_config();
+
+  // update augmentation if preproc-specific aug type is defined
+  cpuvisor::CaffeConfig caffe_config_upd = caffe_config;
+  if (preproc_config.has_data_aug_type() &&
+      (caffe_config.data_aug_type() != preproc_config.data_aug_type())) {
+    caffe_config_upd.set_data_aug_type(preproc_config.data_aug_type());
+  }
+
+  featpipe::CaffeEncoder encoder(caffe_config_upd);
 
   if (FLAGS_dsetfeats) {
     std::string feats_file = preproc_config.dataset_feats_file();

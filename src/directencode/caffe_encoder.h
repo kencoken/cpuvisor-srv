@@ -24,6 +24,8 @@
 
 namespace featpipe {
 
+  // configuration -----------------------
+
   struct CaffeConfig {
     std::string param_file;
     std::string model_file;
@@ -63,6 +65,8 @@ namespace featpipe {
       use_rgb_images = proto_config.use_rgb_images();
     }
   };
+
+  // class definition --------------------
 
   class CaffeEncoder : public GenericDirectEncoder {
   public:

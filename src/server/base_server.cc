@@ -140,8 +140,16 @@ namespace cpuvisor {
 
   BaseServer::BaseServer(const cpuvisor::Config& config) {
     LOG(INFO) << "Initialize encoder...";
-    const cpuvisor::CaffeConfig& caffe_config = config.caffe_config();
-    encoder_.reset(new featpipe::CaffeEncoder(caffe_config));
+    const cpuvisor::ServiceConfig& service_config = config.service_config();
+    const cpuvisor::CaffeConfig caffe_config = config.mutable_caffe_config();
+
+    // update augmentation if service-specific aug type is defined
+    cpuvisor::CaffeConfig caffe_config_upd = caffe_config;
+    if (service_config.has_data_aug_type() &&
+        (caffe_config.data_aug_type() != service_config.data_aug_type())) {
+      caffe_config_upd.set_data_aug_type(service_config.data_aug_type());
+    }
+    encoder_.reset(new featpipe::CaffeEncoder(caffe_config_upd));
 
     LOG(INFO) << "Load in features...";
 
