@@ -141,7 +141,7 @@ namespace cpuvisor {
   BaseServer::BaseServer(const cpuvisor::Config& config) {
     LOG(INFO) << "Initialize encoder...";
     const cpuvisor::ServiceConfig& service_config = config.service_config();
-    const cpuvisor::CaffeConfig caffe_config = config.mutable_caffe_config();
+    const cpuvisor::CaffeConfig caffe_config = config.caffe_config();
 
     // update augmentation if service-specific aug type is defined
     cpuvisor::CaffeConfig caffe_config_upd = caffe_config;

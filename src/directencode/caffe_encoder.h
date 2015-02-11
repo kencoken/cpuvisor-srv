@@ -93,7 +93,7 @@ namespace featpipe {
     }
     // main functions
     virtual cv::Mat compute(const std::vector<cv::Mat>& images,
-                            std::vector<cv::Mat>* _debug_input_images = 0);
+                            std::vector<std::vector<cv::Mat> >* _debug_input_images = 0);
     // virtual setter / getters
     inline virtual size_t get_code_size() const {
       if (config_.output_blob_name == LAST_BLOB_STR) {
@@ -117,6 +117,13 @@ namespace featpipe {
     AugmentationHelper augmentation_helper_;
     boost::shared_ptr<caffe::Net<float> > net_;
     boost::mutex compute_mutex_;
+
+    virtual void compute_(const std::vector<cv::Mat>& images,
+                          cv::Mat* feats,
+                          std::vector<std::vector<cv::Mat> >* _debug_input_images = 0);
+
+    virtual std::vector<cv::Mat> prepareImage_(const cv::Mat image);
+    virtual cv::Mat forwardPropImages_(std::vector<cv::Mat> images);
   };
 }
 
