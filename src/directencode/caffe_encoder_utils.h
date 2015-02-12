@@ -8,17 +8,19 @@
 #include "caffe/caffe.hpp"
 
 namespace featpipe {
-  cv::Mat loadMeanImageFile(const std::string& mean_image_file);
-  cv::Mat downsizeToBound(const cv::Mat& src, const size_t min_size);
-  cv::Mat getBaseCaffeImage(const cv::Mat& src, const size_t min_size);
-  cv::Mat getWholeCropCaffeImage(const cv::Mat& src, const size_t crop_size);
+  namespace caffeutils {
+    cv::Mat loadMeanImageFile(const std::string& mean_image_file);
+    cv::Mat downsizeToBound(const cv::Mat& src, const size_t min_size);
+    cv::Mat getBaseCaffeImage(const cv::Mat& src, const size_t min_size);
+    cv::Mat getWholeCropCaffeImage(const cv::Mat& src, const size_t crop_size);
 
-  cv::Mat convertToChannelContiguous(const cv::Mat& src);
+    cv::Mat convertToChannelContiguous(const cv::Mat& src);
 
-  size_t checkImagesAgainstBlob(const std::vector<cv::Mat>& images,
-                                const caffe::Blob<float>* blob);
+    size_t checkImagesAgainstBlob(const std::vector<cv::Mat>& images,
+                                  const caffe::Blob<float>* blob);
 
-  void setNetTestImages(const std::vector<cv::Mat>& images, caffe::Net<float>& net);
+    void setNetTestImages(const std::vector<cv::Mat>& images, caffe::Net<float>& net);
+  }
 }
 
 #endif

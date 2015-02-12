@@ -21,7 +21,7 @@ namespace cpuvisor {
     return encoder.compute(ims);
 
     #else // DEBUG
-    std::vector<cv::Mat> debug_input_images;
+    std::vector<std::vector<cv::Mat> > debug_input_images;
     cv::Mat feat = encoder.compute(ims, &debug_input_images);
     std::cout << full_path << std::endl;
     if (full_path.find("JPEGImages/000001.jpg") != std::string::npos) {
@@ -29,7 +29,7 @@ namespace cpuvisor {
       mat_file.writeFloatMat("feat", (float*)feat.data, feat.rows, feat.cols);
 
       std::vector<cv::Mat> bgrChannels(3);
-      split(debug_input_images[0], bgrChannels);
+      split(debug_input_images[0][0], bgrChannels);
       mat_file.writeFloatMat("im_b", (float*)bgrChannels[0].data, bgrChannels[0].rows, bgrChannels[0].cols);
       mat_file.writeFloatMat("im_g", (float*)bgrChannels[1].data, bgrChannels[1].rows, bgrChannels[1].cols);
       mat_file.writeFloatMat("im_r", (float*)bgrChannels[2].data, bgrChannels[2].rows, bgrChannels[2].cols);
