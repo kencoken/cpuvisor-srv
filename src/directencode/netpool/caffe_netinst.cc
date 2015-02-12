@@ -109,7 +109,7 @@ namespace featpipe {
 
   std::vector<cv::Mat> CaffeNetInst::prepareImage_(const cv::Mat image) {
 
-    CHECK(!image.empty());
+    //CHECK(!image.empty());
 
     cv::Mat in_image;
 
@@ -120,7 +120,7 @@ namespace featpipe {
       in_image = image;
     }
 
-    CHECK(!in_image.empty());
+    //CHECK(!in_image.empty());
 
     #ifdef DEBUG_CAFFE_IMS // DEBUG
     cv::imshow("Original Image", in_image/255);
