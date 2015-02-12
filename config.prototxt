@@ -2,7 +2,9 @@ caffe_config: {
   param_file: "<BASE_DIR>/model_data/VGG_CNN_M_128_deploy.prototxt"
   model_file: "<BASE_DIR>/model_data/VGG_CNN_M_128.caffemodel"
   mean_image_file: "<BASE_DIR>/model_data/VGG_mean.binaryproto"
+  mode: CM_CPU
   output_blob_name: "fc7"
+  netpool_sz: 1
 }
 preproc_config: {
   dataset_im_paths: "<BASE_DIR>/dsetpaths.txt"

@@ -12,13 +12,21 @@ enum DataAugType {
   DAT_ASPECT_CORNERS = 1;
 }
 
+enum CaffeMode {
+  CM_CPU = 0;
+  CM_GPU = 1;
+}
+
 message CaffeConfig {
   optional string param_file = 1;
   optional string model_file = 2;
   optional string mean_image_file = 3;
   optional string output_blob_name = 4 [default = "fc7"];
   optional DataAugType data_aug_type = 5 [default = DAT_NONE];
+  optional CaffeMode mode = 6 [default = CM_CPU];
+
   optional bool use_rgb_images = 16 [default = false];
+  optional uint32 netpool_sz = 17 [default = 1];
 }
 
 message PreprocConfig {
