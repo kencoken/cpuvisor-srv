@@ -43,7 +43,7 @@ namespace featpipe {
       use_mean_image_ = (!mean_image_path.empty());
       if (use_mean_image_) {
         DLOG(INFO) << "Loading mean image file from: " << mean_image_path << std::endl;
-        mean_image_ = loadMeanImageFile(mean_image_path);
+        mean_image_ = caffeutils::loadMeanImageFile(mean_image_path);
 
         // take centre crop from mean image
         const int IMAGE_DIM = image_dim;

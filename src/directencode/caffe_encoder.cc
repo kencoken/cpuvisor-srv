@@ -132,7 +132,7 @@ cv::Mat featpipe::CaffeEncoder::forwardPropImages_(std::vector<cv::Mat> images) 
   boost::lock_guard<boost::mutex> compute_lock(compute_mutex_);
 
   VLOG(1) << "Copying images to network for feature computation...";
-  setNetTestImages(images, (*net_));
+  caffeutils::setNetTestImages(images, (*net_));
 
   VLOG(1) << "Forwarding test images through network...";
   const:: std::vector<caffe::Blob<float>*>& last_blobs = net_->ForwardPrefilled();

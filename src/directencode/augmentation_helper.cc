@@ -54,7 +54,7 @@ AugmentationHelper::augmentWholeImage(const cv::Mat& image) const {
 
   // extract centre crop
   VLOG(1) << "Get whole cropped image";
-  cv::Mat cropped_im = getWholeCropCaffeImage(image, CROPPED_DIM);
+  cv::Mat cropped_im = caffeutils::getWholeCropCaffeImage(image, CROPPED_DIM);
 
   VLOG(1) << "Multiply base image";
   cropped_im *= image_mul;
@@ -94,7 +94,7 @@ AugmentationHelper::augmentAspectCorners(const cv::Mat& image) const {
 
   // resize to IMAGE_DIM x N where IMAGE_DIM is the smaller dimension
   VLOG(1) << "Getting base Caffe image..." << std::endl;
-  cv::Mat base_im = getBaseCaffeImage(image, IMAGE_DIM);
+  cv::Mat base_im = caffeutils::getBaseCaffeImage(image, IMAGE_DIM);
 
   for (size_t flip_idx = 0; flip_idx < 2; ++flip_idx) {
     if (flip_idx == 1) {
