@@ -83,7 +83,7 @@ namespace cpuvisor {
 
     // always add features before paths to the index to prevent false lookups
 
-    for (size_t i = 0; i < new_feats.rows; ++i) {
+    for (int i = 0; i < new_feats.rows; ++i) {
       feats.push_back(new_feats.row(i)); // could be done more efficiently
     }
     paths.insert(paths.end(), new_paths.begin(), new_paths.end());

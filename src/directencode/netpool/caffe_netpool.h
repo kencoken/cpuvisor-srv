@@ -8,6 +8,7 @@
 #define FEATPIPE_CAFFE_NETPOOL_H_
 
 #include <vector>
+#include <glog/logging.h>
 
 #include "caffe_netinst.h"
 
@@ -21,12 +22,15 @@ namespace featpipe {
       : config_(config)
       , ready_net_cond_var_(boost::shared_ptr<boost::condition_variable>(new boost::condition_variable)) {
       uint32_t pool_sz = config_.netpool_sz;
+
       if (pool_sz_override > 0) {
         pool_sz = pool_sz_override;
       }
+      LOG(INFO) << "Initializing netpool of size: " << pool_sz;
 
       CHECK_GE(pool_sz, 1);
       for (size_t i = 0; i < pool_sz; ++i) {
+        LOG(INFO) << "Net " << i+1 << " of " << pool_sz;
         nets_.push_back(boost::shared_ptr<CaffeNetInst>(new CaffeNetInst(config_, ready_net_cond_var_)));
       }
     }
