@@ -119,8 +119,8 @@ Note also that whilst it is possible to continue using the CPUVISOR service whil
 are added to the index, the processing of queries is likely to be slower until the process
 has completed.
 
-Advanced – Multithreading and Benchmarking
-------------------------------------------
+Notes on Multithreading
+-----------------------
 
 By default, ConvNet features are computed one at a time in a parallelised manner, either:
 
@@ -133,29 +133,25 @@ In most cases, this in-built parallelisation provides the best performance.
 
 An alternative multithreading model is provided by setting *caffe_config->netpool_sz*
 to a value of *N* > 1. In this case, *N* copies of the network will be made and the
-features for up to N different images can be computed simultaneously from separate threads.
+features for up to *N* different images can be computed simultaneously from separate threads.
 
-This setting can *only be used in CPU computation mode*, and is often faster on servers
+This setting can *only be used in CPU computation mode*, and can be faster on servers
 with slower individual CPU clock speeds, but many cores. In general, *N* should be set to
 at most the number of available CPU cores.
 
 It is also important if setting *netpool_sz* > 1 to ensure the multithreading of the linked
 BLAS distribution is disabled to avoid unncessary CPU contention from both feature-level and
-computation-level parallelisation. This can often be done by setting an environment variable.
+regular BLAS-based parallelisation. This can often be done by setting an environment variable.
 For example, for MKL this can be achieved by issuing:
 
     $ export MKL_NUM_THREADS=1
 
-Note that when using N > 1, N copies of the network are created in memory and so the memory
+Note that when using *N* > 1, *N* copies of the network are created in memory and so the memory
 requirements of running the service increases. Note also that feature-level parallelisation
 is only effective for `./cpuvisor_service`, where images are processed from multiple threads.
-At present, regular GPU/BLAS-based parallelisation should be used e.g.~for preprocessing.
+At present, regular GPU/BLAS-based parallelisation should be used e.g. for preprocessing.
 
-#### Benchmarking
-
-To test the effect of different values of *netpool_sz*, use the `./cpuvisor_timeit` utility
-in the `bin/` directory, which will return the time taken to compute a fixed batch of images
-using the current settings.
+The effect of different configurations can be tested using the `./bin/cpuvisor_timeit` utility.
 
 Version History
 ---------------
