@@ -6,6 +6,8 @@ set (cpuvisor_testimg_SOURCES
   directencode/caffe_encoder.cc
   directencode/caffe_encoder_utils.cc
   directencode/augmentation_helper.cc
+  directencode/netpool/caffe_netinst.cc
+  directencode/netpool/caffe_netpool.cc
   classification/svm/liblinear.cc
   server/util/io.cc
   server/util/preproc.cc
@@ -20,6 +22,8 @@ set (cpuvisor_timeit_SOURCES
   directencode/caffe_encoder.cc
   directencode/caffe_encoder_utils.cc
   directencode/augmentation_helper.cc
+  directencode/netpool/caffe_netinst.cc
+  directencode/netpool/caffe_netpool.cc
   server/util/io.cc)
 
 set (cpuvisor_netlib_SOURCES
@@ -30,6 +34,8 @@ set (cpuvisor_preproc_SOURCES
   directencode/caffe_encoder.cc
   directencode/caffe_encoder_utils.cc
   directencode/augmentation_helper.cc
+  directencode/netpool/caffe_netinst.cc
+  directencode/netpool/caffe_netpool.cc
   classification/svm/liblinear.cc
   server/util/io.cc
   server/util/preproc.cc
@@ -46,6 +52,8 @@ set (cpuvisor_service_SOURCES
   directencode/caffe_encoder.cc
   directencode/caffe_encoder_utils.cc
   directencode/augmentation_helper.cc
+  directencode/netpool/caffe_netinst.cc
+  directencode/netpool/caffe_netpool.cc
   classification/svm/liblinear.cc
   server/util/image_downloader.cc
   server/util/status_notifier.cc

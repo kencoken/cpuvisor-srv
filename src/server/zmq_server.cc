@@ -347,7 +347,7 @@ namespace cpuvisor {
 
     uint32_t page_count;
     size_t actual_page_sz = page_sz;
-    if (page_sz < 0) {
+    if (page_sz < 1) {
       page_count = 1;
     } else {
       page_count = std::ceil(static_cast<float>(dset_sz) /

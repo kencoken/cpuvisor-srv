@@ -2,6 +2,8 @@ set (test_SOURCES test.cc
   ../directencode/caffe_encoder.cc
   ../directencode/caffe_encoder_utils.cc
   ../directencode/augmentation_helper.cc
+  ../directencode/netpool/caffe_netinst.cc
+  ../directencode/netpool/caffe_netpool.cc
   ../classification/svm/liblinear.cc
   ../server/util/io.cc
   ../server/util/preproc.cc
