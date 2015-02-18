@@ -27,13 +27,14 @@ void setupGoogleLogging(char* argv[]) {
   google::InitGoogleLogging(argv[0]);
   #endif
 
-  google::InstallFailureSignalHandler();
-
 }
 
 int main(int argc, char* argv[]) {
 
+  google::InstallFailureSignalHandler();
   setupGoogleLogging(argv);
+  gflags::SetUsageMessage("CPU Visor service");
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   cpuvisor::Config config;
   cpuvisor::readProtoFromTextFile(FLAGS_config_path, &config);
