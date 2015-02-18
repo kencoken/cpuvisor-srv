@@ -141,6 +141,8 @@ class VisorLegacyWrap(object):
             return self.get_query_id()
         elif req_dict['func'] == 'releaseQueryId':
             return self.release_query_id(req_dict['query_id'])
+        elif req_dict['func'] == 'downloadTrs':
+            return self.download_trs(req_dict['query_id'], req_dict['query'])
         elif req_dict['func'] == 'addPosTrs':
             return self.add_pos_trs(req_dict['query_id'], req_dict['impath'],
                                     blocking=True)
@@ -163,8 +165,13 @@ class VisorLegacyWrap(object):
             return self.train(req_dict['query_id'])
         elif req_dict['func'] == 'rank':
             return self.rank(req_dict['query_id'])
-        elif req_dict['func'] == 'getRanking' or req_dict['func'] == 'getRankingSubset':
+        elif req_dict['func'] == 'getRanking':
             rep_dict = self.get_ranking(req_dict['query_id'])
+            if rep_dict['success']:
+                rep_dict['total_len'] = len(rep_dict['ranklist'])
+            return rep_dict
+        elif req_dict['func'] == 'getRankingSubset':
+            rep_dict = self.get_ranking_subset(req_dict['query_id'], req_dict['start_idx'], req_dict['end_idx'])
             if rep_dict['success']:
                 rep_dict['total_len'] = len(rep_dict['ranklist'])
             return rep_dict
@@ -192,6 +199,14 @@ class VisorLegacyWrap(object):
         query_id = self._get_query_id(num_query_id)
 
         self.client.free_query(query_id)
+
+        return {'success': True}
+
+    @pyclient.decorators.api_err_handler(False)
+    def download_trs(self, num_query_id, query):
+        query_id = self._get_query_id(num_query_id)
+
+        self.client.download_trs(query_id, query)
 
         return {'success': True}
 
@@ -289,6 +304,36 @@ class VisorLegacyWrap(object):
 
         return {'success': True,
                 'ranklist': ranking_obj}
+
+    @pyclient.decorators.api_err_handler(False)
+    def get_ranking_subset(self, num_query_id, start_idx, end_idx):
+        query_id = self._get_query_id(num_query_id)
+
+        ranking_obj = []
+        page_no = 1
+       
+        while True:
+             if len(ranking_obj) >= end_idx: break
+             ranking = self.client.get_ranking(query_id, page_no)
+
+             for ritem in ranking.rlist:
+                dset_dir = self.client.config.preproc_config.dataset_im_base_path
+                dset_name = os.path.split(dset_dir)[1]
+                if not dset_name:
+                  dset_name = os.path.split(dset_dir[0:-1])[1]
+
+                image = os.path.join(dset_dir, ritem.path)
+                score = ritem.score
+                uri = os.path.splitext(ritem.path)[0]#os.path.join(dset_name, os.path.splitext(ritem.path)[0])
+                path = ritem.path
+
+                ranking_obj.append({'image': image,
+                                    'score': score,
+                                    'uri': uri,
+                                    'path': path})
+
+        return {'success': True,
+                'ranklist': ranking_obj[start_idx:end_idx]}
 
 
     def _get_query_id(self, num_query_id):

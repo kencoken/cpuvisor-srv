@@ -352,7 +352,7 @@ namespace cpuvisor {
     } else {
       page_count = std::ceil(static_cast<float>(dset_sz) /
                              static_cast<float>(page_sz));
-      actual_page_sz = dset_sz;
+      if (page_sz > dset_sz) actual_page_sz = dset_sz;
     }
 
     DLOG(INFO) << "Page size is: " << actual_page_sz;
