@@ -1,32 +1,37 @@
 # PREPARE LIST OF SOURCES
 # -------------------------------------
 
-set (visorcommon_SOURCES
-  generic_zmq_server.cc
-  proto_parse.cc)
+set (caffelib_SOURCES
+  caffe_encoder.cc
+  caffe_encoder_utils.cc
+  augmentation_helper.cc
+  netpool/caffe_netinst.cc
+  netpool/caffe_netpool.cc)
 
 # PREPARE LIST OF LIBRARIES
 # -------------------------------------
 
-set (visorcommon_LIBRARIES
+set (caffelib_LIBRARIES
+  ${Boost_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  ${Caffe_LIBRARIES}
   ${GLOG_LIBRARIES}
-  ${ZeroMQ_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   protodefs)
 
 # COMPILE TARGETS
 # -------------------------------------
 
-add_library(visorcommon SHARED ${visorcommon_SOURCES})
+add_library(caffelib SHARED ${caffelib_SOURCES})
 
 # LINK LIBRARIES
 # -------------------------------------
 
-target_link_libraries(visorcommon ${visorcommon_LIBRARIES})
+target_link_libraries(caffelib ${caffelib_LIBRARIES})
 
 # INSTALL TARGETS
 # -------------------------------------
 
 install(TARGETS
-  visorcommon
+  caffelib
   DESTINATION "${CMAKE_SOURCE_DIR}/bin/lib")

@@ -3,11 +3,6 @@
 
 set (cpuvisor_testimg_SOURCES
   cpuvisor_testimg.cc
-  directencode/caffe_encoder.cc
-  directencode/caffe_encoder_utils.cc
-  directencode/augmentation_helper.cc
-  directencode/netpool/caffe_netinst.cc
-  directencode/netpool/caffe_netpool.cc
   classification/svm/liblinear.cc
   server/util/io.cc
   server/util/preproc.cc
@@ -19,11 +14,6 @@ endif(MATEXP_DEBUG)
 
 set (cpuvisor_timeit_SOURCES
   cpuvisor_timeit.cc
-  directencode/caffe_encoder.cc
-  directencode/caffe_encoder_utils.cc
-  directencode/augmentation_helper.cc
-  directencode/netpool/caffe_netinst.cc
-  directencode/netpool/caffe_netpool.cc
   server/util/io.cc)
 
 set (cpuvisor_netlib_SOURCES
@@ -31,11 +21,6 @@ set (cpuvisor_netlib_SOURCES
 
 set (cpuvisor_preproc_SOURCES
   cpuvisor_preproc.cc
-  directencode/caffe_encoder.cc
-  directencode/caffe_encoder_utils.cc
-  directencode/augmentation_helper.cc
-  directencode/netpool/caffe_netinst.cc
-  directencode/netpool/caffe_netpool.cc
   classification/svm/liblinear.cc
   server/util/io.cc
   server/util/preproc.cc
@@ -49,11 +34,6 @@ set (cpuvisor_service_SOURCES
   cpuvisor_service.cc
   server/zmq_server.cc
   server/base_server.cc
-  directencode/caffe_encoder.cc
-  directencode/caffe_encoder_utils.cc
-  directencode/augmentation_helper.cc
-  directencode/netpool/caffe_netinst.cc
-  directencode/netpool/caffe_netpool.cc
   classification/svm/liblinear.cc
   server/util/image_downloader.cc
   server/util/status_notifier.cc
@@ -95,7 +75,8 @@ set (cpuvisor_testimg_LIBRARIES
   ${GFLAGS_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   protodefs
-  visor_common)
+  visorcommon
+  caffelib)
 if (MATEXP_DEBUG)
   list (APPEND cpuvisor_testimg_LIBRARIES ${MATIO_LIBRARIES})
 endif(MATEXP_DEBUG)
@@ -108,7 +89,8 @@ set (cpuvisor_timeit_LIBRARIES
   ${GLFAGS_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   protodefs
-  visor_common)
+  visorcommon
+  caffelib)
 
 set (cpuvisor_netlib_LIBRARIES
   ${Boost_LIBRARIES}
@@ -124,7 +106,8 @@ set (cpuvisor_preproc_LIBRARIES
   ${GFLAGS_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   protodefs
-  visor_common)
+  visorcommon
+  caffelib)
 if (MATEXP_DEBUG)
   list (APPEND cpuvisor_preproc_LIBRARIES ${MATIO_LIBRARIES})
 endif(MATEXP_DEBUG)
@@ -140,7 +123,8 @@ set (cpuvisor_service_LIBRARIES
   ${PROTOBUF_LIBRARIES}
   ${CPPNETLIB_LIBRARIES}
   protodefs
-  visor_common)
+  visorcommon
+  caffelib)
 if (MATEXP_DEBUG)
   list (APPEND cpuvisor_service_LIBRARIES ${MATIO_LIBRARIES})
 endif(MATEXP_DEBUG)
@@ -152,7 +136,7 @@ set (cpuvisor_preproc_sge_LIBRARIES
   ${GFLAGS_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   protodefs
-  visor_common)
+  visorcommon)
 
 set (cpuvisor_combine_chunks_LIBRARIES
   ${Boost_LIBRARIES}
@@ -161,7 +145,7 @@ set (cpuvisor_combine_chunks_LIBRARIES
   ${GFLAGS_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   protodefs
-  visor_common)
+  visorcommon)
 
 set (cpuvisor_inspect_feats_LIBRARIES
   ${Boost_LIBRARIES}
@@ -170,7 +154,7 @@ set (cpuvisor_inspect_feats_LIBRARIES
   ${GFLAGS_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   protodefs
-  visor_common)
+  visorcommon)
 
 set (cpuvisor_add_dset_images_LIBRARIES
   ${Boost_LIBRARIES}
@@ -180,7 +164,7 @@ set (cpuvisor_add_dset_images_LIBRARIES
   ${ZeroMQ_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   protodefs
-  visor_common)
+  visorcommon)
 
 # COMPILE TARGETS
 # -------------------------------------

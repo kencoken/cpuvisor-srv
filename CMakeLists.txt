@@ -94,5 +94,6 @@ endif ()
 # -------------------------------------
 add_subdirectory(src/proto proto)
 add_subdirectory(src/server/common bin/lib)
+add_subdirectory(src/directencode bin/lib)
 add_subdirectory(src bin)
 add_subdirectory(src/test bin/test)
