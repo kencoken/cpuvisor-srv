@@ -51,7 +51,7 @@ namespace cpuvisor {
 
       } else if (req_str == "add_trs") {
 
-        const TrainImageUrls& urls_proto = rpc_req.GetExtension(train_image_urls);
+        const TrainImageUrls& urls_proto = rpc_req.train_image_urls();
         const int url_count = urls_proto.urls_size();
 
         std::vector<std::string> urls;
@@ -94,7 +94,7 @@ namespace cpuvisor {
 
       } else if (req_str == "add_trs_from_file") { // legacy
 
-        const TrainImageUrls& urls_proto = rpc_req.GetExtension(train_image_urls);
+        const TrainImageUrls& urls_proto = rpc_req.train_image_urls();
         const int url_count = urls_proto.urls_size();
 
         std::vector<std::string> paths;
@@ -114,7 +114,7 @@ namespace cpuvisor {
 
       } else if (req_str == "add_trs_from_file_and_wait") { //legacy
 
-        const TrainImageUrls& urls_proto = rpc_req.GetExtension(train_image_urls);
+        const TrainImageUrls& urls_proto = rpc_req.train_image_urls();
         const int url_count = urls_proto.urls_size();
 
         std::vector<std::string> paths;
@@ -166,10 +166,10 @@ namespace cpuvisor {
           paths.push_back(rpc_req.paths(i));
         }
 
-        const int classifier_path_count = rpc_req.ExtensionSize(cpuvisor::classifier_paths);
+        const int classifier_path_count = rpc_req.classifier_paths_size();
         std::vector<std::string> classifier_paths;
         for (int i = 0; i < classifier_path_count; ++i) {
-          classifier_paths.push_back(rpc_req.GetExtension(cpuvisor::classifier_paths, i));
+          classifier_paths.push_back(rpc_req.classifier_paths(i));
         }
 
         std::vector<Ranking> rankings;
@@ -177,7 +177,7 @@ namespace cpuvisor {
                                                        &rankings);
 
         for (size_t i = 0; i < rankings.size(); ++i) {
-          RankedList* ranking_proto = rpc_rep->AddExtension(scores_collection);
+          RankedList* ranking_proto = rpc_rep->add_scores_collection();
           getRankingProto_(rankings[i],
                            boost::shared_ptr<BaseServerIndexToId>(new BaseServerIndexToId(base_server_)),
                            ranking_proto);
@@ -201,7 +201,7 @@ namespace cpuvisor {
     CHECK_EQ(paths.size(), annos.size());
 
     for (size_t i = 0; i < paths.size(); ++i) {
-      Annotation* annotation_proto = rpc_rep->AddExtension(annotations);
+      Annotation* annotation_proto = rpc_rep->add_annotations();
       annotation_proto->set_path(paths[i]);
       annotation_proto->set_anno(annos[i]);
     }

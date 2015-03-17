@@ -9,7 +9,7 @@
 
 #include "visor_common.pb.h"
 #include "visor_srv.pb.h"
-#include "cpuvisor_srv.pb.h"
+#include "visor_srv.pb.h"
 
 namespace visor {
 

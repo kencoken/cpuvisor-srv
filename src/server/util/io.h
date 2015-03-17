@@ -15,7 +15,7 @@
 
 #include <opencv2/opencv.hpp>
 
-#include "cpuvisor_srv.pb.h"
+#include "visor_srv.pb.h"
 
 using google::protobuf::Message;
 

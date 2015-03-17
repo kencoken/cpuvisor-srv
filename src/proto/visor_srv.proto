@@ -1,6 +1,7 @@
 package visor;
 
 import "visor_common.proto";
+import "cpuvisor_srv.proto";
 
 message RPCReq {
   required string request_string = 1;
@@ -12,7 +13,9 @@ message RPCReq {
   repeated string paths = 40; // used only for add_dset_images
   optional string filepath = 50; // used only for legacy save/load annotations
 
-  extensions 100 to max;
+  // cpuvisor ---
+  optional cpuvisor.TrainImageUrls train_image_urls = 100;
+  repeated string classifier_paths = 150; // used only for returnClassifiersScoresForImages
 }
 
 message RPCRep {
@@ -22,7 +25,9 @@ message RPCRep {
 
   optional RankedList ranking = 10;
 
-  extensions 100 to max;
+  // cpuvisor ---
+  repeated cpuvisor.Annotation annotations = 150; // used only for legacy save/load annotations
+  repeated RankedList scores_collection = 180; // used only for returnClassifiersScoresForImages
 }
 
 message VisorNotification {
@@ -30,6 +35,8 @@ message VisorNotification {
   optional string id = 2;
   optional string data = 3;
 }
+
+// embedded messages ===
 
 message RankedItem {
   optional string path = 1;

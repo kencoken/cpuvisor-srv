@@ -1,17 +1,5 @@
 package cpuvisor;
 
-import "visor_srv.proto";
-
-extend visor.RPCReq {
-  optional TrainImageUrls train_image_urls = 100;
-  repeated string classifier_paths = 150; // used only for returnClassifiersScoresForImages
-}
-
-extend visor.RPCRep {
-  repeated Annotation annotations = 150; // used only for legacy save/load annotations
-  repeated visor.RankedList scores_collection = 200; // used only for returnClassifiersScoresForImages
-}
-
 enum NotificationType {
   NTFY_STATE_CHANGE = 1;
   NTFY_IMAGE_PROCESSED = 2;

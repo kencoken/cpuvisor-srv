@@ -11,7 +11,7 @@
 
 #include "server/common/proto_parse.h"
 #include "visor_config.pb.h"
-#include "cpuvisor_srv.pb.h"
+#include "visor_srv.pb.h"
 
 #include "server/common/common.h"
 #include "server/base_server.h"
