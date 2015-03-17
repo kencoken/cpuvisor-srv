@@ -21,7 +21,7 @@ featpipe::CaffeEncoder setupCaffe() {
   visor::Config config;
   cpuvisor::readProtoFromTextFile(CONFIG_FILE, &config);
 
-  const cpuvisor::CaffeConfig& caffe_config = config.GetExtension(cpuvisor::caffe_config);
+  const cpuvisor::CaffeConfig& caffe_config = config.caffe_config();
   return featpipe::CaffeEncoder(caffe_config);
 }
 

@@ -1,28 +1,5 @@
 package cpuvisor;
 
-import "visor_config.proto";
-
-extend visor.Config {
-  optional CaffeConfig caffe_config = 100;
-}
-
-extend visor.PreprocConfig {
-  optional string neg_im_base_path = 101;
-  optional string neg_im_paths = 102;
-  optional string neg_index_file = 105;
-
-  optional DataAugType data_aug_type_preproc = 120;
-}
-
-extend visor.ServiceConfig {
-  optional DataAugType data_aug_type_srv = 120;
-}
-
-extend visor.ServerConfig {
-  optional string image_cache_path = 110;
-  optional string rlist_cache_path = 111;
-}
-
 enum DataAugType {
   DAT_NONE = 0;
   DAT_ASPECT_CORNERS = 1;

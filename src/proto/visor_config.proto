@@ -1,11 +1,14 @@
 package visor;
 
+import "cpuvisor_config.proto";
+
 message Config {
   optional PreprocConfig preproc_config = 1;
   optional ServiceConfig service_config = 2;
   optional ServerConfig server_config = 3;
 
-  extensions 100 to max;
+  // cpuvisor ---
+  optional cpuvisor.CaffeConfig caffe_config = 100;
 }
 
 message PreprocConfig {
@@ -13,12 +16,18 @@ message PreprocConfig {
   optional string dataset_im_paths = 2;
   optional string dataset_index_file = 5;
 
-  extensions 100 to max;
+  // cpuvisor ---
+  optional string neg_im_base_path = 101;
+  optional string neg_im_paths = 102;
+  optional string neg_index_file = 105;
+
+  optional cpuvisor.DataAugType data_aug_type = 120;
 }
 
 message ServiceConfig {
 
-  extensions 100 to max;
+  // cpuvisor ---
+  optional cpuvisor.DataAugType data_aug_type = 120;
 }
 
 message ServerConfig {
@@ -27,5 +36,7 @@ message ServerConfig {
 
   optional uint32 page_size = 16 [default = 100];
 
-  extensions 100 to max;
+  // cpuvisor ---
+  optional string image_cache_path = 110;
+  optional string rlist_cache_path = 111;
 }

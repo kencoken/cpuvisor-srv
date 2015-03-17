@@ -21,7 +21,6 @@
 #include "server/util/status_notifier.h"
 #include "server/common/common.h"
 #include "visor_config.pb.h"
-#include "cpuvisor_config.pb.h"
 
 using namespace visor;
 

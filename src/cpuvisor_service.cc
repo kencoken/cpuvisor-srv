@@ -5,7 +5,7 @@
 #include <gflags/gflags.h>
 
 #include "server/util/io.h"
-#include "cpuvisor_config.pb.h"
+#include "visor_config.pb.h"
 
 #include "server/zmq_server.h"
 
