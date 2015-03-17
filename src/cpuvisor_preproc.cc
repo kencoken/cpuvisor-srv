@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
   // update augmentation if preproc-specific aug type is defined
   cpuvisor::CaffeConfig caffe_config_upd = caffe_config;
   if (preproc_config.has_data_aug_type() &&
-     (caffe_config.data_aug_type() != preproc_config.data_aug_type())) {
+      (caffe_config.data_aug_type() != preproc_config.data_aug_type())) {
     caffe_config_upd.set_data_aug_type(preproc_config.data_aug_type());
   }
 

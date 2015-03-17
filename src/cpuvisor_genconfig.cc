@@ -11,7 +11,6 @@
 
 #include <google/protobuf/text_format.h>
 #include "visor_config.pb.h"
-#include "cpuvisor_config.pb.h"
 
 DEFINE_string(config_path, "../config.prototxt", "Server config file");
 DEFINE_string(sample_image, "../test_data/input/000001.jpg", "Test image");
@@ -46,7 +45,7 @@ int main(int argc, char* argv[]) {
     buffer << config_stream.rdbuf();
     google::protobuf::TextFormat::ParseFromString(buffer.str(), &config);
   }
-  cpuvisor::CaffeConfig& caffe_config = *config.mutable_caffe_config;
+  cpuvisor::CaffeConfig& caffe_config = *config.mutable_caffe_config();
 
   // 2. Encode!
 

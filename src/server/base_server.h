@@ -40,7 +40,7 @@ namespace cpuvisor {
   };
 
   class InvalidAnnoFileError: public InvalidRequestError {
-    public:
+  public:
     InvalidAnnoFileError(std::string const& msg): InvalidRequestError(msg) { }
   };
 
@@ -50,7 +50,7 @@ namespace cpuvisor {
   };
 
   class InvalidDsetIncrementalUpdateError: public InvalidRequestError {
-    public:
+  public:
     InvalidDsetIncrementalUpdateError(std::string const& msg): InvalidRequestError(msg) { }
   };
 
