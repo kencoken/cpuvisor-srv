@@ -17,7 +17,7 @@ set (visorcommon_LIBRARIES
 # COMPILE TARGETS
 # -------------------------------------
 
-add_library(visorcommon SHARED ${visorcommon_SOURCES})
+add_library(visorcommon STATIC ${visorcommon_SOURCES})
 
 # LINK LIBRARIES
 # -------------------------------------

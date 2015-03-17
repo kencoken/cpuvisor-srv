@@ -22,7 +22,7 @@ set (caffelib_LIBRARIES
 # COMPILE TARGETS
 # -------------------------------------
 
-add_library(caffelib SHARED ${caffelib_SOURCES})
+add_library(caffelib STATIC ${caffelib_SOURCES})
 
 # LINK LIBRARIES
 # -------------------------------------
