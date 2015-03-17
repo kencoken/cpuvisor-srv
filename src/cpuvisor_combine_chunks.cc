@@ -7,7 +7,7 @@ namespace fs = boost::filesystem;
 
 #include "server/util/io.h"
 
-#include "cpuvisor_config.pb.h"
+#include "visor_config.pb.h"
 
 DEFINE_string(config_path, "../config.prototxt", "Server config file");
 DEFINE_int64(chunk_sz, 1000, "Size of computation chunks");
@@ -18,12 +18,12 @@ int main(int argc, char* argv[]) {
   gflags::SetUsageMessage("Dataset feature file chunk combination for CPU Visor server");
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-  cpuvisor::Config config;
+  visor::Config config;
   cpuvisor::readProtoFromTextFile(FLAGS_config_path, &config);
 
-  const cpuvisor::PreprocConfig& preproc_config = config.preproc_config();
+  const visor::PreprocConfig& preproc_config = config.preproc_config();
 
-  const std::string& feats_file = preproc_config.dataset_feats_file();
+  const std::string& feats_file = preproc_config.dataset_index_file();
   fs::path feats_file_fs(feats_file);
   std::string feats_file_base = (feats_file_fs.parent_path() / feats_file_fs.stem()).string();
   std::string feats_file_ext = feats_file_fs.extension().string();

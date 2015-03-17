@@ -9,6 +9,7 @@
 #include "server/util/feat_util.h"
 #include "server/util/io.h"
 
+#include "visor_config.pb.h"
 #include "cpuvisor_config.pb.h"
 
 #define CONFIG_FILE "../../config.prototxt"
@@ -17,10 +18,10 @@
 #define MLAB_OUTPUT_FEAT_PATH "../../test_data/input/mlab_output_feat.txt"
 
 featpipe::CaffeEncoder setupCaffe() {
-  cpuvisor::Config config;
+  visor::Config config;
   cpuvisor::readProtoFromTextFile(CONFIG_FILE, &config);
 
-  const cpuvisor::CaffeConfig& caffe_config = config.caffe_config();
+  const cpuvisor::CaffeConfig& caffe_config = config.GetExtension(cpuvisor::caffe_config);
   return featpipe::CaffeEncoder(caffe_config);
 }
 

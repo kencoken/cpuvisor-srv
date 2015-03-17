@@ -6,7 +6,7 @@
 
 namespace cpuvisor {
 
-  ZmqServer::ZmqServer(const cpuvisor::Config& config)
+  ZmqServer::ZmqServer(const visor::Config& config)
     : GenericZmqServer(config)
     , base_server_(new BaseServer(config))
     , monitor_state_change_thread_(new boost::thread(&ZmqServer::monitor_state_change_, this))
@@ -32,9 +32,6 @@ namespace cpuvisor {
     std::string req_str = rpc_req.request_string();
     std::string id = rpc_req.id();
 
-    const cpuvisor::RPCReqExt rpc_req_ext =
-      visor::protoparse::get_rpc_req_ext(rpc_req);
-
     if (req_str == "start_query") {
 
       std::string tag_str = rpc_req.tag();
@@ -54,7 +51,7 @@ namespace cpuvisor {
 
       } else if (req_str == "add_trs") {
 
-        const TrainImageUrls& urls_proto = rpc_req_ext.train_image_urls();
+        const TrainImageUrls& urls_proto = rpc_req.GetExtension(train_image_urls);
         const int url_count = urls_proto.urls_size();
 
         std::vector<std::string> urls;
@@ -76,7 +73,9 @@ namespace cpuvisor {
 
         Ranking ranking = base_server_->getRanking(id);
 
-        getRankingPage_(ranking, rpc_req, rpc_rep);
+        getRankingPage_(ranking,
+                        boost::shared_ptr<BaseServerIndexToId>(new BaseServerIndexToId(base_server_)),
+                        rpc_req, rpc_rep);
 
       } else if (req_str == "train_rank_get_ranking") {
 
@@ -85,7 +84,9 @@ namespace cpuvisor {
         Ranking ranking;
         base_server_->trainAndRank(id, true, &ranking);
 
-        getRankingPage_(ranking, rpc_req, rpc_rep);
+        getRankingPage_(ranking,
+                        boost::shared_ptr<BaseServerIndexToId>(new BaseServerIndexToId(base_server_)),
+                        rpc_req, rpc_rep);
 
       } else if (req_str == "free_query") {
 
@@ -93,7 +94,7 @@ namespace cpuvisor {
 
       } else if (req_str == "add_trs_from_file") { // legacy
 
-        const TrainImageUrls& urls_proto = rpc_req_ext.train_image_urls();
+        const TrainImageUrls& urls_proto = rpc_req.GetExtension(train_image_urls);
         const int url_count = urls_proto.urls_size();
 
         std::vector<std::string> paths;
@@ -113,7 +114,7 @@ namespace cpuvisor {
 
       } else if (req_str == "add_trs_from_file_and_wait") { //legacy
 
-        const TrainImageUrls& urls_proto = rpc_req_ext.train_image_urls();
+        const TrainImageUrls& urls_proto = rpc_req.GetExtension(train_image_urls);
         const int url_count = urls_proto.urls_size();
 
         std::vector<std::string> paths;
@@ -135,7 +136,7 @@ namespace cpuvisor {
         std::vector<int32_t> annos;
         base_server_->loadAnnotations(filepath, &paths, &annos);
 
-        getAnnotations_(paths, annos, rpc_req, rpc_rep);
+        getAnnotations_(paths, annos, rpc_rep);
 
       } else if (req_str == "save_classifier") { // legacy
 
@@ -165,25 +166,22 @@ namespace cpuvisor {
           paths.push_back(rpc_req.paths(i));
         }
 
-        const int classifier_path_count = rpc_req_ext.classifier_paths_size();
+        const int classifier_path_count = rpc_req.ExtensionSize(cpuvisor::classifier_paths);
         std::vector<std::string> classifier_paths;
         for (int i = 0; i < classifier_path_count; ++i) {
-          classifier_paths.push_back(rpc_req_ext.classifier_paths(i));
+          classifier_paths.push_back(rpc_req.GetExtension(cpuvisor::classifier_paths, i));
         }
 
         std::vector<Ranking> rankings;
         base_server_->returnClassifiersScoresForImages(paths, classifier_paths,
                                                        &rankings);
 
-        cpuvisor::RPCRepExt rpc_rep_ext = get_rpc_rep_ext(*rpc_rep);
-
         for (size_t i = 0; i < rankings.size(); ++i) {
-          RankedList* ranking_proto = rpc_rep_ext.add_scores_collection();
+          RankedList* ranking_proto = rpc_rep->AddExtension(scores_collection);
           getRankingProto_(rankings[i],
+                           boost::shared_ptr<BaseServerIndexToId>(new BaseServerIndexToId(base_server_)),
                            ranking_proto);
         }
-
-        visor::protoparse::set_rpc_rep_ext(rpc_rep_ext, rpc_rep);
 
       } else {
 
@@ -202,15 +200,11 @@ namespace cpuvisor {
                                   RPCRep* rpc_rep) {
     CHECK_EQ(paths.size(), annos.size());
 
-    cpuvisor::RPCRepExt rpc_rep_ext = visor::protoparse::get_rpc_rep_ext(*rpc_rep);
-
     for (size_t i = 0; i < paths.size(); ++i) {
-      Annotation* annotation_proto = rpc_rep_ext.add_annotations();
+      Annotation* annotation_proto = rpc_rep->AddExtension(annotations);
       annotation_proto->set_path(paths[i]);
       annotation_proto->set_anno(annos[i]);
     }
-
-    visor::protoparse::set_rpc_rep_ext(rpc_rep_ext, rpc_rep);
 
   }
 
@@ -251,7 +245,7 @@ namespace cpuvisor {
                 << "*******************************************************" << std::endl;
 
       VisorNotification notify_proto;
-      visor::proto_parse::set_notification_type(NTFY_STATE_CHANGE);
+      visor::protoparse::set_notification_type(NTFY_STATE_CHANGE, &notify_proto);
       notify_proto.set_id(notification.id);
       notify_proto.set_data(new_state_str);
 
@@ -271,7 +265,7 @@ namespace cpuvisor {
                 << "*******************************************************" << std::endl;
 
       VisorNotification notify_proto;
-      visor::proto_parse::set_notification_type(NTFY_IMAGE_PROCESSED);
+      visor::protoparse::set_notification_type(NTFY_IMAGE_PROCESSED, &notify_proto);
       notify_proto.set_id(notification.id);
       notify_proto.set_data(notification.fname);
 
@@ -290,7 +284,7 @@ namespace cpuvisor {
                 << "*******************************************************" << std::endl;
 
       VisorNotification notify_proto;
-      visor::proto_parse::set_notification_type(NTFY_ALL_IMAGES_PROCESSED);
+      visor::protoparse::set_notification_type(NTFY_ALL_IMAGES_PROCESSED, &notify_proto);
       notify_proto.set_id(notification.id);
 
       notify_(notify_proto);
@@ -308,7 +302,7 @@ namespace cpuvisor {
                 << "err:   " << notification.err_msg << std::endl
                 << "*******************************************************" << std::endl;
       VisorNotification notify_proto;
-      visor::proto_parse::set_notification_type(NTFY_ERROR);
+      visor::protoparse::set_notification_type(NTFY_ERROR, &notify_proto);
       notify_proto.set_id(notification.id);
       notify_proto.set_data(notification.err_msg);
 

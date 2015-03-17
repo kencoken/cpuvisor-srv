@@ -19,8 +19,7 @@
 #include "server/query_data.h" // defines all datatypes used in this class
 #include "server/util/image_downloader.h"
 #include "server/util/status_notifier.h"
-#include "server/common/server_errors.h"
-#include "server/common/proto_parse.h"
+#include "server/common/common.h"
 #include "visor_config.pb.h"
 #include "cpuvisor_config.pb.h"
 
@@ -118,7 +117,7 @@ namespace cpuvisor {
   class BaseServer : boost::noncopyable {
 
   public:
-    BaseServer(const cpuvisor::Config& config);
+    BaseServer(const visor::Config& config);
 
     virtual std::string startQuery(const std::string& tag = std::string());
     virtual void setTag(const std::string& id, const std::string& tag);

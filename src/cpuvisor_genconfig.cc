@@ -10,6 +10,7 @@
 #include "directencode/caffe_encoder.h"
 
 #include <google/protobuf/text_format.h>
+#include "visor_config.pb.h"
 #include "cpuvisor_config.pb.h"
 
 DEFINE_string(config_path, "../config.prototxt", "Server config file");
@@ -45,7 +46,7 @@ int main(int argc, char* argv[]) {
     buffer << config_stream.rdbuf();
     google::protobuf::TextFormat::ParseFromString(buffer.str(), &config);
   }
-  cpuvisor::CaffeConfig& caffe_config = *config.mutable_caffe_config();
+  cpuvisor::CaffeConfig& caffe_config = *config.MutableExtension(caffe_config);
 
   // 2. Encode!
 

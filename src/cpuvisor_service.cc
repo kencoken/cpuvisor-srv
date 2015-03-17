@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
   gflags::SetUsageMessage("CPU Visor service");
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-  cpuvisor::Config config;
+  visor::Config config;
   cpuvisor::readProtoFromTextFile(FLAGS_config_path, &config);
 
   cpuvisor::ZmqServer zmq_server(config);

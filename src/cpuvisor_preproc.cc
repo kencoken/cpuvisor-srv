@@ -9,6 +9,7 @@ namespace fs = boost::filesystem;
 #include "server/util/preproc.h"
 #include "server/util/io.h"
 
+#include "visor_config.pb.h"
 #include "cpuvisor_config.pb.h"
 
 DEFINE_string(config_path, "../config.prototxt", "Server config file");
@@ -24,23 +25,23 @@ int main(int argc, char* argv[]) {
   gflags::SetUsageMessage("Preprocessing for CPU Visor server");
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-  cpuvisor::Config config;
+  visor::Config config;
   cpuvisor::readProtoFromTextFile(FLAGS_config_path, &config);
 
-  const cpuvisor::PreprocConfig& preproc_config = config.preproc_config();
-  const cpuvisor::CaffeConfig caffe_config = config.caffe_config();
+  const visor::PreprocConfig& preproc_config = config.preproc_config();
+  const cpuvisor::CaffeConfig& caffe_config = config.GetExtension(cpuvisor::caffe_config);
 
   // update augmentation if preproc-specific aug type is defined
   cpuvisor::CaffeConfig caffe_config_upd = caffe_config;
-  if (preproc_config.has_data_aug_type() &&
-      (caffe_config.data_aug_type() != preproc_config.data_aug_type())) {
-    caffe_config_upd.set_data_aug_type(preproc_config.data_aug_type());
+  if (preproc_config.HasExtension(cpuvisor::data_aug_type_preproc) &&
+      (caffe_config.data_aug_type() != preproc_config.GetExtension(cpuvisor::data_aug_type_preproc))) {
+    caffe_config_upd.set_data_aug_type(preproc_config.GetExtension(cpuvisor::data_aug_type_preproc));
   }
 
   featpipe::CaffeEncoder encoder(caffe_config_upd);
 
   if (FLAGS_dsetfeats) {
-    std::string feats_file = preproc_config.dataset_feats_file();
+    std::string feats_file = preproc_config.dataset_index_file();
 
     {
       fs::path feats_file_fs(feats_file);
@@ -76,15 +77,15 @@ int main(int argc, char* argv[]) {
   }
 
   if (FLAGS_negfeats) {
-    DLOG(INFO) << "Neg feats file is: " << preproc_config.neg_feats_file();
+    DLOG(INFO) << "Neg feats file is: " << preproc_config.GetExtension(cpuvisor::neg_index_file);
 
-    if (fs::exists(preproc_config.neg_feats_file())) {
+    if (fs::exists(preproc_config.GetExtension(cpuvisor::neg_index_file))) {
       LOG(INFO) << "Skipping existing feature file!";
     } else {
-      cpuvisor::procTextFile(preproc_config.neg_im_paths(),
-                             preproc_config.neg_feats_file(),
+      cpuvisor::procTextFile(preproc_config.GetExtension(cpuvisor::neg_im_paths),
+                             preproc_config.GetExtension(cpuvisor::neg_index_file),
                              encoder,
-                             preproc_config.neg_im_base_path());
+                             preproc_config.GetExtension(cpuvisor::neg_im_base_path));
     }
   }
 

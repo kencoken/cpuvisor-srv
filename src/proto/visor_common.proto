@@ -1,0 +1,4 @@
+message AnyEnum {
+  optional string type_url = 1;
+  optional int32 value = 2;
+}

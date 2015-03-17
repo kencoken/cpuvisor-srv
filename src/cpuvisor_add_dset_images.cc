@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
   google::InstallFailureSignalHandler();
 
   visor::Config config;
-  visor::readProtoFromTextFile(FLAGS_config_path, &config);
+  cpuvisor::readProtoFromTextFile(FLAGS_config_path, &config);
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   if (FLAGS_paths.empty()) {

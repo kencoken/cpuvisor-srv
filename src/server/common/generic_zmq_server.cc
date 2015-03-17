@@ -6,11 +6,11 @@
 #include <sstream>
 #include <stdexcept>
 #include <stdint.h>
+#include <glog/logging.h>
+
 #include <google/protobuf/text_format.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/algorithm/string/replace.hpp>
-
-#include "server/common/server_errors.h"
 
 namespace visor {
 
@@ -22,7 +22,9 @@ namespace visor {
     if (serve_thread_) serve_thread_->interrupt();
   }
 
-  void GenericZmqServer::serve(const bool blocking) {
+  // -----------------------------------------------------------------------------
+
+  void GenericZmqServer::start_serving_(const bool blocking) {
     if (!serve_thread_) {
       serve_thread_.reset(new boost::thread(&GenericZmqServer::serve_, this));
     }
@@ -30,8 +32,6 @@ namespace visor {
       serve_thread_->join();
     }
   }
-
-  // -----------------------------------------------------------------------------
 
   void GenericZmqServer::serve_() {
     // Prepare our context
@@ -136,7 +136,7 @@ namespace visor {
 
     try {
 
-      if (!dispatch_handler_(rpc_req, rpc_rep)) {
+      if (!dispatch_handler_(rpc_req, &rpc_rep)) {
 
         rpc_rep.set_success(false);
         std::stringstream sstrm;
@@ -162,7 +162,8 @@ namespace visor {
   }
 
   void GenericZmqServer::getRankingPage_(const Ranking& ranking,
-                                         const RPCReq& rpc_req, RPCRep* rpc_rep) {
+                                         const boost::shared_ptr<IndexToId> converter,
+                                         const RPCReq& rpc_req, RPCRep* rpc_rep) const {
 
     uint32_t page_sz = config_.server_config().page_size();
 
@@ -171,14 +172,15 @@ namespace visor {
     uint32_t page_num = rpc_req.retrieve_page();
 
     // construct ranking proto object
-    getRankingProto_(ranking, ranking_proto, page_sz, page_num);
+    getRankingProto_(ranking, converter, ranking_proto, page_sz, page_num);
 
   }
 
   void GenericZmqServer::getRankingProto_(const Ranking& ranking,
+                                          const boost::shared_ptr<IndexToId> converter,
                                           RankedList* ranking_proto,
                                           const size_t page_sz,
-                                          const size_t page_num) {
+                                          const size_t page_num) const {
 
     uint32_t dset_sz = ranking.scores.rows;
     CHECK_GE(dset_sz, ranking.scores.cols);
@@ -213,7 +215,7 @@ namespace visor {
     float* scores_ptr = (float*)ranking.scores.data;
 
     for (size_t i = 0; i < 10; ++i) {
-      DLOG(INFO) << i+1 << ": " << base_server_->dset_path(sort_idxs_ptr[i])
+      DLOG(INFO) << i+1 << ": " << (*converter)(sort_idxs_ptr[i])
                  << " (" << scores_ptr[sort_idxs_ptr[i]] << ")";
     }
 
@@ -223,7 +225,7 @@ namespace visor {
     for (size_t i = start_idx; i < end_idx; ++i) {
       RankedItem* ritem_proto = ranking_proto->add_rlist();
       uint32_t sort_idx = sort_idxs_ptr[i];
-      ritem_proto->set_path(base_server_->dset_path(sort_idx));
+      ritem_proto->set_path((*converter)(sort_idx));
       ritem_proto->set_score(scores_ptr[sort_idx]);
     }
 

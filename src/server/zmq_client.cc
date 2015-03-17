@@ -37,7 +37,7 @@ namespace cpuvisor {
   void ZmqClient::addDsetImagesToIndex(const std::vector<std::string>& dset_paths) {
 
     // prepare request object
-    RPCReq rpc_req;
+    visor::RPCReq rpc_req;
     rpc_req.set_request_string("add_dset_images_to_index");
     for (size_t i = 0; i < dset_paths.size(); ++i) {
       rpc_req.add_paths(dset_paths[i]);
@@ -57,7 +57,7 @@ namespace cpuvisor {
     zmq::message_t reply;
     socket_->recv(&reply);
 
-    RPCRep rpc_rep;
+    visor::RPCRep rpc_rep;
     rpc_rep.ParseFromArray(reply.data(), reply.size());
 
   }

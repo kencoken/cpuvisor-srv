@@ -52,7 +52,7 @@ namespace featpipe {
     }
 
     DLOG(INFO) << "Initializing network with " << image_count << " images";
-    net_.reset(new caffe::Net<float>(config_.param_file.c_str(), image_count));
+    net_.reset(new caffe::Net<float>(config_.param_file.c_str(), caffe::TEST, image_count));
     net_->CopyTrainedLayersFrom(config_.model_file.c_str());
 
     augmentation_helper_ = AugmentationHelper(config_.mean_image_file);

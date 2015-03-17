@@ -13,12 +13,9 @@
 
 #include <boost/thread.hpp>
 
-namespace cpuvisor {
+#include "server/common/common.h"
 
-  struct Ranking {
-    cv::Mat scores;
-    cv::Mat sort_idxs;
-  };
+namespace cpuvisor {
 
   enum QueryState {QS_DATACOLL, QS_DATACOLL_COMPLETE,
                    QS_TRAINING, QS_TRAINED,
@@ -29,7 +26,7 @@ namespace cpuvisor {
     std::vector<std::string> pos_paths; // for debugging
     boost::mutex pos_mutex; // to ensure features are added in thread-safe manner
     cv::Mat model;
-    Ranking ranking;
+    visor::Ranking ranking;
   };
 
   struct QueryIfo {

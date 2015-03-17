@@ -1,0 +1,31 @@
+package visor;
+
+message Config {
+  optional PreprocConfig preproc_config = 1;
+  optional ServiceConfig service_config = 2;
+  optional ServerConfig server_config = 3;
+
+  extensions 100 to max;
+}
+
+message PreprocConfig {
+  optional string dataset_im_base_path = 1;
+  optional string dataset_im_paths = 2;
+  optional string dataset_index_file = 5;
+
+  extensions 100 to max;
+}
+
+message ServiceConfig {
+
+  extensions 100 to max;
+}
+
+message ServerConfig {
+  optional string server_endpoint = 1;
+  optional string notify_endpoint = 2;
+
+  optional uint32 page_size = 16 [default = 100];
+
+  extensions 100 to max;
+}

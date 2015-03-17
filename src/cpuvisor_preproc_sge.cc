@@ -13,7 +13,7 @@ namespace fs = boost::filesystem;
 
 #include "server/util/io.h"
 
-#include "cpuvisor_config.pb.h"
+#include "visor_config.pb.h"
 
 DEFINE_string(config_path, "../config.prototxt", "Server config file");
 DEFINE_bool(dsetfeats, true, "Compute dataset features");
@@ -44,10 +44,10 @@ int main(int argc, char* argv[]) {
     fs::create_directories(log_path_fs);
   }
 
-  cpuvisor::Config config;
+  visor::Config config;
   cpuvisor::readProtoFromTextFile(FLAGS_config_path, &config);
 
-  const cpuvisor::PreprocConfig& preproc_config = config.preproc_config();
+  const visor::PreprocConfig& preproc_config = config.preproc_config();
 
   if (FLAGS_dsetfeats) {
     int64_t im_count = cpuvisor::getTextFileLineCount(preproc_config.dataset_im_paths());

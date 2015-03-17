@@ -142,48 +142,36 @@ namespace cpuvisor {
 
     LOG(INFO) << "Parse config...";
 
-    const cpuvisor::ConfigExt config_ext =
-      visor::protoparse::get_config_ext(config);
-
-    const cpuvisor::CaffeConfig& caffe_config = config_ext.caffe_config();
-
     const visor::ServiceConfig& service_config = config.service_config();
-    const cpuvisor::ServiceConfigExt service_config_ext =
-      visor::protoparse::get_service_config_ext(service_config);
-
     const visor::PreprocConfig& preproc_config = config.preproc_config();
-    const cpuvisor::PreprocConfig preproc_config_ext =
-      visor::protoparse::get_preproc_config_ext(preproc_config);
+    const visor::ServerConfig& server_config = config.server_config();
+    const cpuvisor::CaffeConfig& caffe_config = config.GetExtension(cpuvisor::caffe_config);
 
     LOG(INFO) << "Initialize encoder...";
 
     // update augmentation if service-specific aug type is defined
     cpuvisor::CaffeConfig caffe_config_upd = caffe_config;
-    if (service_config_ext.has_data_aug_type() &&
-        (caffe_config.data_aug_type() != service_config_ext.data_aug_type())) {
-      caffe_config_upd.set_data_aug_type(service_config_ext.data_aug_type());
+    if (service_config.HasExtension(data_aug_type_srv) &&
+        (caffe_config.data_aug_type() != service_config.GetExtension(cpuvisor::data_aug_type_srv))) {
+      caffe_config_upd.set_data_aug_type(service_config.GetExtension(cpuvisor::data_aug_type_srv));
     }
     encoder_.reset(new featpipe::CaffeEncoder(caffe_config_upd));
 
     LOG(INFO) << "Load in features...";
 
-    CHECK(cpuvisor::readFeatsFromProto(preproc_config_ext.dataset_feats_file(),
+    CHECK(cpuvisor::readFeatsFromProto(preproc_config.dataset_index_file(),
                                        &dset_feats_, &dset_paths_));
     dset_base_path_ = preproc_config.dataset_im_base_path();
-    dset_feats_file_ = preproc_config_ext.dataset_feats_file();
+    dset_feats_file_ = preproc_config.dataset_index_file();
 
-    CHECK(cpuvisor::readFeatsFromProto(preproc_config_ext.neg_feats_file(),
+    CHECK(cpuvisor::readFeatsFromProto(preproc_config.GetExtension(neg_index_file),
                                        &neg_feats_, &neg_paths_));
-    neg_base_path_ = preproc_config_ext.neg_im_base_path();
+    neg_base_path_ = preproc_config.GetExtension(neg_im_base_path);
 
     post_processor_ =
       boost::shared_ptr<BaseServerPostProcessorWithDsetFeats>(new BaseServerPostProcessorWithDsetFeats(*encoder_, dset_feats_, dset_paths_, dset_base_path_));
 
-    const visor::ServerConfig& server_config = config.server_config();
-    const cpuvisor::ServerConfigExt server_config_ext =
-      visor::protoparse::get_server_config_ext(server_config);
-
-    image_cache_path_ = server_config_ext.image_cache_path();
+    image_cache_path_ = server_config.GetExtension(image_cache_path);
     image_downloader_ =
       boost::shared_ptr<ImageDownloader>(new ImageDownloader(image_cache_path_,
                                                              post_processor_));

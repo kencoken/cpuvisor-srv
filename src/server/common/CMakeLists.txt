@@ -2,14 +2,15 @@
 # -------------------------------------
 
 set (visor_common_SOURCES
-  server/common/generic_zmq_server.cc
-  server/common/proto_parse.cc)
+  generic_zmq_server.cc
+  proto_parse.cc)
 
 # PREPARE LIST OF LIBRARIES
 # -------------------------------------
 
 set (visor_common_LIBRARIES
   ${GLOG_LIBRARIES}
+  ${ZeroMQ_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   protodefs)
 

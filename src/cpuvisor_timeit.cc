@@ -13,6 +13,7 @@ namespace fs = boost::filesystem;
 #include "server/util/io.h"
 #include "server/util/tictoc.h"
 
+#include "visor_config.pb.h"
 #include "cpuvisor_config.pb.h"
 
 DEFINE_string(config_path, "../config.prototxt", "Server config file");
@@ -34,10 +35,10 @@ int main (int argc, char* argv[]) {
   gflags::SetUsageMessage("Benchmarking utility for CPU Visor server");
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-  cpuvisor::Config config;
+  visor::Config config;
   cpuvisor::readProtoFromTextFile(FLAGS_config_path, &config);
 
-  const cpuvisor::CaffeConfig& caffe_config = config.caffe_config();
+  const cpuvisor::CaffeConfig& caffe_config = config.GetExtension(cpuvisor::caffe_config);
   boost::shared_ptr<featpipe::CaffeEncoder> encoder(new featpipe::CaffeEncoder(caffe_config));
 
   // start

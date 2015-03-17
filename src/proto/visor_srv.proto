@@ -1,0 +1,43 @@
+package visor;
+
+import "visor_common.proto";
+
+message RPCReq {
+  required string request_string = 1;
+  optional string id = 2;
+  optional string tag = 3;
+
+  optional uint32 retrieve_page = 11 [default = 1];
+
+  repeated string paths = 40; // used only for add_dset_images
+  optional string filepath = 50; // used only for legacy save/load annotations
+
+  extensions 100 to max;
+}
+
+message RPCRep {
+  required bool success = 1 [default = true];
+  optional string id = 2;
+  optional string err_msg = 16;
+
+  optional RankedList ranking = 10;
+
+  extensions 100 to max;
+}
+
+message VisorNotification {
+  required AnyEnum notification_type = 1;
+  optional string id = 2;
+  optional string data = 3;
+}
+
+message RankedItem {
+  optional string path = 1;
+  optional float score = 2;
+}
+
+message RankedList {
+  repeated RankedItem rlist = 1;
+  optional uint32 page = 2;
+  optional uint32 page_count = 3;
+}

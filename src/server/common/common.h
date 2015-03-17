@@ -1,15 +1,26 @@
 ////////////////////////////////////////////////////////////////////////////
-//    File:        server_errors.h
+//    File:        common.h
 //    Author:      Ken Chatfield
-//    Description: Server error exceptions
+//    Description: Definitions shared across VISOR services
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef VISOR_SERVER_ERRORS_H_
-#define VISOR_SERVER_ERRORS_H_
+#ifndef VISOR_SERVER_COMMON_H_
+#define VISOR_SERVER_COMMON_H_
 
+#include <opencv2/opencv.hpp>
 #include <stdexcept>
 
 namespace visor {
+
+  struct Ranking {
+    cv::Mat scores;
+    cv::Mat sort_idxs;
+  };
+
+  class IndexToId {
+  public:
+    virtual std::string operator()(const size_t index) const = 0;
+  };
 
   // exceptions --------------------------
 
