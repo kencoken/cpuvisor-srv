@@ -16,21 +16,21 @@
 
 #include <zmq.hpp>
 
-#include "cpuvisor_config.pb.h"
-#include "cpuvisor_srv.pb.h"
+#include "visor_config.pb.h"
+#include "visor_srv.pb.h"
 
 namespace cpuvisor {
 
   class ZmqClient : boost::noncopyable {
   public:
-    ZmqClient(const cpuvisor::Config& config,
+    ZmqClient(const visor::Config& config,
               boost::shared_ptr<zmq::context_t> context = boost::shared_ptr<zmq::context_t>());
     virtual ~ZmqClient();
 
     virtual void addDsetImagesToIndex(const std::vector<std::string>& dset_paths);
 
   protected:
-    Config config_;
+    visor::Config config_;
 
     boost::shared_ptr<zmq::context_t> context_;
     boost::shared_ptr<zmq::socket_t> socket_;

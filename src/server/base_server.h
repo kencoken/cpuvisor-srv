@@ -19,15 +19,21 @@
 #include "server/query_data.h" // defines all datatypes used in this class
 #include "server/util/image_downloader.h"
 #include "server/util/status_notifier.h"
+#include "server/common/server_errors.h"
+#include "server/common/proto_parse.h"
+#include "visor_config.pb.h"
 #include "cpuvisor_config.pb.h"
+
+using namespace visor;
 
 namespace cpuvisor {
 
   // exceptions --------------------------
+  // extending InvalidRequestError in server/common/server_errors.h
 
-  class InvalidRequestError: public std::runtime_error {
+  class TrainingError: public InvalidRequestError {
   public:
-    InvalidRequestError(std::string const& msg): std::runtime_error(msg) { }
+    TrainingError(std::string const& msg): InvalidRequestError(msg) { }
   };
 
   class WrongQueryStatusError: public InvalidRequestError {
@@ -35,19 +41,14 @@ namespace cpuvisor {
     WrongQueryStatusError(std::string const& msg): InvalidRequestError(msg) { }
   };
 
-  class TrainingError: public InvalidRequestError {
-  public:
-    TrainingError(std::string const& msg): InvalidRequestError(msg) { }
+  class InvalidAnnoFileError: public InvalidRequestError {
+    public:
+    InvalidAnnoFileError(std::string const& msg): InvalidRequestError(msg) { }
   };
 
   class CannotReturnRankingError: public InvalidRequestError {
   public:
     CannotReturnRankingError(std::string const& msg): InvalidRequestError(msg) { }
-  };
-
-  class InvalidAnnoFileError: public InvalidRequestError {
-    public:
-    InvalidAnnoFileError(std::string const& msg): InvalidRequestError(msg) { }
   };
 
   class InvalidDsetIncrementalUpdateError: public InvalidRequestError {

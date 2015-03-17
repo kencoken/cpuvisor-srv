@@ -1,49 +1,18 @@
+//syntax = "proto3";
 package cpuvisor;
 
-message FeatProto {
-  repeated float data = 1 [packed = true];
-}
+import "visor_srv.proto";
 
-message FeatsProto {
-  optional uint32 num = 1 [default = 0];
-  optional uint32 dim = 2 [default = 0];
-  repeated float data = 3 [packed = true];
-  repeated string paths = 4;
-
-  repeated FeatProto feats = 5; // unused
-  repeated string chunks = 10;
-}
-
-message ModelProto {
-  optional uint32 dim = 2 [default = 0];
-  repeated float data = 3 [packed = true];
-}
-
-
-message RPCReq {
-  required string request_string = 1;
-  optional string id = 2;
-  optional string tag = 3;
-
+message RPCReqExt { // Extension
   optional TrainImageUrls train_image_urls = 10;
-  optional uint32 retrieve_page = 11 [default = 1];
-
-  repeated string image_paths = 40; // used only for add_dset_images
-  optional string filepath = 50; // used only for legacy save/load annotations
 
   repeated string classifier_paths = 100; // used only for returnClassifiersScoresForImages
 }
 
-message RPCRep {
-  required bool success = 1 [default = true];
-  optional string id = 2;
-  optional string err_msg = 16;
-
-  optional RankedList ranking = 10;
-
+message RPCRepExt { // Extension
   repeated Annotation annotations = 50; // used only for legacy save/load annotations
 
-  repeated RankedList scores_collection = 100; // used only for returnClassifiersScoresForImages
+  repeated visor.RankedList scores_collection = 100; // used only for returnClassifiersScoresForImages
 }
 
 enum NotificationType {
@@ -53,26 +22,23 @@ enum NotificationType {
   NTFY_ERROR = 100;
 }
 
-message VisorNotification {
-  required NotificationType type = 1;
-  optional string id = 2;
-  optional string data = 3;
+message FeatsProto {
+  optional uint32 num = 1; // default: 0
+  optional uint32 dim = 2; // default: 0
+  repeated float data = 3 [packed = true];
+  repeated string paths = 4;
+
+  repeated string chunks = 10;
+}
+
+message ModelProto {
+  optional uint32 dim = 2; // default: 0
+  repeated float data = 3 [packed = true];
 }
 
 message TrainImageUrls {
   repeated string urls = 1;
-  optional bool are_positive = 2 [default = true];
-}
-
-message RankedItem {
-  optional string path = 1;
-  optional float score = 2;
-}
-
-message RankedList {
-  repeated RankedItem rlist = 1;
-  optional uint32 page = 2;
-  optional uint32 page_count = 3;
+  optional bool are_positive = 2; // default: true
 }
 
 message Annotation {

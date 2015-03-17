@@ -7,41 +7,31 @@
 #ifndef CPUVISOR_ZMQ_SERVER_H_
 #define CPUVISOR_ZMQ_SERVER_H_
 
-#include <string>
-#include <boost/shared_ptr.hpp>
-#include <boost/thread.hpp>
-#include <boost/utility.hpp>
+#include "generic_zmq_server.h"
 
-#include <zmq.hpp>
-
+#include "server/common/proto_parse.h"
+#include "visor_config.pb.h"
 #include "cpuvisor_config.pb.h"
+#include "visor_srv.pb.h"
 #include "cpuvisor_srv.pb.h"
 
 #include "server/base_server.h"
 
+using namespace visor;
+
 namespace cpuvisor {
 
-  class ZmqServer : boost::noncopyable {
+  class ZmqServer : GenericZmqServer {
   public:
-    ZmqServer(const cpuvisor::Config& config);
+    ZmqServer(const Config& config);
     virtual ~ZmqServer();
 
-    virtual void serve(const bool blocking=true);
-
   protected:
-    virtual void serve_();
-    virtual RPCRep dispatch_(RPCReq rpc_req);
-
-    virtual void getRankingPage_(const Ranking& ranking,
-                                 const RPCReq& rpc_req, RPCRep* rpc_rep);
-    virtual void getRankingProto_(const Ranking& ranking,
-                                  RankedList* ranking_proto,
-                                  const size_t page_sz = -1,
-                                  const size_t page_num = 0);
+    virtual bool dispatch_handler_(const RPCReq& rpc_req, RPCRep* rpc_rep);
 
     virtual void getAnnotations_(const std::vector<std::string>& paths,
                                  const std::vector<int32_t>& annos,
-                                 const RPCReq& rpc_req, RPCRep* rpc_rep);
+                                 RPCRep* rpc_rep);
 
     virtual void monitor_state_change_();
     virtual void monitor_add_trs_images_();
@@ -50,7 +40,6 @@ namespace cpuvisor {
 
     Config config_;
 
-    boost::shared_ptr<boost::thread> serve_thread_;
     boost::shared_ptr<BaseServer> base_server_;
 
     boost::shared_ptr<boost::thread> monitor_state_change_thread_;
@@ -58,7 +47,6 @@ namespace cpuvisor {
     boost::shared_ptr<boost::thread> monitor_add_trs_complete_thread_;
     boost::shared_ptr<boost::thread> monitor_errors_thread_;
 
-    boost::shared_ptr<zmq::socket_t> notify_socket_;
   };
 
 }

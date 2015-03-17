@@ -4,7 +4,7 @@
 #include <gflags/gflags.h>
 
 #include "server/util/io.h"
-#include "cpuvisor_config.pb.h"
+#include "visor_config.pb.h"
 
 #include "server/zmq_client.h"
 
@@ -16,8 +16,8 @@ int main(int argc, char* argv[]) {
   //google::InitGoogleLogging(argv[0]);
   google::InstallFailureSignalHandler();
 
-  cpuvisor::Config config;
-  cpuvisor::readProtoFromTextFile(FLAGS_config_path, &config);
+  visor::Config config;
+  visor::readProtoFromTextFile(FLAGS_config_path, &config);
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   if (FLAGS_paths.empty()) {

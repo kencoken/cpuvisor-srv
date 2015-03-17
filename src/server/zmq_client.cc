@@ -5,7 +5,7 @@
 
 namespace cpuvisor {
 
-  ZmqClient::ZmqClient(const cpuvisor::Config& config,
+  ZmqClient::ZmqClient(const visor::Config& config,
                        boost::shared_ptr<zmq::context_t> context)
     : config_(config) {
 
@@ -40,7 +40,7 @@ namespace cpuvisor {
     RPCReq rpc_req;
     rpc_req.set_request_string("add_dset_images_to_index");
     for (size_t i = 0; i < dset_paths.size(); ++i) {
-      rpc_req.add_image_paths(dset_paths[i]);
+      rpc_req.add_paths(dset_paths[i]);
     }
 
     // serialize and send request

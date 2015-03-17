@@ -94,7 +94,8 @@ set (cpuvisor_testimg_LIBRARIES
   ${GLOG_LIBRARIES}
   ${GFLAGS_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
-  protodefs)
+  protodefs
+  visor_common)
 if (MATEXP_DEBUG)
   list (APPEND cpuvisor_testimg_LIBRARIES ${MATIO_LIBRARIES})
 endif(MATEXP_DEBUG)
@@ -106,7 +107,8 @@ set (cpuvisor_timeit_LIBRARIES
   ${GLOG_LIBRARIES}
   ${GLFAGS_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
-  protodefs)
+  protodefs
+  visor_common)
 
 set (cpuvisor_netlib_LIBRARIES
   ${Boost_LIBRARIES}
@@ -121,7 +123,8 @@ set (cpuvisor_preproc_LIBRARIES
   ${GLOG_LIBRARIES}
   ${GFLAGS_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
-  protodefs)
+  protodefs
+  visor_common)
 if (MATEXP_DEBUG)
   list (APPEND cpuvisor_preproc_LIBRARIES ${MATIO_LIBRARIES})
 endif(MATEXP_DEBUG)
@@ -136,7 +139,8 @@ set (cpuvisor_service_LIBRARIES
   ${ZeroMQ_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   ${CPPNETLIB_LIBRARIES}
-  protodefs)
+  protodefs
+  visor_common)
 if (MATEXP_DEBUG)
   list (APPEND cpuvisor_service_LIBRARIES ${MATIO_LIBRARIES})
 endif(MATEXP_DEBUG)
@@ -147,7 +151,8 @@ set (cpuvisor_preproc_sge_LIBRARIES
   ${GLOG_LIBRARIES}
   ${GFLAGS_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
-  protodefs)
+  protodefs
+  visor_common)
 
 set (cpuvisor_combine_chunks_LIBRARIES
   ${Boost_LIBRARIES}
@@ -155,7 +160,8 @@ set (cpuvisor_combine_chunks_LIBRARIES
   ${GLOG_LIBRARIES}
   ${GFLAGS_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
-  protodefs)
+  protodefs
+  visor_common)
 
 set (cpuvisor_inspect_feats_LIBRARIES
   ${Boost_LIBRARIES}
@@ -163,7 +169,8 @@ set (cpuvisor_inspect_feats_LIBRARIES
   ${GLOG_LIBRARIES}
   ${GFLAGS_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
-  protodefs)
+  protodefs
+  visor_common)
 
 set (cpuvisor_add_dset_images_LIBRARIES
   ${Boost_LIBRARIES}
@@ -172,7 +179,8 @@ set (cpuvisor_add_dset_images_LIBRARIES
   ${GFLAGS_LIBRARIES}
   ${ZeroMQ_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
-  protodefs)
+  protodefs
+  visor_common)
 
 # COMPILE TARGETS
 # -------------------------------------

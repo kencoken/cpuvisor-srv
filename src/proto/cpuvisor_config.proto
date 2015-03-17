@@ -1,10 +1,28 @@
+//syntax = "proto3";
 package cpuvisor;
 
-message Config {
+message ConfigExt { // Extension
   optional CaffeConfig caffe_config = 1;
-  optional PreprocConfig preproc_config = 2;
-  optional ServiceConfig service_config = 3;
-  optional ServerConfig server_config = 10;
+}
+
+message PreprocConfigExt { // Extension
+  optional string dataset_feats_file = 2;
+  optional string neg_im_paths = 3;
+  optional string neg_feats_file = 4;
+
+  optional string dataset_im_base_path = 5;
+  optional string neg_im_base_path = 6;
+
+  optional DataAugType data_aug_type = 20;
+}
+
+message ServiceConfigExt { // Extension
+  optional DataAugType data_aug_type = 20;
+}
+
+message ServerConfigExt { // Extension
+  optional string image_cache_path = 10;
+  optional string rlist_cache_path = 11;
 }
 
 enum DataAugType {
@@ -21,35 +39,10 @@ message CaffeConfig {
   optional string param_file = 1;
   optional string model_file = 2;
   optional string mean_image_file = 3;
-  optional string output_blob_name = 4 [default = "fc7"];
-  optional DataAugType data_aug_type = 5 [default = DAT_NONE];
-  optional CaffeMode mode = 6 [default = CM_CPU];
+  optional string output_blob_name = 4; // default: "fc7"
+  optional DataAugType data_aug_type = 5; // default: DAT_NONE
+  optional CaffeMode mode = 6; // default: CM_CPU
 
-  optional bool use_rgb_images = 16 [default = false];
-  optional uint32 netpool_sz = 17 [default = 1];
-}
-
-message PreprocConfig {
-  optional string dataset_im_paths = 1;
-  optional string dataset_feats_file = 2;
-  optional string neg_im_paths = 3;
-  optional string neg_feats_file = 4;
-
-  optional string dataset_im_base_path = 5;
-  optional string neg_im_base_path = 6;
-
-  optional DataAugType data_aug_type = 20;
-}
-
-message ServiceConfig {
-  optional DataAugType data_aug_type = 20;
-}
-
-message ServerConfig {
-  optional string server_endpoint = 1;
-  optional string notify_endpoint = 5;
-  optional string image_cache_path = 10;
-  optional string rlist_cache_path = 11;
-
-  optional uint32 page_size = 16 [default = 100];
+  optional bool use_rgb_images = 16; // default: false
+  optional uint32 netpool_sz = 17; // default: 1
 }
