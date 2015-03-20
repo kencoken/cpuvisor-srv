@@ -5,7 +5,7 @@ Author: Ken Chatfield, University of Oxford (ken@robots.ox.ac.uk)
 
 Copyright 2014-2015, all rights reserved.
 
-Release: v0.2.2 (February 2015)
+Release: v0.2.3 (March 2015)
 License: MIT (see LICENSE.md)
 
 Installation Instructions
@@ -48,7 +48,7 @@ Connecting to the Service
 
 Ensure that all demo script dependencies have been installed as described in the section
 below. Following this, a simple example of how to use the service from code can be run
-by first starting the CPUVISOR Service as described above, and then issuing:
+by first starting the cpuvisor service as described above, and then issuing:
 
     $ python test_client.py
 
@@ -153,6 +153,12 @@ At present, regular GPU/BLAS-based parallelisation should be used e.g. for prepr
 
 The effect of different configurations can be tested using the `./bin/cpuvisor_timeit` utility.
 
+Alternative Interfaces
+----------------------
+
+A Java client for the cpuvisor-service is also available courtesy of Robin Aly at the University
+of Twente: [JCpuVisor](https://bitbucket.org/alyr/jcpuvisor)
+
 Version History
 ---------------
 
@@ -160,3 +166,4 @@ Version History
 - **v0.2** – *January 2015* – Added webserver demo
 - **v0.2.1** – *February 2015* – Added incremental indexing
 - **v0.2.2** - *February 2015* - Added alternative feature-level parallelisation for CPU
+- **v0.2.3** - *March 2015* - Bugfixes
