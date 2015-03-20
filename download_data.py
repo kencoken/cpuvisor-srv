@@ -97,7 +97,7 @@ if __name__ == "__main__":
     file_dir = os.path.dirname(os.path.realpath(__file__))
     prepare_config_proto(file_dir)
 
-    target_dir = os.path.join(file_dir, 'server_data', 'dset_images_test')
+    target_dir = os.path.join(file_dir, 'server_data', 'dset_images')
     download_voc_data(target_dir)
 
     target_dir = os.path.join(file_dir, 'server_data', 'neg_images')
