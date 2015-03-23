@@ -7,7 +7,7 @@
 #include "server/util/io.h"
 #include "visor_config.pb.h"
 
-#include "server/zmq_server.h"
+#include "server/cpuvisor/zmq_server.h"
 
 DEFINE_string(config_path, "../config.prototxt", "Server config file");
 

@@ -6,7 +6,7 @@
 #include "server/util/io.h"
 #include "visor_config.pb.h"
 
-#include "server/zmq_client.h"
+#include "server/cpuvisor/zmq_client.h"
 
 DEFINE_string(config_path, "../config.prototxt", "Server config file");
 DEFINE_string(paths, "", "Text file containing images to add to index");

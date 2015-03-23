@@ -16,9 +16,9 @@
 
 #include "directencode/caffe_encoder.h"
 
-#include "server/query_data.h" // defines all datatypes used in this class
+#include "server/cpuvisor/query_data.h" // defines all datatypes used in this class
+#include "server/cpuvisor/status_notifier.h"
 #include "server/util/image_downloader.h"
-#include "server/util/status_notifier.h"
 #include "server/common/common.h"
 #include "visor_config.pb.h"
 

@@ -12,7 +12,7 @@
 
 #include "server/util/concurrent_queue_single_sub.h"
 
-#include "server/query_data.h"
+#include "server/cpuvisor/query_data.h"
 
 namespace cpuvisor {
 

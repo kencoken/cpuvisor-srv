@@ -7,14 +7,14 @@
 #ifndef CPUVISOR_ZMQ_SERVER_H_
 #define CPUVISOR_ZMQ_SERVER_H_
 
-#include "common/generic_zmq_server.h"
+#include "server/common/generic_zmq_server.h"
 
 #include "server/common/proto_parse.h"
 #include "visor_config.pb.h"
 #include "visor_srv.pb.h"
 
 #include "server/common/common.h"
-#include "server/base_server.h"
+#include "server/cpuvisor/base_server.h"
 
 using namespace visor;
 

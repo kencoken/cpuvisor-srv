@@ -32,11 +32,11 @@ endif(MATEXP_DEBUG)
 
 set (cpuvisor_service_SOURCES
   cpuvisor_service.cc
-  server/zmq_server.cc
-  server/base_server.cc
+  server/cpuvisor/zmq_server.cc
+  server/cpuvisor/base_server.cc
+  server/cpuvisor/status_notifier.cc
   classification/svm/liblinear.cc
   server/util/image_downloader.cc
-  server/util/status_notifier.cc
   server/util/io.cc
   server/util/feat_util.cc
   server/util/preproc.cc
@@ -60,7 +60,7 @@ set (cpuvisor_inspect_feats_SOURCES
 
 set (cpuvisor_add_dset_images_SOURCES
   cpuvisor_add_dset_images.cc
-  server/zmq_client.cc
+  server/cpuvisor/zmq_client.cc
   server/util/io.cc)
 
 # PREPARE LIST OF LIBRARIES
