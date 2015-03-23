@@ -3,8 +3,8 @@ import sys
 
 import zmq
 from google import protobuf
-from proto import cpuvisor_config_pb2 as protoconfig
-from proto import cpuvisor_srv_pb2 as protosrv
+from proto import visor_config_pb2 as protoconfig
+from proto import visor_srv_pb2 as protosrv
 
 import logging
 log = logging.getLogger(__name__)

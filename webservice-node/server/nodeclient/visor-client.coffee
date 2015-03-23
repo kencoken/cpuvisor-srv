@@ -10,9 +10,12 @@ class VisorClient
 
   constructor: (protoconfig_path) ->
     builder = protobufjs.newBuilder({ convertFieldsToCamelCase: false });
+    protobufjs.loadProtoFile(path.resolve(__dirname, "../../../src/proto/visor_common.proto"), builder)
+    protobufjs.loadProtoFile(path.resolve(__dirname, "../../../src/proto/visor_srv.proto"), builder)
+    protobufjs.loadProtoFile(path.resolve(__dirname, "../../../src/proto/visor_config.proto"), builder)
     protobufjs.loadProtoFile(path.resolve(__dirname, "../../../src/proto/cpuvisor_srv.proto"), builder)
     protobufjs.loadProtoFile(path.resolve(__dirname, "../../../src/proto/cpuvisor_config.proto"), builder)
-    @proto_classes = builder.build("cpuvisor")
+    @proto_classes = builder.build()
 
     data = fs.readFileSync protoconfig_path, {encoding: 'utf8'}
 
@@ -56,7 +59,7 @@ class VisorClient
         @google_searcher.query query, (err, results) =>
           if err then callback(err)
 
-          image_urls_obj = new @proto_classes.TrainImageUrls()
+          image_urls_obj = new @proto_classes.cpuvisor.TrainImageUrls()
           for result in results
             image_urls_obj.add('urls', result.url)
 
@@ -161,14 +164,14 @@ class VisorClient
     req_dict = fields
     req_dict.request_string = req_str
 
-    return new @proto_classes.RPCReq(req_dict)
+    return new @proto_classes.visor.RPCReq(req_dict)
 
   encode_req_: (req_obj) =>
     return req_obj.encode().toBuffer()
 
 
   parse_message_: (message) =>
-    return @proto_classes.RPCRep.decode(message)
+    return @proto_classes.visor.RPCRep.decode(message)
 
 
 if require.main == module
