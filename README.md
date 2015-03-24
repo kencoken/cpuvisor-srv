@@ -5,7 +5,7 @@ Author: Ken Chatfield, University of Oxford (ken@robots.ox.ac.uk)
 
 Copyright 2014-2015, all rights reserved.
 
-Release: v0.2.3 (March 2015)
+Release: v0.2.4 (March 2015)
 License: MIT (see LICENSE.md)
 
 Installation Instructions
@@ -62,10 +62,10 @@ Dependencies
 
 The following C++ libraries are required:
 
- + [Caffe](https://github.com/kencoken/caffe) – use the `dev` branch of the
+ + [Caffe](https://github.com/kencoken/caffe) – use the `set-input-count` branch of the
    forked version of the repo `kencoken/caffe`
- + [cppnetlib](https://github.com/kencoken/cpp-netlib) – use the `0.11-devel`
-   branch of the forked version of the repo `kencoken/cpp-netlib`
+ + [cppnetlib](https://github.com/cpp-netlib/cpp-netlib) – use the `0.11-devel`
+   branch or newer
  + Boost v1.55.0+
  + Liblinear
  + OpenCV
@@ -167,3 +167,4 @@ Version History
 - **v0.2.1** – *February 2015* – Added incremental indexing
 - **v0.2.2** - *February 2015* - Added alternative feature-level parallelisation for CPU
 - **v0.2.3** - *March 2015* - Bugfixes
+- **v0.2.4** - *March 2015* - Updated supported Caffe version

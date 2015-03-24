@@ -33,7 +33,6 @@ void featpipe::CaffeEncoder::initNetFromConfig_() {
   default:
     LOG(FATAL) << "Unsupported mode!";
   }
-  caffe::Caffe::set_phase(caffe::Caffe::TEST);
 
   nets_ = boost::shared_ptr<CaffeNetPool>(new CaffeNetPool(config_));
 

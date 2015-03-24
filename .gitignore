@@ -2,7 +2,7 @@
 *.pyc
 build*/
 bin/
-proto/
+/proto/
 test_data/output/*
 server_data/*
 .idea/*
