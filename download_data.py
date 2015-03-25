@@ -5,6 +5,7 @@ import urlparse
 import tarfile
 import contextlib
 import shutil
+import re
 
 VOC_VAL_URL = 'http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtrainval_06-Nov-2007.tar'
 VOC_TEST_URL = 'http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtest_06-Nov-2007.tar'
@@ -30,15 +31,52 @@ def download_url(url, fname):
 
     return fname
 
-def prepare_config_proto(base_path):
+def prepare_config_proto(base_path, dset_dir=None):
 
-    orig_file = 'config.prototxt'
-    tmp_file = 'config.prototxt.new'
+    orig_file = os.path.join(base_path, 'config.prototxt')
+    tmp_file = os.path.join(base_path, 'config.prototxt.new')
+
+    dset_dir_regex = None
+    if dset_dir:
+        if os.path.isabs(dset_dir):
+            dset_dir_regex = '<DSET_DIR>'
+        else:
+            dset_dir_regex = '".*<DSET_DIR>.*"'
 
     with open(orig_file, 'r') as fp_r:
         with open(tmp_file, 'w') as fp_w:
             for line in fp_r:
                 fp_w.write(line.replace('<BASE_DIR>', base_path))
+                if dset_dir_regex:
+                    line = re.sub(dset_dir_regex, '"%s"' % base_path, line)
+
+    os.remove(orig_file)
+    shutil.move(tmp_file, orig_file)
+
+def set_config_field(base_path, field, new_value):
+
+    orig_file = os.path.join(base_path, 'config.prototxt')
+    tmp_file = os.path.join(base_path, 'config.prototxt.new')
+
+    with open(orig_file, 'r') as fp_r:
+        old_config_str = fp_r.read()
+
+    # super-simple and naive replacing of field values by searching for text of form:
+    # <FIELD_NAME>: <VALUE>\n
+    field_start_idx = re.search(field + ':[ ]*', old_config_str).end(0)
+    newline_regex = re.compile('[ ]*\n')
+    field_end_idx = newline_regex.search(old_config_str, field_start_idx).start(0)
+
+    old_value = old_config_str[field_start_idx:field_end_idx]
+
+    new_value = str(new_value)
+    if old_value[0] == '"':
+        new_value = '"%s"' % new_value
+
+    new_config_str = old_config_str[:field_start_idx] + new_value + old_config_str[field_end_idx:]
+
+    with open(tmp_file, 'w') as fp_w:
+        fp_w.write(new_config_str)
 
     os.remove(orig_file)
     shutil.move(tmp_file, orig_file)
@@ -95,7 +133,7 @@ def download_models(target_path):
 if __name__ == "__main__":
 
     file_dir = os.path.dirname(os.path.realpath(__file__))
-    prepare_config_proto(file_dir)
+    prepare_config_proto(file_dir, 'VOCdevkit/VOC2007')
 
     target_dir = os.path.join(file_dir, 'server_data', 'dset_images')
     download_voc_data(target_dir)

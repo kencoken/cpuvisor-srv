@@ -9,7 +9,7 @@ caffe_config: {
 }
 preproc_config: {
   dataset_im_paths: "<BASE_DIR>/dsetpaths.txt"
-  dataset_im_base_path: "<BASE_DIR>/server_data/dset_images/VOCdevkit/VOC2007"
+  dataset_im_base_path: "<BASE_DIR>/server_data/dset_images/<DSET_DIR>"
   dataset_feats_file: "<BASE_DIR>/server_data/dsetfeats.binaryproto"
   neg_im_paths: "<BASE_DIR>/negpaths.txt"
   neg_im_base_path: "<BASE_DIR>/server_data/neg_images"

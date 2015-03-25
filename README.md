@@ -27,7 +27,8 @@ Usage
 
 The following preprocessing steps are required before running the service:
 
- 1. Edit `./config.prototxt` with Caffe model files and dataset base paths
+ 1. Update `./config.prototxt` with the paths of the Caffe model files and
+    datasets to use
  2. Edit `./dsetpaths.txt` and `./negpaths.txt` with the paths to all dataset and
     negative training images (by default the paths in `dsetpaths.txt` contain all
     images from the PASCAL VOC 2007 dataset)
