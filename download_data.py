@@ -23,6 +23,7 @@ def make_temp_directory():
     yield temp_dir
     shutil.rmtree(temp_dir)
 
+
 def download_url(url, fname):
 
     data = urllib2.urlopen(url)
@@ -30,6 +31,7 @@ def download_url(url, fname):
         fp.write(data.read())
 
     return fname
+
 
 def prepare_config_proto(base_path, dset_dir=None):
 
@@ -53,6 +55,43 @@ def prepare_config_proto(base_path, dset_dir=None):
     os.remove(orig_file)
     shutil.move(tmp_file, orig_file)
 
+
+def find_config_field_(config_str, field):
+
+    # split field into subparts if required
+    fields = field.split('.')
+
+    # find leaf field
+    match = {}
+
+    match['start_idx'] = re.search(fields[-1] + ':[ ]*', config_str).end(0)
+    if not match['start_idx']:
+        raise RuntimeError('Could not locate field %s in config file' % field)
+
+    newline_regex = re.compile('[ ]*\n')
+    match['end_idx'] = newline_regex.search(config_str, match['start_idx']).start(0)
+    if not match['end_idx']:
+        raise RuntimeError('Could not locate field %s in config file' % field)
+
+    match['value'] = config_str[match['start_idx']:match['end_idx']]
+
+    # check leaf field is child of parent fields
+    search_pos = match['start_idx']
+    for parent_field in reversed(fields[:-1]):
+        idx = config_str.rfind('{', 0, search_pos)
+        if idx == -1:
+            raise RuntimeError('Could not locate field %s in config file' % field)
+        search_pos = idx
+
+        parent_field_start_idx = re.search(parent_field + ':[ ]*$', config_str[:search_pos])
+        if not parent_field_start_idx:
+            raise RuntimeError('Could not locate field %s in config file' % field)
+
+        search_pos = parent_field_start_idx
+
+    return match
+
+
 def set_config_field(base_path, field, new_value):
 
     orig_file = os.path.join(base_path, 'config.prototxt')
@@ -63,23 +102,35 @@ def set_config_field(base_path, field, new_value):
 
     # super-simple and naive replacing of field values by searching for text of form:
     # <FIELD_NAME>: <VALUE>\n
-    field_start_idx = re.search(field + ':[ ]*', old_config_str).end(0)
-    newline_regex = re.compile('[ ]*\n')
-    field_end_idx = newline_regex.search(old_config_str, field_start_idx).start(0)
-
-    old_value = old_config_str[field_start_idx:field_end_idx]
+    field_match = find_config_field_(old_config_str, field)
 
     new_value = str(new_value)
-    if old_value[0] == '"':
+    if leaf_field_match['value'][0] == '"':
         new_value = '"%s"' % new_value
 
-    new_config_str = old_config_str[:field_start_idx] + new_value + old_config_str[field_end_idx:]
+    # set field contents
+    new_config_str = (old_config_str[:leaf_field_match['start_idx']]
+                      + new_value
+                      + old_config_str[leaf_field_match['end_idx']:])
 
     with open(tmp_file, 'w') as fp_w:
         fp_w.write(new_config_str)
 
     os.remove(orig_file)
     shutil.move(tmp_file, orig_file)
+
+
+def get_config_field(base_path, field):
+
+    config_file = os.path.join(base_path, 'config.prototxt')
+
+    with open(config_file, 'r') as fp_r:
+        config_str = fp_r.read()
+
+    field_match = find_config_field_(config_str, field)
+
+    return field_match['value']
+
 
 def download_voc_data(target_path):
 
@@ -99,6 +150,7 @@ def download_voc_data(target_path):
             with tarfile.open(fname) as tar:
                 tar.extractall(target_path)
 
+
 def download_neg_images(target_path):
 
     if not os.path.exists(target_path):
@@ -112,6 +164,7 @@ def download_neg_images(target_path):
         print 'Extracting %s...' % fname
         with tarfile.open(fname) as tar:
             tar.extractall(target_path)
+
 
 def download_models(target_path):
 
@@ -129,6 +182,7 @@ def download_models(target_path):
         for fname in fnames:
             print 'Copying %s...' % fname
             shutil.copyfile(fname, os.path.join(target_path, os.path.split(fname)[1]))
+
 
 if __name__ == "__main__":
 
