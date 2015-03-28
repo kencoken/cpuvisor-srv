@@ -15,6 +15,7 @@ CNN_PROTO = 'http://www.robots.ox.ac.uk/~vgg/software/deep_eval/releases/bvlc/VG
 CNN_MODEL = 'http://www.robots.ox.ac.uk/~vgg/software/deep_eval/releases/bvlc/VGG_CNN_M_128.caffemodel'
 
 NEG_IMAGES = 'http://www.robots.ox.ac.uk/~vgg/software/deep_eval/releases/neg_images.tar'
+NEG_FEATS = ''
 
 @contextlib.contextmanager
 def make_temp_directory():
@@ -33,7 +34,7 @@ def download_url(url, fname):
     return fname
 
 
-def prepare_config_proto(base_path, dset_dir=None):
+def prepare_config_proto(base_path, dset_dir=None, custom_fields={}):
 
     orig_file = os.path.join(base_path, 'config.prototxt')
     tmp_file = os.path.join(base_path, 'config.prototxt.new')
@@ -48,12 +49,16 @@ def prepare_config_proto(base_path, dset_dir=None):
     with open(orig_file, 'r') as fp_r:
         with open(tmp_file, 'w') as fp_w:
             for line in fp_r:
-                fp_w.write(line.replace('<BASE_DIR>', base_path))
+                line = line.replace('<BASE_DIR>', base_path)
                 if dset_dir_regex:
                     line = re.sub(dset_dir_regex, '"%s"' % base_path, line)
+                for (field, value) in custom_fields.iteritems():
+                    line = line.replace(field, value)
 
-    os.remove(orig_file)
-    shutil.move(tmp_file, orig_file)
+                fp_w.write(line.replace('<BASE_DIR>', base_path))
+
+    os.path.remove(orig_file)
+    shutil.move(tmp_file, dst_file)
 
 
 def find_config_field_(config_str, field):
@@ -92,12 +97,17 @@ def find_config_field_(config_str, field):
     return match
 
 
-def set_config_field(base_path, field, new_value):
+def get_url_fname_(url):
+    return url.split('/')[-1].split('#')[0].split('?')[0]
 
-    orig_file = os.path.join(base_path, 'config.prototxt')
-    tmp_file = os.path.join(base_path, 'config.prototxt.new')
 
-    with open(orig_file, 'r') as fp_r:
+def set_config_field(base_path, field, new_value, config_file=None):
+
+    if not config_file:
+        config_file = os.path.join(base_path, 'config.prototxt')
+    tmp_file = config_file + 'config.prototxt.new'
+
+    with open(config_file, 'r') as fp_r:
         old_config_str = fp_r.read()
 
     # super-simple and naive replacing of field values by searching for text of form:
@@ -116,20 +126,8 @@ def set_config_field(base_path, field, new_value):
     with open(tmp_file, 'w') as fp_w:
         fp_w.write(new_config_str)
 
-    os.remove(orig_file)
-    shutil.move(tmp_file, orig_file)
-
-
-def get_config_field(base_path, field):
-
-    config_file = os.path.join(base_path, 'config.prototxt')
-
-    with open(config_file, 'r') as fp_r:
-        config_str = fp_r.read()
-
-    field_match = find_config_field_(config_str, field)
-
-    return field_match['value']
+    os.remove(config_file)
+    shutil.move(tmp_file, config_file)
 
 
 def download_voc_data(target_path):
@@ -159,12 +157,36 @@ def download_neg_images(target_path):
     with make_temp_directory() as temp_dir:
 
         print 'Downloading %s...' % NEG_IMAGES
-        fname = download_url(NEG_IMAGES, os.path.join(temp_dir, NEG_IMAGES.split('/')[-1].split('#')[0].split('?')[0]))
+        fname = download_url(NEG_IMAGES, os.path.join(temp_dir, get_url_fname_(NEG_IMAGES)))
 
         print 'Extracting %s...' % fname
         with tarfile.open(fname) as tar:
             tar.extractall(target_path)
 
+
+def download_neg_feats(target_path):
+
+    # raises error if NEG_FEATS not specified
+
+    if not NEG_FEATS:
+        return False
+
+    if not os.path.exists(os.split.path(target_path)[0]):
+        os.makedirs(os.split.path(target_path)[0])
+
+    # does not re-download if already exists
+
+    if not os.path.exists(target_path):
+
+        with make_temp_directory() as temp_dir:
+
+            print 'Downloading %s...' % NEG_IMAGES
+            fname = download_url(NEG_FEATS, os.path.join(temp_dir, get_url_fname_(NEG_FEATS)))
+
+            print 'Copying %s...' % fname
+            shutil.copyfile(fname, target_path)
+
+    return True
 
 def download_models(target_path):
 
@@ -174,14 +196,20 @@ def download_models(target_path):
     with make_temp_directory() as temp_dir:
 
         urls = [CNN_MEAN, CNN_PROTO, CNN_MODEL]
-        fnames = []
-        for url in urls:
-            print 'Downloading %s...' % url
-            fnames.append(download_url(url, os.path.join(temp_dir, url.split('/')[-1].split('#')[0].split('?')[0])))
 
-        for fname in fnames:
-            print 'Copying %s...' % fname
-            shutil.copyfile(fname, os.path.join(target_path, os.path.split(fname)[1]))
+        for url in urls:
+            fname = get_url_fname_(url)
+            out_fname = os.path.join(target_path, fname)
+
+            # does not re-download if already exists
+
+            if not os.path.exists(out_fname):
+
+                print 'Downloading %s...' % url
+                tmp_fname = fnames.append(download_url(NEG_IMAGES, os.path.join(temp_dir, get_url_fname_(url))))
+
+                print 'Copying %s...' % fname
+                shutil.copyfile(tmp_fname, out_fname)
 
 
 if __name__ == "__main__":
