@@ -6,6 +6,7 @@ import tarfile
 import contextlib
 import shutil
 import re
+import subprocess
 
 VOC_VAL_URL = 'http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtrainval_06-Nov-2007.tar'
 VOC_TEST_URL = 'http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtest_06-Nov-2007.tar'
@@ -27,9 +28,10 @@ def make_temp_directory():
 
 def download_url(url, fname):
 
-    data = urllib2.urlopen(url)
-    with open(fname, 'wb') as fp:
-        fp.write(data.read())
+    # data = urllib2.urlopen(url)
+    # with open(fname, 'wb') as fp:
+    #     fp.write(data.read())
+    subprocess.check_call(['wget -O %s %s' % (fname, url)], shell=True)
 
     return fname
 
@@ -57,7 +59,7 @@ def prepare_config_proto(base_path, dset_dir=None, custom_fields={}):
 
                 fp_w.write(line.replace('<BASE_DIR>', base_path))
 
-    os.path.remove(orig_file)
+    os.remove(orig_file)
     shutil.move(tmp_file, dst_file)
 
 
@@ -105,14 +107,14 @@ def set_config_field(base_path, field, new_value, config_file=None):
 
     if not config_file:
         config_file = os.path.join(base_path, 'config.prototxt')
-    tmp_file = config_file + 'config.prototxt.new'
+    tmp_file = config_file + '.new'
 
     with open(config_file, 'r') as fp_r:
         old_config_str = fp_r.read()
 
     # super-simple and naive replacing of field values by searching for text of form:
     # <FIELD_NAME>: <VALUE>\n
-    field_match = find_config_field_(old_config_str, field)
+    leaf_field_match = find_config_field_(old_config_str, field)
 
     new_value = str(new_value)
     if leaf_field_match['value'][0] == '"':
@@ -184,7 +186,7 @@ def download_neg_feats(target_path):
             fname = download_url(NEG_FEATS, os.path.join(temp_dir, get_url_fname_(NEG_FEATS)))
 
             print 'Copying %s...' % fname
-            shutil.copyfile(fname, target_path)
+            shutil.copyfile(fname, os.path.join(target_path, os.path.split(fname)[1]))
 
     return True
 
@@ -199,6 +201,7 @@ def download_models(target_path):
 
         for url in urls:
             fname = get_url_fname_(url)
+            tmp_fname = os.path.join(temp_dir, fname)
             out_fname = os.path.join(target_path, fname)
 
             # does not re-download if already exists
@@ -206,9 +209,9 @@ def download_models(target_path):
             if not os.path.exists(out_fname):
 
                 print 'Downloading %s...' % url
-                tmp_fname = fnames.append(download_url(NEG_IMAGES, os.path.join(temp_dir, get_url_fname_(url))))
+                download_url(url, tmp_fname)
 
-                print 'Copying %s...' % fname
+                print 'Copying %s...' % out_fname
                 shutil.copyfile(tmp_fname, out_fname)
 
 
