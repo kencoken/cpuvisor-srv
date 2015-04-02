@@ -1,3 +1,5 @@
+#!/bin/bash
+
 CRASH_LOG=../logs/cpuvisor_service_crash.log
 STDERR_LOG=../logs/cpuvisor_service_stderr.log
 
