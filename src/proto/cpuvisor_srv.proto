@@ -19,7 +19,6 @@ message ModelProto {
   repeated float data = 3 [packed = true];
 }
 
-
 message RPCReq {
   required string request_string = 1;
   optional string id = 2;
@@ -44,6 +43,7 @@ message RPCRep {
   repeated Annotation annotations = 50; // used only for legacy save/load annotations
 
   repeated RankedList scores_collection = 100; // used only for returnClassifiersScoresForImages
+  repeated string classifier_tags = 120; // used only for getAvailableUberClassifiers
 }
 
 enum NotificationType {

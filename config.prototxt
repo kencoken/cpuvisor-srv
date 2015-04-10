@@ -18,6 +18,10 @@ preproc_config: {
 }
 service_config: {
   data_aug_type: DAT_NONE
+  uber_classifier_config: {
+    index_file: ""
+    base_path: ""
+  }
 }
 server_config: {
   server_endpoint: "tcp://127.0.0.1:5555"

@@ -19,6 +19,7 @@
 #include "server/query_data.h" // defines all datatypes used in this class
 #include "server/util/image_downloader.h"
 #include "server/util/status_notifier.h"
+#include "server/util/uber_classifiers.h"
 #include "cpuvisor_config.pb.h"
 
 namespace cpuvisor {
@@ -153,6 +154,9 @@ namespace cpuvisor {
                                                   const std::vector<std::string>& classifier_paths,
                                                   std::vector<Ranking>* rankings = 0);
 
+    virtual std::set<std::string> getAvailableUberClassifiers();
+    virtual void loadUberClassifier(const std::string& id, const std::string& query_str);
+
   protected:
     virtual boost::shared_ptr<QueryIfo> getQueryIfo_(const std::string& id);
 
@@ -166,6 +170,8 @@ namespace cpuvisor {
     cv::Mat dset_feats_;
     std::vector<std::string> dset_paths_;
     std::string dset_base_path_;
+
+    UberClassifiers uber_classifiers_;
 
     std::string dset_feats_file_;
     boost::shared_mutex dset_update_mutex_;

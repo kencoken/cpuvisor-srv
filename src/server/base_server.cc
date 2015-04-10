@@ -141,7 +141,7 @@ namespace cpuvisor {
   BaseServer::BaseServer(const cpuvisor::Config& config) {
     LOG(INFO) << "Initialize encoder...";
     const cpuvisor::ServiceConfig& service_config = config.service_config();
-    const cpuvisor::CaffeConfig caffe_config = config.caffe_config();
+    const cpuvisor::CaffeConfig& caffe_config = config.caffe_config();
 
     // update augmentation if service-specific aug type is defined
     cpuvisor::CaffeConfig caffe_config_upd = caffe_config;
@@ -153,7 +153,7 @@ namespace cpuvisor {
 
     LOG(INFO) << "Load in features...";
 
-    const cpuvisor::PreprocConfig preproc_config = config.preproc_config();
+    const cpuvisor::PreprocConfig& preproc_config = config.preproc_config();
 
     CHECK(cpuvisor::readFeatsFromProto(preproc_config.dataset_feats_file(),
                                        &dset_feats_, &dset_paths_));
@@ -164,15 +164,28 @@ namespace cpuvisor {
                                        &neg_feats_, &neg_paths_));
     neg_base_path_ = preproc_config.neg_im_base_path();
 
+    LOG(INFO) << "Initialize image downloader...";
+
     post_processor_ =
       boost::shared_ptr<BaseServerPostProcessorWithDsetFeats>(new BaseServerPostProcessorWithDsetFeats(*encoder_, dset_feats_, dset_paths_, dset_base_path_));
 
-    const cpuvisor::ServerConfig server_config = config.server_config();
+    const cpuvisor::ServerConfig& server_config = config.server_config();
 
     image_cache_path_ = server_config.image_cache_path();
     image_downloader_ =
       boost::shared_ptr<ImageDownloader>(new ImageDownloader(image_cache_path_,
                                                              post_processor_));
+
+    LOG(INFO) << "Wrapping up initialization...";
+
+    const cpuvisor::UberClassifierConfig& uber_classifier_config =
+      service_config.uber_classifier_config();
+
+    const std::string& uc_index_file = uber_classifier_config.index_file();
+    if (!uc_index_file.empty()) {
+      uber_classifiers_.loadFromIndexFile(uc_index_file,
+                                          uber_classifier_config.base_path());
+    }
 
     notifier_ = boost::shared_ptr<StatusNotifier>(new StatusNotifier());
 
@@ -583,6 +596,35 @@ namespace cpuvisor {
                                &(*rankings)[i].scores,
                                &(*rankings)[i].sort_idxs);
     }
+  }
+
+  std::set<std::string> BaseServer::getAvailableUberClassifiers() {
+
+    return uber_classifiers_.getAvailableClassifiers();
+
+  }
+
+  void BaseServer::loadUberClassifier(const std::string& id, const std::string& query_str) {
+
+    boost::shared_ptr<QueryIfo> query_ifo = getQueryIfo_(id);
+
+    if (query_ifo->state == QS_DATACOLL) {
+      query_ifo->state = QS_TRAINING;
+      notifier_->post_state_change_(id, query_ifo->state);
+    } else {
+      throw WrongQueryStatusError("Loading classifiers is only supported for new queries (in state QS_DATACOLL)");
+    }
+
+    LOG(INFO) << "Loading uber-classifier with query string: " << query_str << "...";
+    if (!uber_classifiers_.hasClassifier(query_str)) {
+      std::string err_msg = std::string("No uber-classifier with query string: ") + query_str;
+      throw TrainingError(err_msg);
+    }
+    query_ifo->data.model = uber_classifiers_.getClassifier(query_str);
+
+    query_ifo->state = QS_TRAINED;
+    notifier_->post_state_change_(id, query_ifo->state);
+
   }
 
   // Protected methods -----------------------------------------------------------

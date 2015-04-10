@@ -43,6 +43,7 @@ message PreprocConfig {
 
 message ServiceConfig {
   optional DataAugType data_aug_type = 20;
+  optional UberClassifierConfig uber_classifier_config = 100;
 }
 
 message ServerConfig {
@@ -52,4 +53,9 @@ message ServerConfig {
   optional string rlist_cache_path = 11;
 
   optional uint32 page_size = 16 [default = 100];
+}
+
+message UberClassifierConfig {
+  optional string index_file = 1;
+  optional string base_path = 2;
 }

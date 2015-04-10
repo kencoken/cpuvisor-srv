@@ -70,7 +70,7 @@ include_directories("${CMAKE_SOURCE_DIR}/src")
 # (not editable via ccmake, as are overridden here -
 # this would also be the case if the variables were non-cached
 # but let's cache them anyway so they at least appear in ccmake)
-set(CMAKE_CXX_FLAGS "-g -Wall -march=native -DCPU_ONLY" # flags added to all configs - and also when no config specified (default)
+set(CMAKE_CXX_FLAGS "-g -Wall -march=native -DCPU_ONLY -std=c++11" # flags added to all configs - and also when no config specified (default)
   CACHE STRING "Edit in CMakeLists.txt" FORCE)
 set(CMAKE_CXX_FLAGS_DEBUG ""#"-D_GLIBCXX_DEBUG"
   CACHE STRING "Edit in CMakeLists.txt" FORCE)

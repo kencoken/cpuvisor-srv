@@ -291,6 +291,18 @@ namespace cpuvisor {
                              ranking_proto);
           }
 
+        } else if (req_str == "get_available_uber_classifiers") {
+
+          std::set<std::string> query_strs = base_server_->getAvailableUberClassifiers();
+
+          rpc_rep.clear_classifier_tags();
+          for (auto& query_str : query_strs) {
+            rpc_rep.add_classifier_tags(query_str);
+          }
+
+        } else if (req_str == "load_uber_classifier") {
+
+          base_server_->loadUberClassifier(id, rpc_req.tag());
 
         } else {
 
@@ -311,6 +323,10 @@ namespace cpuvisor {
       rpc_rep.set_err_msg(sstrm.str());
 
       LOG(ERROR) << "Request error occurred: " << sstrm.str();
+
+    } catch (...) {
+
+      LOG(FATAL) << "Unexpected request error occurred";
 
     }
 

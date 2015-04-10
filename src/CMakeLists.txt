@@ -60,7 +60,8 @@ set (cpuvisor_service_SOURCES
   server/util/io.cc
   server/util/feat_util.cc
   server/util/preproc.cc
-  server/util/file_util.cc)
+  server/util/file_util.cc
+  server/util/uber_classifiers.cc)
 if (MATEXP_DEBUG)
   list (APPEND cpuvisor_service_SOURCES server/util/debug/matfileutils.cc)
   list (APPEND cpuvisor_service_SOURCES server/util/debug/matfileutils_cpp.cc)
