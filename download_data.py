@@ -175,8 +175,10 @@ def download_neg_feats(target_path):
     if not NEG_FEATS:
         return False
 
-    if not os.path.exists(os.split.path(target_path)[0]):
-        os.makedirs(os.split.path(target_path)[0])
+    (path, fname) = os.path.split(target_path)
+
+    if not os.path.exists(path):
+        os.makedirs(path)
 
     # does not re-download if already exists
 
@@ -185,10 +187,11 @@ def download_neg_feats(target_path):
         with make_temp_directory() as temp_dir:
 
             print 'Downloading %s...' % NEG_IMAGES
-            fname = download_url(NEG_FEATS, os.path.join(temp_dir, get_url_fname_(NEG_FEATS)))
+            tar_fname = download_url(NEG_FEATS, os.path.join(temp_dir, get_url_fname_(NEG_FEATS)))
 
-            print 'Copying %s...' % fname
-            shutil.copyfile(fname, os.path.join(target_path, os.path.split(fname)[1]))
+            print 'Extracting %s...' % fname
+            with tarfile.open(tar_fname) as tar:
+                tar.extractall(path)
 
     return True
 
