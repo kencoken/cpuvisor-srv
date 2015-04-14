@@ -16,7 +16,7 @@ CNN_PROTO = 'http://www.robots.ox.ac.uk/~vgg/software/deep_eval/releases/bvlc/VG
 CNN_MODEL = 'http://www.robots.ox.ac.uk/~vgg/software/deep_eval/releases/bvlc/VGG_CNN_M_128.caffemodel'
 
 NEG_IMAGES = 'http://www.robots.ox.ac.uk/~vgg/software/deep_eval/releases/neg_images.tar'
-NEG_FEATS = 'http://www.robots.ox.ac.uk/~vgg/software/deep_eval/releases/neg_feats_VGG_CNN_M_128.tgz'
+NEG_FEATS = 'http://www.robots.ox.ac.uk/~vgg/software/deep_eval/releases/negfeats_VGG_CNN_M_128.tgz'
 
 @contextlib.contextmanager
 def make_temp_directory():
