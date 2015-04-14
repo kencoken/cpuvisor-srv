@@ -16,7 +16,7 @@ CNN_PROTO = 'http://www.robots.ox.ac.uk/~vgg/software/deep_eval/releases/bvlc/VG
 CNN_MODEL = 'http://www.robots.ox.ac.uk/~vgg/software/deep_eval/releases/bvlc/VGG_CNN_M_128.caffemodel'
 
 NEG_IMAGES = 'http://www.robots.ox.ac.uk/~vgg/software/deep_eval/releases/neg_images.tar'
-NEG_FEATS = ''
+NEG_FEATS = 'http://www.robots.ox.ac.uk/~vgg/software/deep_eval/releases/neg_feats_VGG_CNN_M_128.tgz'
 
 @contextlib.contextmanager
 def make_temp_directory():
@@ -143,7 +143,9 @@ def download_voc_data(target_path):
         fnames = {}
         for set, url in urls.iteritems():
             print 'Downloading %s: %s...' % (set, url)
-            fnames[set] = download_url(url, os.path.join(temp_dir, set + '.tar'))
+
+            fileext = os.path.splitext(urlparse.urlparse(url).path)[1]
+            fnames[set] = download_url(url, os.path.join(temp_dir, set + fileext))
 
         for set, fname in fnames.iteritems():
             print 'Extracting %s: %s...' % (set, fname)
