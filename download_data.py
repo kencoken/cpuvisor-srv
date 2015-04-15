@@ -132,6 +132,34 @@ def set_config_field(base_path, field, new_value, config_file=None):
     shutil.move(tmp_file, config_file)
 
 
+def get_config_field(base_path, field, config_file=None):
+
+    if not config_file:
+        config_file = os.path.join(base_path, 'config.prototxt')
+
+    with open(config_file, 'r') as fp_r:
+        config_str = fp_r.read()
+
+    leaf_field_match = find_config_field_(config_str, field)
+
+    if leaf_field_match['value'][0] == '"':
+        # return a string
+        return leaf_field_match['value'][1:-1]
+    else:
+        try:
+            # try returning an int
+            val = int(leaf_field_match['value'])
+            return val
+        except ValueError:
+            try:
+                # try returning a float
+                val = float(leaf_field_match['value'])
+                return val
+            except ValueError:
+                # else return as string (e.g. enum value etc.)
+                return leaf_field_match['value']
+
+
 def download_voc_data(target_path):
 
     if not os.path.exists(target_path):
