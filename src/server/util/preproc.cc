@@ -78,7 +78,13 @@ namespace cpuvisor {
     cv::Mat new_feats = procPaths_(new_paths, encoder, base_path);
 
     CHECK_EQ(feats.rows, paths.size());
-    CHECK_EQ(feats.cols, new_feats.cols);
+    if (paths.size() > 0) {
+      // appending to an existing feature matrix
+      CHECK_EQ(feats.cols, new_feats.cols);
+    } else {
+      // starting with an empty feature matrix
+      CHECK_EQ(feats.cols, 0);
+    }
     CHECK_EQ(new_feats.rows, new_paths.size());
 
     // always add features before paths to the index to prevent false lookups
